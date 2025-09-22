@@ -34,21 +34,39 @@ export function AuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       const response = await authService.login(email, password)
-      localStorage.setItem('token', response.token)
-      localStorage.setItem('refreshToken', response.refreshToken)
-      setUser(response.user)
-      return { success: true }
+      
+      if (response.success) {
+        localStorage.setItem('token', response.data.token)
+        localStorage.setItem('refreshToken', response.data.refreshToken)
+        setUser(response.data.user)
+        return { success: true }
+      } else {
+        return { success: false, message: response.message }
+      }
     } catch (error) {
-      return { success: false, message: error.message }
+      // Handle axios errors properly
+      if (error.error && error.data) {
+        return { success: false, message: error.data.message }
+      }
+      return { success: false, message: error.message || 'An error occurred during login' }
     }
   }
 
   const register = async (name, email, password, confirmPassword) => {
     try {
       const response = await authService.register(name, email, password, confirmPassword)
-      return { success: true, message: 'Registration successful! Please login.' }
+      
+      if (response.success) {
+        return { success: true, message: 'Registration successful! Please login.' }
+      } else {
+        return { success: false, message: response.message }
+      }
     } catch (error) {
-      return { success: false, message: error.message }
+      // Handle axios errors properly
+      if (error.error && error.data) {
+        return { success: false, message: error.data.message }
+      }
+      return { success: false, message: error.message || 'An error occurred during registration' }
     }
   }
 

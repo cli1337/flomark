@@ -9,7 +9,6 @@ const api = axios.create({
   },
 })
 
-// Add token to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {
@@ -18,43 +17,53 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Handle token refresh on 401 errors
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    const originalRequest = error.config;
+
     if (error.response?.status === 401) {
-      const refreshToken = localStorage.getItem('refreshToken')
+      const refreshToken = localStorage.getItem('refreshToken');
       if (refreshToken) {
         try {
-          const response = await axios.post(`${API_BASE_URL}/users/refresh`, {
-            refreshToken
-          })
-          const { token, refreshToken: newRefreshToken } = response.data.data
-          localStorage.setItem('token', token)
-          localStorage.setItem('refreshToken', newRefreshToken)
-          
-          // Retry original request
-          error.config.headers.Authorization = `Bearer ${token}`
-          return api.request(error.config)
+          const response = await axios.post(`${API_BASE_URL}/user/refresh`, {
+            refreshToken,
+          });
+
+          const { token, refreshToken: newRefreshToken } = response.data.data;
+          localStorage.setItem('token', token);
+          localStorage.setItem('refreshToken', newRefreshToken);
+
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api.request(originalRequest);
         } catch (refreshError) {
-          localStorage.removeItem('token')
-          localStorage.removeItem('refreshToken')
-          window.location.href = '/login'
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
         }
       }
     }
-    return Promise.reject(error)
+
+    return Promise.resolve({
+      error: true,
+      status: error.response?.status,
+      data: error.response?.data,
+      headers: error.response?.headers,
+      config: originalRequest,
+    });
   }
-)
+);
+
 
 export const authService = {
   async login(email, password) {
-    const response = await api.post('/users/auth', { email, password })
-    return response.data.data
+    const response = await api.post('/user/auth', { email, password })
+    return response.data
   },
 
   async register(name, email, password, confirmPassword) {
-    const response = await api.post('/users/create', {
+    const response = await api.post('/user/create', {
       name,
       email,
       password,
@@ -64,12 +73,12 @@ export const authService = {
   },
 
   async getProfile() {
-    const response = await api.get('/users/profile')
+    const response = await api.get('/user/profile')
     return response.data.data
   },
 
   async refreshToken(refreshToken) {
-    const response = await api.post('/users/refresh', { refreshToken })
+    const response = await api.post('/user/refresh', { refreshToken })
     return response.data.data
   }
 }

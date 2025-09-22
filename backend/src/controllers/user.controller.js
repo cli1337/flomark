@@ -1,22 +1,13 @@
 import { prisma } from "../config/database.js";
-import { validationResult } from "express-validator";
 import bcrypt from "bcrypt";
 import { generateToken, generateRefreshToken, verifyToken } from "../utils/jwt.utils.js";
 
 export const createUser = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      return res.status(400).json({ message: "Already logged in", key: "already_logged_in", success: false });
-    }
     if (!req.body) {
       return res.status(400).json({ message: "Body is required", key: "body_required", success: false });
     }
     const { name, email, password, confirmPassword } = req.body;
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ message: "Validation failed", key: "validation_failed", errors: errors.array(), success: false });
-    }
     if (!name || !email || !password || !confirmPassword) {
       return res.status(400).json({ message: "No field can be empty", key: "fields_empty", success: false });
     }
@@ -42,11 +33,6 @@ export const createUser = async (req, res, next) => {
 
 export const authenticateUser = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      return res.status(400).json({ message: "Already logged in", key: "already_logged_in", success: false });
-    }
-
     if (!req.body) {
       return res.status(400).json({ message: "Body is required", key: "body_required", success: false });
     }

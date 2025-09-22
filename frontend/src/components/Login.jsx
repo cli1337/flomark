@@ -18,6 +18,7 @@ function Login() {
 
     const result = await login(email, password)
     
+    console.log(result)
     if (result.success) {
       navigate('/profile')
     } else {

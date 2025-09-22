@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import userRoutes from "./routes/user.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
-const mainRoutePath = "/v1";
+const mainRoutePath = "/api";
 
 const app = express();
 
