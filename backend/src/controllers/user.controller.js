@@ -1,19 +1,14 @@
 import { prisma } from "../config/database.js";
 import { validationResult } from "express-validator";
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-
-export const getUsers = async (req, res, next) => {
-  try {
-    const users = await prisma.user.findMany();
-    res.json({ data: users, total: users.length });
-  } catch (err) {
-    next(err);
-  }
-};
+import { generateToken, generateRefreshToken, verifyToken } from "../utils/jwt.utils.js";
 
 export const createUser = async (req, res, next) => {
   try {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      return res.status(400).json({ message: "Already logged in", key: "already_logged_in", success: false });
+    }
     if (!req.body) {
       return res.status(400).json({ message: "Body is required", key: "body_required", success: false });
     }
@@ -47,6 +42,11 @@ export const createUser = async (req, res, next) => {
 
 export const authenticateUser = async (req, res, next) => {
   try {
+    const authHeader = req.headers.authorization;
+    if (authHeader) {
+      return res.status(400).json({ message: "Already logged in", key: "already_logged_in", success: false });
+    }
+
     if (!req.body) {
       return res.status(400).json({ message: "Body is required", key: "body_required", success: false });
     }
@@ -61,8 +61,85 @@ export const authenticateUser = async (req, res, next) => {
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid password", key: "invalid_password", success: false });
     }
-    const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: "1h" });
-    res.json({ data: { token }, success: true });
+    const token = generateToken({ userId: user.id, email: user.email });
+    const refreshToken = generateRefreshToken({ userId: user.id });
+    
+    res.json({ 
+      data: { 
+        token, 
+        refreshToken,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email
+        }
+      }, 
+      success: true 
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const refreshToken = async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body;
+    
+    if (!refreshToken) {
+      return res.status(400).json({
+        message: "Refresh token is required",
+        key: "refresh_token_required",
+        success: false,
+      });
+    }
+
+    const decoded = verifyToken(refreshToken);
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.userId },
+      select: { id: true, email: true, name: true },
+    });
+
+    if (!user) {
+      return res.status(401).json({
+        message: "User not found",
+        key: "user_not_found",
+        success: false,
+      });
+    }
+
+    const newToken = generateToken({ userId: user.id, email: user.email });
+    const newRefreshToken = generateRefreshToken({ userId: user.id });
+
+    res.json({
+      data: {
+        token: newToken,
+        refreshToken: newRefreshToken,
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      },
+      success: true,
+    });
+  } catch (err) {
+    if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+      return res.status(401).json({
+        message: "Invalid or expired refresh token",
+        key: "invalid_refresh_token",
+        success: false,
+      });
+    }
+    next(err);
+  }
+};
+
+export const getProfile = async (req, res, next) => {
+  try {
+    res.json({
+      data: req.user,
+      success: true,
+    });
   } catch (err) {
     next(err);
   }

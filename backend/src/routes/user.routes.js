@@ -1,10 +1,20 @@
 import { Router } from "express";
-import { getUsers, createUser, authenticateUser } from "../controllers/user.controller.js";
+import { 
+  createUser, 
+  authenticateUser, 
+  refreshToken, 
+  getProfile 
+} from "../controllers/user.controller.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 
 const router = Router();
 
-router.get("/", getUsers);
-router.post("/", createUser);
+// <-- Public Routes -->
+router.post("/create", createUser);
 router.post("/auth", authenticateUser);
+router.post("/refresh", refreshToken);
+
+// <-- Protected Routes -->
+router.get("/profile", authenticateToken, getProfile);
 
 export default router;
