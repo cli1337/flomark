@@ -1,0 +1,245 @@
+{
+  "validUserTests": [
+    {
+      "name": "Valid User Creation",
+      "description": "Test with valid user data",
+      "request": {
+        "name": "John Doe",
+        "email": "john.doe@example.com",
+        "password": "Password123!",
+        "confirmPassword": "Password123!"
+      },
+      "expectedStatus": 201,
+      "expectedResponse": {
+        "success": true,
+        "data": {
+          "name": "John Doe",
+          "email": "john.doe@example.com",
+          "role": "USER"
+        }
+      }
+    },
+    {
+      "name": "Valid User with Complex Password",
+      "description": "Test with complex password requirements",
+      "request": {
+        "name": "Jane Smith",
+        "email": "jane.smith@example.com",
+        "password": "MySecure@Pass2024",
+        "confirmPassword": "MySecure@Pass2024"
+      },
+      "expectedStatus": 201,
+      "expectedResponse": {
+        "success": true,
+        "data": {
+          "name": "Jane Smith",
+          "email": "jane.smith@example.com",
+          "role": "USER"
+        }
+      }
+    }
+  ],
+  "invalidUserTests": [
+    {
+      "name": "Missing Required Fields",
+      "description": "Test with missing required fields",
+      "request": {
+        "name": "Test User",
+        "email": "test@example.com"
+      },
+      "expectedStatus": 400,
+      "expectedResponse": {
+        "success": false,
+        "key": "fields_empty",
+        "message": "No field can be empty"
+      }
+    },
+    {
+      "name": "Empty Body",
+      "description": "Test with empty request body",
+      "request": {},
+      "expectedStatus": 400,
+      "expectedResponse": {
+        "success": false,
+        "key": "body_required",
+        "message": "Body is required"
+      }
+    },
+    {
+      "name": "Password Mismatch",
+      "description": "Test with password and confirmPassword not matching",
+      "request": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "password": "Password123!",
+        "confirmPassword": "DifferentPassword123!"
+      },
+      "expectedStatus": 400,
+      "expectedResponse": {
+        "success": false,
+        "key": "password_mismatch",
+        "message": "Password and confirm password do not match"
+      }
+    },
+    {
+      "name": "Weak Password - Too Short",
+      "description": "Test with password less than 8 characters",
+      "request": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "password": "Pass1!",
+        "confirmPassword": "Pass1!"
+      },
+      "expectedStatus": 400,
+      "expectedResponse": {
+        "success": false,
+        "key": "invalid_password",
+        "message": "Password must be at least 8 characters long and contain at least 1 uppercase letter and 1 special character"
+      }
+    },
+    {
+      "name": "Weak Password - No Uppercase",
+      "description": "Test with password without uppercase letter",
+      "request": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "password": "password123!",
+        "confirmPassword": "password123!"
+      },
+      "expectedStatus": 400,
+      "expectedResponse": {
+        "success": false,
+        "key": "invalid_password",
+        "message": "Password must be at least 8 characters long and contain at least 1 uppercase letter and 1 special character"
+      }
+    },
+    {
+      "name": "Weak Password - No Special Character",
+      "description": "Test with password without special character",
+      "request": {
+        "name": "Test User",
+        "email": "test@example.com",
+        "password": "Password123",
+        "confirmPassword": "Password123"
+      },
+      "expectedStatus": 400,
+      "expectedResponse": {
+        "success": false,
+        "key": "invalid_password",
+        "message": "Password must be at least 8 characters long and contain at least 1 uppercase letter and 1 special character"
+      }
+    },
+    {
+      "name": "Duplicate Email",
+      "description": "Test with email that already exists",
+      "request": {
+        "name": "Another User",
+        "email": "john.doe@example.com",
+        "password": "Password123!",
+        "confirmPassword": "Password123!"
+      },
+      "expectedStatus": 400,
+      "expectedResponse": {
+        "success": false,
+        "key": "user_exists",
+        "message": "User already exists"
+      }
+    }
+  ],
+  "edgeCaseTests": [
+    {
+      "name": "Very Long Name",
+      "description": "Test with very long name",
+      "request": {
+        "name": "A".repeat(100),
+        "email": "longname@example.com",
+        "password": "Password123!",
+        "confirmPassword": "Password123!"
+      },
+      "expectedStatus": 201
+    },
+    {
+      "name": "Email with Special Characters",
+      "description": "Test with email containing special characters",
+      "request": {
+        "name": "Special User",
+        "email": "user+test@example-domain.co.uk",
+        "password": "Password123!",
+        "confirmPassword": "Password123!"
+      },
+      "expectedStatus": 201
+    },
+    {
+      "name": "Unicode Name",
+      "description": "Test with unicode characters in name",
+      "request": {
+        "name": "José María",
+        "email": "jose@example.com",
+        "password": "Password123!",
+        "confirmPassword": "Password123!"
+      },
+      "expectedStatus": 201
+    }
+  ],
+  "curlExamples": {
+    "validUser": "curl -X POST http://localhost:3000/api/users \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"John Doe\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"Password123!\",\n    \"confirmPassword\": \"Password123!\"\n  }'",
+    "invalidPassword": "curl -X POST http://localhost:3000/api/users \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"Test User\",\n    \"email\": \"test@example.com\",\n    \"password\": \"weak\",\n    \"confirmPassword\": \"weak\"\n  }'",
+    "duplicateEmail": "curl -X POST http://localhost:3000/api/users \\\n  -H 'Content-Type: application/json' \\\n  -d '{\n    \"name\": \"Another User\",\n    \"email\": \"john.doe@example.com\",\n    \"password\": \"Password123!\",\n    \"confirmPassword\": \"Password123!\"\n  }'"
+  },
+  "postmanCollection": {
+    "info": {
+      "name": "User API Tests",
+      "description": "Test collection for user creation endpoint"
+    },
+    "item": [
+      {
+        "name": "Create Valid User",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@example.com\",\n  \"password\": \"Password123!\",\n  \"confirmPassword\": \"Password123!\"\n}"
+          },
+          "url": {
+            "raw": "{{baseUrl}}/api/users",
+            "host": ["{{baseUrl}}"],
+            "path": ["api", "users"]
+          }
+        }
+      },
+      {
+        "name": "Create User - Password Mismatch",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"Password123!\",\n  \"confirmPassword\": \"DifferentPassword123!\"\n}"
+          },
+          "url": {
+            "raw": "{{baseUrl}}/api/users",
+            "host": ["{{baseUrl}}"],
+            "path": ["api", "users"]
+          }
+        }
+      }
+    ],
+    "variable": [
+      {
+        "key": "baseUrl",
+        "value": "http://localhost:3000"
+      }
+    ]
+  }
+}
