@@ -11,8 +11,8 @@ function App() {
       <Router>
         <div className="App">
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/" element={<Navigate to="/login" />} />
           </Routes>
@@ -30,6 +30,19 @@ function ProtectedRoute({ children }) {
   }
   
   return user ? children : <Navigate to="/login" />
+}
+
+function PublicRoute({ children }) {
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return <div className="container">Loading...</div>
+  }
+  
+  // Debug logging to help identify the issue
+  console.log('PublicRoute - user:', user, 'loading:', loading)
+  
+  return user ? <Navigate to="/profile" replace /> : children
 }
 
 export default App

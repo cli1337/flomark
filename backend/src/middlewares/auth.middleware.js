@@ -23,7 +23,7 @@ export const authenticateToken = async (req, res, next) => {
         name: true,
         email: true,
         createdAt: true,
-        updatedAt: true,
+        role: true,
       },
     });
 
@@ -81,7 +81,7 @@ export const optionalAuth = async (req, res, next) => {
         name: true,
         email: true,
         createdAt: true,
-        updatedAt: true,
+        role: true,
       },
     });
 

@@ -13,13 +13,16 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
+    console.log('AuthContext useEffect - token exists:', !!token)
     if (token) {
       // Verify token and get user profile
       authService.getProfile()
         .then(userData => {
+          console.log('Profile loaded:', userData)
           setUser(userData)
         })
-        .catch(() => {
+        .catch((error) => {
+          console.log('Profile load failed:', error)
           localStorage.removeItem('token')
           localStorage.removeItem('refreshToken')
         })
@@ -39,6 +42,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('refreshToken', response.data.refreshToken)
         setUser(response.data.user)
+        console.log('Login successful, user set:', response.data.user)
         return { success: true }
       } else {
         return { success: false, message: response.message }

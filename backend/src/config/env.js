@@ -19,6 +19,10 @@ export const ENV = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
 };
 
+// Debug JWT secret
+console.log('JWT_SECRET exists:', !!ENV.JWT_SECRET);
+console.log('JWT_SECRET value:', ENV.JWT_SECRET ? 'Set' : 'Not set');
+
 if (!ENV.DATABASE_URL) {
   throw new Error("❌ DATABASE_URL is missing in .env file.");
 }
