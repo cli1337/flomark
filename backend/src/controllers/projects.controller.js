@@ -1,4 +1,5 @@
 import { prisma } from "../config/database.js";
+import { ObjectId } from "mongodb";
 
 export const getProjects = async (req, res, next) => {
     try {
@@ -18,6 +19,34 @@ export const getProjects = async (req, res, next) => {
     }
 };
 
+export const getProjectById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: {
+                members: true
+            }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        res.json({ data: project, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
 export const createProject = async (req, res, next) => {
     try {
         if (!req.body) {
@@ -31,7 +60,11 @@ export const createProject = async (req, res, next) => {
 
         const projects = await prisma.project.findMany({
             where: {
-                userId: req.user.id
+                members: {
+                    some: {
+                        userId: req.user.id
+                    }
+                }
             }
         });
         if (projects.length >= 5) {
@@ -43,7 +76,15 @@ export const createProject = async (req, res, next) => {
         }
 
         const project = await prisma.project.create({
-            data: { name, userId: req.user.id }
+            data: { 
+                name,
+                members: {
+                    create: {
+                        userId: req.user.id,
+                        role: 'OWNER'
+                    }
+                }
+            }
         });
         res.json({ data: project, success: true });
     } catch (err) {

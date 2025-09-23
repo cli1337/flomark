@@ -1,24 +1,43 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import Login from './components/Auth/Login'
-import Register from './components/Auth/Register'
-import Projects from './components/projects/List'
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
+import Login from './pages/auth/login/Login'
+import Register from './pages/auth/register/Register'
+import Projects from './pages/home/List'
+import Main from './pages/landing/Main'
+import Project from './pages/home/Project'
+
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+
+function LogoutRoute() {
+  const { logout } = useAuth()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    logout()
+    navigate('/login', { replace: true })
+  }, [logout, navigate])
+
+  return <div className="container">Logging out...</div>
+}
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-            <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-            <Route path="/" element={<Navigate to="/login" />} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+
+      <AuthProvider>
+        <Router>
+          <div className="App">
+            <Routes>
+              <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+              <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+              <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+              <Route path="/logout" element={<LogoutRoute />} />
+              <Route path="/" element={<Main />} />
+              <Route path="/projects/:id" element={<ProtectedRoute><Project /></ProtectedRoute>} />
+            </Routes>
+          </div>
+        </Router>
+      </AuthProvider>
+
   )
 }
 
@@ -38,9 +57,7 @@ function PublicRoute({ children }) {
   if (loading) {
     return <div className="container">Loading...</div>
   }
-  
-  console.log('PublicRoute - user:', user, 'loading:', loading)
-  
+    
   return user ? <Navigate to="/projects" replace /> : children
 }
 

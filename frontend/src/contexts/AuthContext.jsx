@@ -3,7 +3,7 @@ import { authService } from '../services/authService'
 
 const AuthContext = createContext()
 
-export function useAuth() {
+const useAuth = () => {
   return useContext(AuthContext)
 }
 
@@ -13,12 +13,10 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem('token')
-    console.log('AuthContext useEffect - token exists:', !!token)
+
     if (token) {
-      // Verify token and get user profile
       authService.getProfile()
         .then(userData => {
-          console.log('Profile loaded:', userData)
           setUser(userData)
         })
         .catch((error) => {
@@ -42,13 +40,12 @@ export function AuthProvider({ children }) {
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('refreshToken', response.data.refreshToken)
         setUser(response.data.user)
-        console.log('Login successful, user set:', response.data.user)
+
         return { success: true }
       } else {
         return { success: false, message: response.message }
       }
     } catch (error) {
-      // Handle axios errors properly
       if (error.error && error.data) {
         return { success: false, message: error.data.message }
       }
@@ -66,7 +63,6 @@ export function AuthProvider({ children }) {
         return { success: false, message: response.message }
       }
     } catch (error) {
-      // Handle axios errors properly
       if (error.error && error.data) {
         return { success: false, message: error.data.message }
       }
@@ -94,3 +90,5 @@ export function AuthProvider({ children }) {
     </AuthContext.Provider>
   )
 }
+
+export { useAuth }

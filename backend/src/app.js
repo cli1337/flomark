@@ -4,11 +4,30 @@ import userRoutes from "./routes/user.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 const mainRoutePath = "/api";
+import { createRequire } from 'module';
+
+import { readFileSync } from 'fs';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.get(`${mainRoutePath}/health`, (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    message: 'API is running',
+    key: 'api_running',
+    version: packageJson.version
+  });
+});
 
 app.use(`${mainRoutePath}/user`, userRoutes);
 app.use(`${mainRoutePath}/projects`, projectsRoutes);
