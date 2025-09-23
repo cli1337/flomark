@@ -9,6 +9,8 @@ function Projects() {
   const [newProjectName, setNewProjectName] = useState('')
   const [loading, setLoading] = useState(true)
 
+  const [createProjectError, setCreateProjectError] = useState(null)
+
   const navigate = useNavigate()
 
   const fetchProjects = () => {
@@ -36,7 +38,15 @@ function Projects() {
     
     projectService.createProject(newProjectName).then(response => {
       setNewProjectName('')
-      fetchProjects()
+      if (response.success) {
+        navigate(`/projects/${response.data.id}`)
+        fetchProjects()
+      } else {
+        setCreateProjectError(response.message)
+        setTimeout(() => {
+          setCreateProjectError(null)
+        }, 3000)
+      }
     }).catch(error => {
       console.error('Error creating project:', error)
     })
@@ -75,6 +85,7 @@ function Projects() {
             <button onClick={handleCreateProject} disabled={!newProjectName.trim()}>
               Create Project
             </button>
+            {createProjectError && <p style={{color: "red"}}>{createProjectError}</p>}
           </div>
 
         </div>
