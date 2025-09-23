@@ -20,7 +20,7 @@ function Login() {
     
     console.log(result)
     if (result.success) {
-      navigate('/profile')
+      navigate('/projects')
     } else {
       setError(result.message)
     }
