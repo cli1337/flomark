@@ -6,6 +6,7 @@ function Project() {
     const { id } = useParams()
     const [project, setProject] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [image, setImage] = useState(null)
 
     const navigate = useNavigate()
 
@@ -14,11 +15,48 @@ function Project() {
         const response = await projectService.getProjectById(id)
         if (response.success) {
             setProject(response.data)
+            // Get the image URL from the project data
+            if (response.data.imageHash) {
+                // Extract filename from imageHash (handle both URL and filename cases)
+                let filename = response.data.imageHash
+                if (filename.includes('/')) {
+                    // If it's a URL, extract the filename
+                    filename = filename.split('/').pop()
+                }
+                
+                // Fetch image with authentication and convert to data URL
+                try {
+                    const imageData = await projectService.getProjectImage(id)
+                    if (imageData) {
+                        setImage(imageData)
+                    }
+                } catch (error) {
+                    console.error('Error loading image:', error)
+                    setImage(null)
+                }
+            }
         } else {
             navigate('/projects')
             setProject(null)
         }
         setLoading(false)
+    }
+
+    const handleImageUpload = async (e) => {
+        const file = e.target.files[0]
+        if (!file) return
+        
+        try {
+            const response = await projectService.uploadProjectImage(id, file)
+            if (response.success) {
+                setProject(response.data)
+                fetchProject()
+            } else {
+                console.error(response.message)
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error)
+        }
     }
     
     useEffect(() => {
@@ -56,8 +94,24 @@ function Project() {
                         </div>
                         <div>
                             <h2>Image</h2>
-                            <p>Project Image: {project.imageHash || 'No image'}</p>
+                            {project.imageHash ? (
+                                <div>
+                                    <img src={image} alt="Project" style={{maxWidth: '200px', maxHeight: '200px'}} />
+                                    <p>Current image URL: {image}</p>
+                                </div>
+                            ) : (
+                                <p>No image uploaded</p>
+                            )}
                         </div>
+                        <div>
+                            <input 
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageUpload}
+                                style={{marginBottom: '10px'}}
+                            />
+                        </div>
+
                     </>
                 )
             )}

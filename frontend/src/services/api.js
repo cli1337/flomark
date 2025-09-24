@@ -9,6 +9,16 @@ const api = axios.create({
   },
 })
 
+// Helper function to create API instance with different content type
+const createApiInstance = (contentType = 'application/json') => {
+  return axios.create({
+    baseURL: API_BASE_URL,
+    headers: {
+      'Content-Type': contentType,
+    },
+  })
+}
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) {

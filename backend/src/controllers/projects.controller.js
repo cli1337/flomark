@@ -1,5 +1,8 @@
 import { prisma } from "../config/database.js";
 import { ObjectId } from "mongodb";
+import fs from "fs";
+import crypto from "crypto";
+import { ENV } from "../config/env.js";
 
 export const getProjects = async (req, res, next) => {
     try {
@@ -40,6 +43,10 @@ export const getProjectById = async (req, res, next) => {
         
         if (!project) {
             return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+
+        if (project.members.some(member => member.userId !== req.user.id)) {
+            return res.status(403).json({ message: "You are not authorized to update this project", key: "unauthorized", success: false });
         }
         res.json({ data: project, success: true });
     } catch (err) {
@@ -86,8 +93,64 @@ export const createProject = async (req, res, next) => {
                 }
             }
         });
+        
         res.json({ data: project, success: true });
     } catch (err) {
+        next(err);
+    }
+};
+
+export const uploadProjectImage = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ message: "File is required", key: "file_required", success: false });
+        }
+        
+        if (!ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+
+        const project = await prisma.project.findUnique({
+            where: { id: req.params.id },
+            include: {
+                members: true
+            }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to update this project", key: "unauthorized", success: false });
+        }
+
+        const imageId = crypto.randomBytes(16).toString('hex');
+        const fileExtension = req.file.originalname.split('.').pop();
+        const imagePath = `${imageId}.${fileExtension}`;
+
+        const targetPath = `./storage/photos/${imagePath}`;
+        fs.renameSync(req.file.path, targetPath);
+
+        const updatedProject = await prisma.project.update({
+            where: { id: req.params.id },
+            data: { imageHash: imagePath }
+        });
+
+        if (!updatedProject) {
+            return res.status(400).json({ message: "Failed to update project image", key: "failed_to_update_project_image", success: false });
+        }
+        
+        res.json({ 
+            data: updatedProject, 
+            success: true,
+            message: "Project image updated successfully"
+        });
+    } catch (err) {
+        if (req.file && fs.existsSync(req.file.path)) {
+            fs.unlinkSync(req.file.path);
+        }
         next(err);
     }
 };
