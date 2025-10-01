@@ -74,9 +74,6 @@ export const createProject = async (req, res, next) => {
                 }
             }
         });
-        if (projects.length >= 5) {
-            return res.status(400).json({ message: "You can only have 5 projects", key: "max_projects", success: false });
-        }
 
         if (name.length < 3 || name.length > 20) {
             return res.status(400).json({ message: "Name must be between 3 and 20 characters", key: "invalid_name", success: false });
@@ -151,6 +148,38 @@ export const uploadProjectImage = async (req, res, next) => {
         if (req.file && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
+        next(err);
+    }
+};
+
+export const createList = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+        if (!name) {
+            return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
+        }
+        const list = await prisma.list.create({
+            data: { name, projectId: id }
+        });
+        res.json({ data: list, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getListsByProject = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const lists = await prisma.list.findMany({ where: { projectId: id } });
+        if (!lists) {
+            return res.status(404).json({ message: "Lists not found", key: "lists_not_found", success: false });
+        }
+        if (lists.some(list => list.projectId !== id)) {
+            return res.status(403).json({ message: "You are not authorized to get this list", key: "unauthorized", success: false });
+        }
+        res.json({ data: lists, success: true });
+    } catch (err) {
         next(err);
     }
 };
