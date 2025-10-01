@@ -61,7 +61,6 @@ const checkProjectAccess = async (req, res, next) => {
   }
 };
 
-// Public endpoint for serving images (no auth required for now)
 router.get("/photos/:projectId/:filename", (req, res) => {
   try {
     const { filename } = req.params;
@@ -87,9 +86,8 @@ router.get("/photos/:projectId/:filename", (req, res) => {
 
     const stats = fs.statSync(filePath);
     
-    // Determine content type based on file extension
     const ext = path.extname(filename).toLowerCase();
-    let contentType = 'image/jpeg'; // default
+    let contentType = 'image/jpeg';
     if (ext === '.png') contentType = 'image/png';
     else if (ext === '.gif') contentType = 'image/gif';
     else if (ext === '.webp') contentType = 'image/webp';
@@ -111,7 +109,6 @@ router.get("/photos/:projectId/:filename", (req, res) => {
   }
 });
 
-// Authenticated endpoint for serving images (with project access check)
 router.get("/photos/:projectId/:filename/auth", authenticateToken, checkProjectAccess, (req, res) => {
   try {
     const { filename } = req.params;
@@ -137,9 +134,8 @@ router.get("/photos/:projectId/:filename/auth", authenticateToken, checkProjectA
 
     const stats = fs.statSync(filePath);
     
-    // Determine content type based on file extension
     const ext = path.extname(filename).toLowerCase();
-    let contentType = 'image/jpeg'; // default
+    let contentType = 'image/jpeg';
     if (ext === '.png') contentType = 'image/png';
     else if (ext === '.gif') contentType = 'image/gif';
     else if (ext === '.webp') contentType = 'image/webp';

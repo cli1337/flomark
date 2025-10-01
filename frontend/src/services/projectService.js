@@ -23,7 +23,6 @@ export const projectService = {
     const formData = new FormData()
     formData.append('image', file)
     
-    // Create a separate axios instance for file uploads
     const token = localStorage.getItem('token')
     const response = await axios.post(`${API_BASE_URL}/projects/${id}/image`, formData, {
       headers: {
@@ -37,10 +36,8 @@ export const projectService = {
   async getProjectImage(id) {
     const project = await this.getProjectById(id)
     if (project.success && project.data.imageHash) {
-      // Extract filename from imageHash (handle both URL and filename cases)
       let filename = project.data.imageHash
       if (filename.includes('/')) {
-        // If it's a URL, extract the filename
         filename = filename.split('/').pop()
       }
       
@@ -52,7 +49,6 @@ export const projectService = {
         responseType: 'blob'
       })
       
-      // Convert blob to data URL
       return new Promise((resolve) => {
         const reader = new FileReader()
         reader.onloadend = () => resolve(reader.result)

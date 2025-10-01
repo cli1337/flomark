@@ -15,16 +15,12 @@ function Project() {
         const response = await projectService.getProjectById(id)
         if (response.success) {
             setProject(response.data)
-            // Get the image URL from the project data
             if (response.data.imageHash) {
-                // Extract filename from imageHash (handle both URL and filename cases)
                 let filename = response.data.imageHash
                 if (filename.includes('/')) {
-                    // If it's a URL, extract the filename
                     filename = filename.split('/').pop()
                 }
                 
-                // Fetch image with authentication and convert to data URL
                 try {
                     const imageData = await projectService.getProjectImage(id)
                     if (imageData) {

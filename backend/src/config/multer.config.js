@@ -2,7 +2,6 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Ensure the storage directories exist
 const photosDir = './storage/photos';
 const tasksDir = './storage/tasks';
 
@@ -14,7 +13,6 @@ if (!fs.existsSync(tasksDir)) {
   fs.mkdirSync(tasksDir, { recursive: true });
 }
 
-// Configure multer for photo uploads
 const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, photosDir);
@@ -26,7 +24,6 @@ const photoStorage = multer.diskStorage({
   }
 });
 
-// Configure multer for task uploads
 const taskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, tasksDir);
@@ -38,7 +35,6 @@ const taskStorage = multer.diskStorage({
   }
 });
 
-// File filter for photos
 const photoFilter = (req, file, cb) => {
   const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
   
@@ -49,16 +45,10 @@ const photoFilter = (req, file, cb) => {
   }
 };
 
-// File filter for general files
 const taskFileFilter = (req, file, cb) => {
-  // Allow common file types for tasks
   const allowedTypes = [
     'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
-    'application/pdf', 'text/plain', 'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'text/csv'
+    'text/plain'
   ];
   
   if (allowedTypes.includes(file.mimetype)) {
@@ -68,12 +58,11 @@ const taskFileFilter = (req, file, cb) => {
   }
 };
 
-// Create multer instances
 export const uploadPhoto = multer({
   storage: photoStorage,
   fileFilter: photoFilter,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    fileSize: 5 * 1024 * 1024, // 5MB
     files: 1
   }
 });
@@ -82,12 +71,11 @@ export const uploadTaskFile = multer({
   storage: taskStorage,
   fileFilter: taskFileFilter,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit for task files
+    fileSize: 10 * 1024 * 1024, // 10MB
     files: 1
   }
 });
 
-// Middleware to handle multer errors
 export const handleMulterError = (error, req, res, next) => {
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {

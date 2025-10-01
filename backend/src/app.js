@@ -11,6 +11,7 @@ import { createRequire } from 'module';
 import { readFileSync } from 'fs';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
@@ -36,11 +37,21 @@ app.use(`${mainRoutePath}/user`, userRoutes);
 app.use(`${mainRoutePath}/projects`, projectsRoutes);
 app.use(`${mainRoutePath}/storage`, storageRoutes);
 
-// Handle multer errors globally
+if (!fs.existsSync('./storage')) {
+  fs.mkdirSync('./storage');
+  console.log('Storage directory created');
+}
+if (!fs.existsSync('./storage/photos')) {
+  fs.mkdirSync('./storage/photos');
+  console.log('Storage/photos directory created');
+}
+if (!fs.existsSync('./storage/tasks')) {
+  fs.mkdirSync('./storage/tasks');
+  console.log('Storage/tasks directory created');
+}
+
 app.use(handleMulterError);
 
-
-// Handle payload too large errors
 app.use((error, req, res, next) => {
   if (error.type === 'entity.too.large') {
     return res.status(413).json({
