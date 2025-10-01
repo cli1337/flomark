@@ -65,6 +65,7 @@ export const createProject = async (req, res, next) => {
             return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
         }
 
+        // optional image
         const projects = await prisma.project.findMany({
             where: {
                 members: {

@@ -8,7 +8,8 @@ import {
   Check,
   ArrowRight,
   ArrowLeft,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Loader2
 } from 'lucide-react'
 import { projectService } from '../services/projectService'
 import { useToast } from '../contexts/ToastContext'
@@ -47,19 +48,19 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
 
     setLoading(true)
     try {
-      // Create project
       const response = await projectService.createProject(projectData.name)
       
       if (response.success) {
         const projectId = response.data.id
-        
-        // Upload image if provided
         if (projectData.image && !projectData.skipImage) {
           try {
-            await projectService.uploadProjectImage(projectId, projectData.image)
+            const imageResponse = await projectService.uploadProjectImage(projectId, projectData.image)
+            if (imageResponse.success) {
+              response.data.imageHash = imageResponse.data.imageHash
+            }
           } catch (error) {
             console.error('Error uploading image:', error)
-            // Don't fail the whole process for image upload errors
+            showError('Image Upload Failed', 'Project created but image upload failed')
           }
         }
 
@@ -105,7 +106,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-[#18191b] border border-white/10 rounded-lg w-full max-w-md">
-        {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-white/10">
           <h2 className="text-white text-xl font-semibold">Create New Project</h2>
           <button
@@ -116,7 +116,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
           </button>
         </div>
 
-        {/* Progress Steps */}
         <div className="px-6 py-4 border-b border-white/10">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -154,7 +153,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
           </div>
         </div>
 
-        {/* Content */}
         <div className="p-6">
           {step === 1 && (
             <div className="space-y-4">
@@ -268,7 +266,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
           )}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between p-6 border-t border-white/10">
           <Button
             onClick={step === 1 ? handleClose : prevStep}
@@ -295,7 +292,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
               >
                 {loading ? (
                   <>
-                    <div className="animate-spin h-4 w-4 border-2 border-black border-t-transparent rounded-full mr-2"></div>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     Creating...
                   </>
                 ) : (

@@ -39,7 +39,8 @@ import {
   List,
   ArrowLeft,
   Upload,
-  ChevronRight
+  ChevronRight,
+  Image as ImageIcon
 } from 'lucide-react'
 
 const Dashboard = () => {
@@ -181,7 +182,14 @@ const Dashboard = () => {
       setSidebarCollapsed(!sidebarCollapsed)
     } else {
       setSidebarOpen(true)
+      setSidebarCollapsed(false)
     }
+  }
+
+  // Close sidebar completely
+  const closeSidebar = () => {
+    setSidebarOpen(false)
+    setSidebarCollapsed(false)
   }
 
   // Load projects on mount
@@ -244,54 +252,102 @@ const Dashboard = () => {
     </div>
   )
 
-  const ProjectCard = ({ project }) => (
-    <Card 
-      className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group"
-      onClick={() => handleProjectSelect(project)}
-    >
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
-              <Building2 className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h3 className="text-white font-semibold text-lg">{project.name}</h3>
-              <p className="text-gray-400 text-sm">Created {new Date(project.createdAt).toLocaleDateString()}</p>
-            </div>
+  const ProjectCard = ({ project }) => {
+    const [projectImage, setProjectImage] = useState(null)
+    const [imageLoading, setImageLoading] = useState(false)
+
+    // Load project image if available
+    useEffect(() => {
+      if (project.imageHash && !projectImage) {
+        setImageLoading(true)
+        projectService.getProjectImage(project.id)
+          .then(imageData => {
+            if (imageData) {
+              setProjectImage(imageData)
+            }
+          })
+          .catch(error => {
+            console.error('Error loading project image:', error)
+          })
+          .finally(() => {
+            setImageLoading(false)
+          })
+      }
+    }, [project.id, project.imageHash, projectImage])
+
+    return (
+      <Card 
+        className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group overflow-hidden"
+        onClick={() => handleProjectSelect(project)}
+      >
+        {/* Project Image */}
+        {project.imageHash && (
+          <div className="h-32 bg-[#18191b] relative overflow-hidden">
+            {imageLoading ? (
+              <div className="w-full h-full bg-[#18191b] flex items-center justify-center">
+                <div className="animate-spin h-6 w-6 border-2 border-white/20 border-t-white/60 rounded-full"></div>
+              </div>
+            ) : projectImage ? (
+              <img
+                src={projectImage}
+                alt={project.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+            ) : (
+              <div className="w-full h-full bg-[#18191b] flex items-center justify-center">
+                <ImageIcon className="h-8 w-8 text-gray-400" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button 
-                className="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover:opacity-100"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <MoreVertical className="h-4 w-4 text-gray-400" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-48 bg-gray-800 border-gray-700">
-              <DropdownMenuItem className="text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Project
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer">
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer">
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <div className="flex items-center gap-4 text-sm text-gray-400">
-          <span>{project.lists?.length || 0} lists</span>
-          <span>{project.members?.length || 0} members</span>
-        </div>
-      </CardContent>
-    </Card>
-  )
+        )}
+
+        <CardContent className="p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex items-center gap-3">
+              {!project.imageHash && (
+                <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
+                  <Building2 className="h-5 w-5 text-white" />
+                </div>
+              )}
+              <div>
+                <h3 className="text-white font-semibold text-lg">{project.name}</h3>
+                <p className="text-gray-400 text-sm">Created {new Date(project.createdAt).toLocaleDateString()}</p>
+              </div>
+            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button 
+                  className="p-1 hover:bg-white/10 rounded transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <MoreVertical className="h-4 w-4 text-gray-400" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuItem className="cursor-pointer">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Project
+                </DropdownMenuItem>
+                <DropdownMenuItem className="cursor-pointer">
+                  <Copy className="h-4 w-4 mr-2" />
+                  Duplicate
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer">
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+          <div className="flex items-center gap-4 text-sm text-gray-400">
+            <span>{project.lists?.length || 0} lists</span>
+            <span>{project.members?.length || 0} members</span>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-[#18191b]">
@@ -367,8 +423,8 @@ const Dashboard = () => {
                         <MoreVertical className="h-4 w-4 text-gray-400" />
                       </button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-48 bg-gray-800 border-gray-700">
-                      <DropdownMenuItem className="text-gray-300 hover:bg-gray-700 hover:text-white cursor-pointer">
+                    <DropdownMenuContent className="w-48">
+                      <DropdownMenuItem className="cursor-pointer">
                         <Settings className="h-4 w-4 mr-2" />
                         Settings
                       </DropdownMenuItem>
@@ -384,15 +440,26 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* Hide Sidebar */}
-              <button
-                onClick={toggleSidebarCollapse}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
-                title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
-              >
-                <ChevronLeft className={`h-4 w-4 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
-                {!sidebarCollapsed && <span className="font-medium">Hide Sidebar</span>}
-              </button>
+              {/* Sidebar Controls */}
+              <div className="space-y-2">
+                <button
+                  onClick={toggleSidebarCollapse}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors ${sidebarCollapsed ? 'justify-center' : ''}`}
+                  title={sidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+                >
+                  <ChevronLeft className={`h-4 w-4 ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+                  {!sidebarCollapsed && <span className="font-medium">Collapse Sidebar</span>}
+                </button>
+                {!sidebarCollapsed && (
+                  <button
+                    onClick={closeSidebar}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="font-medium">Hide Sidebar</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         )}

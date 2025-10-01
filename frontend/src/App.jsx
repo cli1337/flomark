@@ -2,10 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Login from './pages/auth/login/Login'
 import Register from './pages/auth/register/Register'
-import Projects from './pages/home/List'
-import Main from './pages/landing/Main'
-import Project from './pages/home/Project'
-import Dashboard from './pages/dashboard/Dashboard'
+import Projects from './pages/projects/Projects'
+import ProjectDetail from './pages/projects/ProjectDetail'
+import Profile from './pages/profile/Profile'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { useServerStatus } from './hooks/useServerStatus'
@@ -23,27 +22,24 @@ function LogoutRoute() {
 }
 
 function App() {
-  // Monitor server status
   useServerStatus()
 
   return (
-    <AuthProvider>
-      <Router>
-        <div className="App">
-          <Routes>
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-            <Route path="/logout" element={<LogoutRoute />} />
-            <Route path="/" element={<Navigate to="/login" />} />
-            <Route path="/" element={<Navigate to="/dashboard" />} />
-            {/* <Route path="/" element={<Main />} /> */}
-            <Route path="/projects/:id" element={<ProtectedRoute><Project /></ProtectedRoute>} />
-          </Routes>
-        </div>
-      </Router>
-    </AuthProvider>
+        <AuthProvider>
+          <Router>
+            <div className="App">
+              <Routes>
+                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+                <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/logout" element={<LogoutRoute />} />
+                <Route path="/" element={<Navigate to="/projects" />} />
+              </Routes>
+            </div>
+          </Router>
+        </AuthProvider>
   )
 }
 
@@ -64,7 +60,7 @@ function PublicRoute({ children }) {
     return <div className="container">Loading...</div>
   }
     
-  return user ? <Navigate to="/dashboard" replace /> : children
+  return user ? <Navigate to="/projects" replace /> : children
 }
 
 export default App

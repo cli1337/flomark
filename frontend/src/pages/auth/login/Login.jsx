@@ -23,10 +23,10 @@ function Login() {
 
     const result = await login(email, password)
 
-    if (result.success) {
-      showSuccess('Login Successful', 'Welcome back!')
-      navigate('/dashboard')
-    } else {
+        if (result.success) {
+          showSuccess('Login Successful', 'Welcome back!')
+          navigate('/projects')
+        } else {
       showError('Login Failed', result.message)
     }
 

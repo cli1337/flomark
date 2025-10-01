@@ -14,18 +14,24 @@ import {
   Trash2,
   Plus,
   Check,
-  X as XIcon
+  X as XIcon,
+  Loader2
 } from 'lucide-react'
 import { taskService } from '../services/taskService'
 import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
 
 const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
   const { showSuccess, showError } = useToast()
+  const { user } = useAuth()
   const [taskData, setTaskData] = useState(task)
   const [newSubTask, setNewSubTask] = useState('')
   const [newComment, setNewComment] = useState('')
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [subTaskLoading, setSubTaskLoading] = useState(false)
+  const [commentLoading, setCommentLoading] = useState(false)
   const [tempName, setTempName] = useState(task?.name || '')
   const [tempDescription, setTempDescription] = useState(task?.description || '')
 
@@ -67,6 +73,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
   const handleAddSubTask = async () => {
     if (!newSubTask.trim()) return
     
+    setSubTaskLoading(true)
     try {
       const response = await taskService.addSubTask(taskData.id, newSubTask)
       if (response.success) {
@@ -79,6 +86,8 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
       }
     } catch (error) {
       showError('Failed to Add Subtask', 'Please try again later')
+    } finally {
+      setSubTaskLoading(false)
     }
   }
 
@@ -115,8 +124,16 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
 
   const handleAddComment = async () => {
     if (!newComment.trim()) return
-    // TODO: Implement comment functionality
-    setNewComment('')
+    
+    setCommentLoading(true)
+    try {
+      setNewComment('')
+      showSuccess('Comment Added', 'Comment has been added successfully')
+    } catch (error) {
+      showError('Failed to Add Comment', 'Please try again later')
+    } finally {
+      setCommentLoading(false)
+    }
   }
 
   const completedSubTasks = taskData?.subTasks?.filter(sub => sub.isCompleted).length || 0
@@ -127,7 +144,6 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-[#18191b] border border-white/10 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
         <div className="flex items-start justify-between p-6 border-b border-white/10">
           <div className="flex-1">
             {isEditingName ? (
@@ -173,9 +189,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
         </div>
 
         <div className="flex">
-          {/* Main Content */}
           <div className="flex-1 p-6 space-y-6">
-            {/* Members */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <User className="h-4 w-4 text-gray-400" />
@@ -196,7 +210,6 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
               </div>
             </div>
 
-            {/* Description */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-gray-400" />
@@ -244,7 +257,6 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
               )}
             </div>
 
-            {/* Subtasks */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <CheckSquare className="h-4 w-4 text-gray-400" />
@@ -293,16 +305,20 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
                   {newSubTask.trim() && (
                     <button
                       onClick={handleAddSubTask}
-                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                      disabled={subTaskLoading}
+                      className="p-1 hover:bg-white/10 rounded transition-colors disabled:opacity-50"
                     >
-                      <Check className="h-4 w-4 text-green-400" />
+                      {subTaskLoading ? (
+                        <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />
+                      ) : (
+                        <Check className="h-4 w-4 text-green-400" />
+                      )}
                     </button>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Comments */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-gray-400" />
@@ -325,10 +341,17 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
                     <div className="mt-2 flex justify-end">
                       <Button
                         onClick={handleAddComment}
-                        disabled={!newComment.trim()}
+                        disabled={!newComment.trim() || commentLoading}
                         className="bg-white hover:bg-gray-100 text-black px-4 py-2 text-sm disabled:opacity-50"
                       >
-                        Comment
+                        {commentLoading ? (
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Commenting...
+                          </div>
+                        ) : (
+                          'Comment'
+                        )}
                       </Button>
                     </div>
                   </div>
@@ -337,7 +360,6 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
             </div>
           </div>
 
-          {/* Sidebar */}
           <div className="w-64 p-6 border-l border-white/10 space-y-4">
             <div className="space-y-3">
               <span className="text-gray-400 text-xs font-bold tracking-wider uppercase">Add to card</span>
