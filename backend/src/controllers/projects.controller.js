@@ -4,6 +4,8 @@ import fs from "fs";
 import crypto from "crypto";
 import { ENV } from "../config/env.js";
 
+const cache = new Map();
+
 export const getProjects = async (req, res, next) => {
     try {
 
@@ -180,6 +182,80 @@ export const getListsByProject = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to get this list", key: "unauthorized", success: false });
         }
         res.json({ data: lists, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const createInviteLink = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+        const project = await prisma.project.findUnique({ 
+            where: { id },
+            include: { members: true }
+        });
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        if (!project.members.some(member => member.userId === req.user.id && member.role === "OWNER")) {
+            return res.status(403).json({ message: "You are not authorized to create invite for this project", key: "unauthorized", success: false });
+        }
+
+        const inviteLink = crypto.randomBytes(16).toString('hex');
+        res.json({ data: inviteLink, success: true });
+        cache.set(inviteLink, {
+            projectId: req.params.id,
+            email: req.body.email
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const joinProject = async (req, res, next) => {
+    try {
+        const { inviteLink } = req.params;
+        const invite = cache.get(inviteLink);
+        if (!invite) {
+            return res.status(404).json({ message: "Invite link not found", key: "invite_link_not_found", success: false });
+        }
+        const project = await prisma.project.findUnique({ 
+            where: { id: invite.projectId },
+            include: { members: true }
+        });
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+
+        const user = await prisma.user.findUnique({ where: { email: invite.email } });
+        if (!user) {
+            return res.status(404).json({ message: "User not found", key: "user_not_found", success: false });
+        }
+
+        const existingMember = await prisma.projectMember.findUnique({
+            where: {
+                userId_projectId: {
+                    userId: user.id,
+                    projectId: project.id
+                }
+            }
+        });
+
+        if (existingMember) {
+            return res.status(403).json({ message: "User is already a member of this project", key: "already_a_member", success: false });
+        }
+        
+        const member = await prisma.projectMember.create({
+            data: { projectId: project.id, userId: user.id, role: "MEMBER" }
+        });
+            res.json({ data: { member, project }, success: true });
+        cache.delete(inviteLink);
     } catch (err) {
         next(err);
     }

@@ -106,9 +106,6 @@ const ProjectDetail = () => {
     }
   }
 
-  const handleInviteMember = async (email) => {
-    console.log('Inviting member:', email)
-  }
   useEffect(() => {
     if (id) {
       fetchProjectData()
@@ -179,7 +176,6 @@ const ProjectDetail = () => {
           project={project} 
           members={members}
           projectOwner={user}
-          onInviteMember={handleInviteMember}
           onLabelsChange={setSelectedLabels}
           onMembersChange={setSelectedMembers}
         />

@@ -5,6 +5,7 @@ import Register from './pages/auth/register/Register'
 import Projects from './pages/projects/Projects'
 import ProjectDetail from './pages/projects/ProjectDetail'
 import Profile from './pages/profile/Profile'
+import JoinProject from './pages/join/JoinProject'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { useServerStatus } from './hooks/useServerStatus'
@@ -34,6 +35,7 @@ function App() {
                 <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                 <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                 <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/join/:inviteLink" element={<JoinProject />} />
                 <Route path="/logout" element={<LogoutRoute />} />
                 <Route path="/" element={<Navigate to="/projects" />} />
               </Routes>

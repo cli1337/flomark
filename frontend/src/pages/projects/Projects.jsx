@@ -243,79 +243,110 @@ const Projects = () => {
                   <ProjectCard key={project.id} project={project} />
                 ))}
                 
-                <Card 
-                  className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group overflow-hidden border-dashed"
-                  onClick={() => setShowCreateProject(true)}
-                >
-                  <CardContent className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors mb-3">
-                      <Plus className="h-6 w-6 text-white" />
-                    </div>
-                    <h3 className="text-white font-semibold text-base mb-1">Create Project</h3>
-                    <p className="text-gray-400 text-xs text-center">Start organizing tasks</p>
-                  </CardContent>
-                </Card>
+                {projects.length > 0 && (
+                  <Card 
+                    className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group overflow-hidden border-dashed"
+                    onClick={() => setShowCreateProject(true)}
+                  >
+                    <CardContent className="p-8 flex flex-col items-center justify-center min-h-[160px]">
+                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors mb-3">
+                        <Plus className="h-6 w-6 text-white" />
+                      </div>
+                      <h3 className="text-white font-semibold text-base mb-1">Create Project</h3>
+                      <p className="text-gray-400 text-xs text-center">Start organizing tasks</p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
 
               {totalPages > 1 && (
                 <div className="flex items-center justify-center gap-2 mt-8">
+                  {/* First Page */}
+                  <Button
+                    onClick={() => handlePageChange(1)}
+                    disabled={currentPage === 1 || loading}
+                    variant="ghost"
+                    className="text-white hover:bg-white/10 disabled:opacity-50"
+                    title="First page"
+                  >
+                    <ChevronsLeft className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Previous Page */}
                   <Button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1 || loading}
                     variant="ghost"
                     className="text-white hover:bg-white/10 disabled:opacity-50"
+                    title="Previous page"
                   >
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                    ) : (
-                      <ChevronLeft className="h-4 w-4 mr-1" />
-                    )}
-                    Previous
+                    <ChevronLeft className="h-4 w-4" />
                   </Button>
                   
+                  {/* Page Numbers */}
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const pageNum = currentPage <= 3 ? i + 1 : currentPage - 2 + i
-                      if (pageNum > totalPages) return null
+                    {(() => {
+                      const pages = []
+                      const maxVisible = 5
+                      let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+                      let endPage = Math.min(totalPages, startPage + maxVisible - 1)
                       
-                      return (
-                        <Button
-                          key={pageNum}
-                          onClick={() => handlePageChange(pageNum)}
-                          className={`w-10 h-10 ${
-                            pageNum === currentPage
-                              ? 'bg-white text-black hover:bg-gray-100'
-                              : 'text-white hover:bg-white/10'
-                          }`}
-                        >
-                          {pageNum}
-                        </Button>
-                      )
-                    })}
+                      if (endPage - startPage + 1 < maxVisible) {
+                        startPage = Math.max(1, endPage - maxVisible + 1)
+                      }
+                      
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <Button
+                            key={i}
+                            onClick={() => handlePageChange(i)}
+                            disabled={loading}
+                            className={`w-10 h-10 ${
+                              i === currentPage
+                                ? 'bg-white text-black hover:bg-gray-100'
+                                : 'text-white hover:bg-white/10'
+                            }`}
+                          >
+                            {i}
+                          </Button>
+                        )
+                      }
+                      return pages
+                    })()}
                   </div>
                   
+                  {/* Next Page */}
                   <Button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages || loading}
                     variant="ghost"
                     className="text-white hover:bg-white/10 disabled:opacity-50"
+                    title="Next page"
                   >
-                    Next
-                    {loading ? (
-                      <Loader2 className="h-4 w-4 ml-1 animate-spin" />
-                    ) : (
-                      <ChevronRight className="h-4 w-4 ml-1" />
-                    )}
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                  
+                  {/* Last Page */}
+                  <Button
+                    onClick={() => handlePageChange(totalPages)}
+                    disabled={currentPage === totalPages || loading}
+                    variant="ghost"
+                    className="text-white hover:bg-white/10 disabled:opacity-50"
+                    title="Last page"
+                  >
+                    <ChevronsRight className="h-4 w-4" />
                   </Button>
                 </div>
               )}
 
               {projects.length === 0 && (
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
-                  <CardContent className="p-12 text-center">
-                    <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-white font-semibold text-lg mb-2">No projects yet</h3>
-                    <p className="text-gray-400 mb-6">Create your first project to get started</p>
+                <Card className="bg-white/5 border-white/10 backdrop-blur-xl border-dashed">
+                  <CardContent className="p-8 flex flex-col items-center justify-center min-h-[160px]">
+                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center mb-3">
+                      <Plus className="h-6 w-6 text-white" />
+                    </div>
+                    <h3 className="text-white font-semibold text-base mb-1">No projects yet</h3>
+                    <p className="text-gray-400 text-xs text-center mb-4">Create your first project to get started</p>
                     <Button 
                       onClick={() => setShowCreateProject(true)}
                       className="bg-white hover:bg-gray-100 text-black px-6 py-2 rounded-lg font-medium"
