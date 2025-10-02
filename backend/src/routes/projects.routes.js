@@ -6,6 +6,8 @@ import {
   uploadProjectImage,
   createList,
   getListsByProject,
+  updateList,
+  reorderLists,
   createInviteLink,
   joinProject,
   getMembersByProject,
@@ -31,6 +33,8 @@ router.post("/:id/image", uploadPhoto.single('image'), handleMulterError, upload
 
 router.post("/:id/list", createList);
 router.get("/:id/lists", getListsByProject);
+router.put("/lists/:listId", updateList);
+router.put("/:id/lists/reorder", reorderLists);
 
 router.get("/:id/members", getMembersByProject);
 router.delete("/:id/members/:memberId", removeMemberFromProject);

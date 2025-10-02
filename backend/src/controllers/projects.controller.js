@@ -181,12 +181,46 @@ export const uploadProjectImage = async (req, res, next) => {
 export const createList = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { name } = req.body;
+        const { name, color } = req.body;
+        
         if (!name) {
             return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
         }
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+
+        // Check if user has access to this project
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to create lists in this project", key: "unauthorized", success: false });
+        }
+
+        // Get the highest order number for this project
+        const lastList = await prisma.list.findFirst({
+            where: { projectId: id },
+            orderBy: { order: 'desc' }
+        });
+        
+        const nextOrder = lastList ? lastList.order + 1 : 0;
+
         const list = await prisma.list.create({
-            data: { name, projectId: id }
+            data: { 
+                name, 
+                projectId: id,
+                order: nextOrder,
+                color: color || "#3b82f6"
+            }
         });
         res.json({ data: list, success: true });
     } catch (err) {
@@ -197,13 +231,31 @@ export const createList = async (req, res, next) => {
 export const getListsByProject = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const lists = await prisma.list.findMany({ where: { projectId: id } });
-        if (!lists) {
-            return res.status(404).json({ message: "Lists not found", key: "lists_not_found", success: false });
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
-        if (lists.some(list => list.projectId !== id)) {
-            return res.status(403).json({ message: "You are not authorized to get this list", key: "unauthorized", success: false });
+
+        // Check if user has access to this project
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
         }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
+        }
+
+        const lists = await prisma.list.findMany({ 
+            where: { projectId: id },
+            orderBy: { order: 'asc' }
+        });
+        
         res.json({ data: lists, success: true });
     } catch (err) {
         next(err);
@@ -600,6 +652,120 @@ export const deleteLabel = async (req, res, next) => {
         res.json({ data: { id: labelId }, success: true });
     } catch (err) {
         console.error('deleteLabel error:', err);
+        next(err);
+    }
+};
+
+export const updateList = async (req, res, next) => {
+    try {
+        const { listId } = req.params;
+        const { name, color, order } = req.body;
+        
+        if (!listId) {
+            return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
+        }
+        
+        if (!ObjectId.isValid(listId)) {
+            return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
+        }
+        
+        // Find the list and check permissions
+        const list = await prisma.list.findUnique({
+            where: { id: listId },
+            include: {
+                project: {
+                    include: { members: true }
+                }
+            }
+        });
+        
+        if (!list) {
+            return res.status(404).json({ message: "List not found", key: "list_not_found", success: false });
+        }
+        
+        const isMember = list.project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to update this list", key: "unauthorized", success: false });
+        }
+        
+        // Prepare update data
+        const updateData = {};
+        if (name !== undefined) {
+            if (!name.trim()) {
+                return res.status(400).json({ message: "List name is required", key: "name_required", success: false });
+            }
+            updateData.name = name.trim();
+        }
+        if (color !== undefined) {
+            updateData.color = color;
+        }
+        if (order !== undefined) {
+            updateData.order = order;
+        }
+        
+        const updatedList = await prisma.list.update({
+            where: { id: listId },
+            data: updateData
+        });
+        
+        res.json({ data: updatedList, success: true });
+    } catch (err) {
+        console.error('updateList error:', err);
+        next(err);
+    }
+};
+
+export const reorderLists = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { listIds } = req.body;
+        
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+        
+        if (!listIds || !Array.isArray(listIds)) {
+            return res.status(400).json({ message: "List IDs array is required", key: "list_ids_required", success: false });
+        }
+        
+        // Check if user has access to this project
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to reorder lists in this project", key: "unauthorized", success: false });
+        }
+        
+        // Update the order of each list
+        const updatePromises = listIds.map((listId, index) => {
+            return prisma.list.update({
+                where: { id: listId },
+                data: { order: index }
+            });
+        });
+        
+        await Promise.all(updatePromises);
+        
+        // Return updated lists in new order
+        const updatedLists = await prisma.list.findMany({
+            where: { projectId: id },
+            orderBy: { order: 'asc' }
+        });
+        
+        res.json({ data: updatedLists, success: true });
+    } catch (err) {
+        console.error('reorderLists error:', err);
         next(err);
     }
 };

@@ -8,11 +8,17 @@ import { taskService } from '../../services/taskService'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import TaskModal from '../../components/TaskModal'
+import CreateColumnModal from '../../components/CreateColumnModal'
 import ProjectBoardHeader from '../../components/ProjectBoardHeader'
 import Layout from '../../components/Layout'
+import useDragAndDrop from '../../hooks/useDragAndDrop'
 import { 
   Plus, 
-  List
+  List,
+  GripVertical,
+  Edit2,
+  Check,
+  X
 } from 'lucide-react'
 
 const ProjectDetail = () => {
@@ -25,10 +31,11 @@ const ProjectDetail = () => {
   
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
-  const [showCreateList, setShowCreateList] = useState(false)
-  const [newListName, setNewListName] = useState('')
+  const [showCreateColumnModal, setShowCreateColumnModal] = useState(false)
   const [selectedLabels, setSelectedLabels] = useState([])
   const [selectedMembers, setSelectedMembers] = useState([])
+  const [editingColumnId, setEditingColumnId] = useState(null)
+  const [editingColumnName, setEditingColumnName] = useState('')
   
   const [project, setProject] = useState(null)
   const [lists, setLists] = useState([])
@@ -74,23 +81,67 @@ const ProjectDetail = () => {
     }
   }
 
-  const handleCreateList = async () => {
-    if (!newListName.trim() || !project) return
-    
+  const handleColumnCreated = async (newColumn) => {
+    await fetchProjectData()
+  }
+
+  const handleColumnReorder = async (newOrder) => {
     try {
-      const response = await listService.createList(project.id, newListName)
+      // Update local state immediately for better UX
+      setLists(newOrder)
+      
+      const response = await listService.reorderLists(project.id, newOrder.map(col => col.id))
+      
       if (response.success) {
-        showSuccess('List Created', `${newListName} has been created successfully`)
-        setNewListName('')
-        setShowCreateList(false)
-        await fetchProjectData()
+        showSuccess('Columns reordered', 'Column order has been updated')
       } else {
-        showError('Failed to create list', response.message)
+        throw new Error(response.message)
       }
     } catch (error) {
-      console.error('Error creating list:', error)
-      showError('Failed to create list', 'Please try again later')
+      console.error('Error reordering columns:', error)
+      showError('Failed to reorder columns', 'Please try again later')
+      // Revert to original order on error
+      await fetchProjectData()
     }
+  }
+
+  const handleStartEditColumn = (column) => {
+    setEditingColumnId(column.id)
+    setEditingColumnName(column.name)
+  }
+
+  const handleSaveColumnName = async () => {
+    if (!editingColumnName.trim()) {
+      showError('Column name cannot be empty', 'Please enter a valid column name')
+      return
+    }
+
+    try {
+      const response = await listService.updateList(editingColumnId, { name: editingColumnName })
+      
+      if (response.success) {
+        // Update local state
+        setLists(prev => prev.map(list => 
+          list.id === editingColumnId 
+            ? { ...list, name: editingColumnName }
+            : list
+        ))
+        
+        setEditingColumnId(null)
+        setEditingColumnName('')
+        showSuccess('Column updated', 'Column name has been updated successfully')
+      } else {
+        showError('Failed to update column', response.message)
+      }
+    } catch (error) {
+      console.error('Error updating column name:', error)
+      showError('Failed to update column', 'Please try again later')
+    }
+  }
+
+  const handleCancelEditColumn = () => {
+    setEditingColumnId(null)
+    setEditingColumnName('')
   }
 
   const handleTaskClick = async (task) => {
@@ -105,6 +156,9 @@ const ProjectDetail = () => {
       showError('Failed to load task', 'Please try again later')
     }
   }
+
+  // Initialize drag and drop
+  const { getDragProps } = useDragAndDrop(lists, handleColumnReorder)
 
   useEffect(() => {
     if (id) {
@@ -146,26 +200,93 @@ const ProjectDetail = () => {
     </Card>
   )
 
-  const Column = ({ list }) => (
-    <div className="flex-1 min-w-64 sm:min-w-72">
-      <div className="flex items-center gap-2 mb-6">
-        <div className="w-3 h-3 rounded-full bg-blue-500"></div>
-        <h2 className="text-gray-400 font-bold text-xs tracking-wider uppercase">
-          {list.name} ({tasks[list.id]?.length || 0})
-        </h2>
+  const Column = ({ list }) => {
+    const isEditing = editingColumnId === list.id
+
+    return (
+      <div 
+        className="flex-1 min-w-64 sm:min-w-72 group"
+        {...getDragProps(list)}
+      >
+        {/* Column Header */}
+        <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3 flex-1">
+              <GripVertical className="h-4 w-4 text-gray-600 cursor-grab hover:text-gray-400 transition-colors" />
+              <div 
+                className="w-3 h-3 rounded-full" 
+                style={{ backgroundColor: list.color || '#3b82f6' }}
+              ></div>
+              
+              {isEditing ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    type="text"
+                    value={editingColumnName}
+                    onChange={(e) => setEditingColumnName(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSaveColumnName()
+                      }
+                    }}
+                    className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-white/40 flex-1"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSaveColumnName}
+                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                    title="Save"
+                  >
+                    <Check className="h-4 w-4 text-green-400" />
+                  </button>
+                  <button
+                    onClick={handleCancelEditColumn}
+                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                    title="Cancel"
+                  >
+                    <X className="h-4 w-4 text-red-400" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 flex-1">
+                  <h2 className="text-gray-400 font-bold text-xs tracking-wider uppercase flex-1">
+                    {list.name} ({tasks[list.id]?.length || 0})
+                  </h2>
+                  <button
+                    onClick={() => handleStartEditColumn(list)}
+                    className="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover:opacity-100"
+                    title="Edit column name"
+                  >
+                    <Edit2 className="h-4 w-4 text-gray-400 hover:text-white" />
+                  </button>
+                </div>
+              )}
+            </div>
+            
+            {/* Add Task Button */}
+            <button
+              className="ml-2 p-1.5 hover:bg-white/10 rounded transition-colors"
+              title="Add task"
+            >
+              <Plus className="h-4 w-4 text-gray-400 hover:text-white" />
+            </button>
+          </div>
+        </div>
+
+        {/* Tasks */}
+        <div className="space-y-3">
+          {tasks[list.id]?.map(task => (
+            <TaskCard key={task.id} task={task} />
+          ))}
+          <Card className="bg-white/5 border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer">
+            <CardContent className="p-4 text-center">
+              <span className="text-gray-400 text-sm">Add card</span>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-      <div className="space-y-3">
-        {tasks[list.id]?.map(task => (
-          <TaskCard key={task.id} task={task} />
-        ))}
-        <Card className="bg-white/5 border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer">
-          <CardContent className="p-4 text-center">
-            <span className="text-gray-400 text-sm">+ New Task</span>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  )
+    )
+  }
 
   if (!project) return null
 
@@ -192,53 +313,17 @@ const ProjectDetail = () => {
                   <Column key={list.id} list={list} />
                 ))}
                 
-                {showCreateList ? (
-                  <div className="flex-1 min-w-64 sm:min-w-72">
-                    <Card className="bg-white/5 border-white/10">
-                      <CardContent className="p-4">
-                        <input
-                          type="text"
-                          value={newListName}
-                          onChange={(e) => setNewListName(e.target.value)}
-                          placeholder="Enter list name..."
-                          className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20 mb-3"
-                          autoFocus
-                          onKeyPress={(e) => e.key === 'Enter' && handleCreateList()}
-                        />
-                        <div className="flex gap-2">
-                          <Button
-                            onClick={handleCreateList}
-                            disabled={!newListName.trim()}
-                            className="bg-white hover:bg-gray-100 text-black px-3 py-1 text-sm"
-                          >
-                            Add List
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              setShowCreateList(false)
-                              setNewListName('')
-                            }}
-                            className="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 text-sm"
-                          >
-                            Cancel
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </div>
-                ) : (
-                  <div className="flex-1 min-w-64 sm:min-w-72 flex items-center justify-center">
-                    <Card 
-                      className="bg-white/5 border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer w-full"
-                      onClick={() => setShowCreateList(true)}
-                    >
-                      <CardContent className="p-8 text-center">
-                        <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                        <span className="text-gray-400 text-lg font-medium">+ New Column</span>
-                      </CardContent>
-                    </Card>
-                  </div>
-                )}
+                <div className="flex-1 min-w-64 sm:min-w-72 flex items-center justify-center">
+                  <Card 
+                    className="bg-white/5 border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer w-full"
+                    onClick={() => setShowCreateColumnModal(true)}
+                  >
+                    <CardContent className="p-8 text-center">
+                      <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                      <span className="text-gray-400 text-lg font-medium">Create Column</span>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             ) : (
               <div className="flex items-center justify-center py-12">
@@ -248,7 +333,7 @@ const ProjectDetail = () => {
                     <h3 className="text-white font-semibold text-lg mb-2">No columns yet</h3>
                     <p className="text-gray-400 mb-6">Create your first column to start organizing tasks</p>
                     <Button 
-                      onClick={() => setShowCreateList(true)}
+                      onClick={() => setShowCreateColumnModal(true)}
                       className="bg-white hover:bg-gray-100 text-black px-6 py-2 rounded-lg font-medium"
                     >
                       Create Column
@@ -279,6 +364,13 @@ const ProjectDetail = () => {
             return newTasks
           })
         }}
+      />
+
+      <CreateColumnModal
+        isOpen={showCreateColumnModal}
+        onClose={() => setShowCreateColumnModal(false)}
+        projectId={project?.id}
+        onColumnCreated={handleColumnCreated}
       />
     </Layout>
   )
