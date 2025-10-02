@@ -22,6 +22,11 @@ export const getProjects = async (req, res, next) => {
                     include: {
                         user: true
                     }
+                },
+                lists: {
+                    include: {
+                        tasks: true
+                    }
                 }
             }
         });

@@ -205,12 +205,12 @@ const Profile = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="w-24 h-24 rounded-xl bg-purple-600 flex items-center justify-center text-white text-2xl font-bold border border-white/20">
+                    <div className={`w-24 h-24 rounded-xl flex items-center justify-center text-white text-2xl font-bold border border-white/20 ${profileImagePreview ? 'bg-transparent' : 'bg-gray-600'}`}>
                       {profileImagePreview ? (
                         <img
                           src={profileImagePreview}
                           alt="Profile"
-                          className="w-24 h-24 rounded-full object-cover"
+                          className="w-full h-full rounded-xl object-cover"
                         />
                       ) : user?.name ? (
                         user.name.charAt(0).toUpperCase()

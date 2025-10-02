@@ -194,7 +194,7 @@ function Register() {
                         <div 
                           className={`h-2 rounded-full transition-all duration-300 ${
                             passwordInfo.strength <= 2 ? 'bg-red-500' :
-                            passwordInfo.strength <= 3 ? 'bg-yellow-500' :
+                            passwordInfo.strength <= 3 ? 'bg-gray-500' :
                             passwordInfo.strength <= 4 ? 'bg-blue-500' : 'bg-green-500'
                           }`}
                           style={{ width: `${(passwordInfo.strength / 5) * 100}%` }}

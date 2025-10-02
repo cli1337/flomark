@@ -87,7 +87,7 @@ export const ToastProvider = ({ children }) => {
       case 'error':
         return 'border-red-500/20 bg-red-500/10'
       case 'warning':
-        return 'border-yellow-500/20 bg-yellow-500/10'
+        return 'border-yellow-500/20 bg-gray-500/10'
       case 'info':
       default:
         return 'border-blue-500/20 bg-blue-500/10'

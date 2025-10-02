@@ -59,7 +59,7 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
                   <div
                     key={member.id || index}
                     className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 hover:z-10 relative cursor-pointer transition-all duration-200 group ${
-                      isOwner ? 'bg-yellow-500' : 'bg-purple-600'
+                      isOwner ? 'bg-gray-500' : 'bg-gray-600'
                     }`}
                     title={`${userName} - ${userRole}`}
                   >

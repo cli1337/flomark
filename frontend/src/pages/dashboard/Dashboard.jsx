@@ -203,7 +203,7 @@ const Dashboard = () => {
             {task.members.slice(0, 3).map(member => (
               <div
                 key={member.id}
-                className="w-6 h-6 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium"
               >
                 {member.user?.name?.charAt(0) || 'U'}
               </div>

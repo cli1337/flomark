@@ -60,7 +60,7 @@ import { Label } from '@radix-ui/react-label';`}
         </div>
       </div>
 
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+      <div className="bg-gray-50 border border-yellow-200 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 text-yellow-800">Key Features</h2>
         <ul className="space-y-2 text-yellow-700">
           <li>🎨 <strong>Accessible:</strong> Built with accessibility in mind</li>
@@ -72,10 +72,10 @@ import { Label } from '@radix-ui/react-label';`}
         </ul>
       </div>
 
-      <div className="bg-purple-50 border border-purple-200 rounded-lg p-6">
+      <div className="bg-gray-50 border border-purple-200 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 text-purple-800">Next Steps</h2>
         <ol className="space-y-2 text-purple-700">
-          <li>1. Explore the demo components in <code className="bg-purple-100 px-2 py-1 rounded">/components/examples/</code></li>
+          <li>1. Explore the demo components in <code className="bg-gray-100 px-2 py-1 rounded">/components/examples/</code></li>
           <li>2. Start building your own components using the UI primitives</li>
           <li>3. Customize the theme colors and styling to match your design</li>
           <li>4. Check the <a href="https://www.radix-ui.com/docs" className="underline hover:no-underline" target="_blank" rel="noopener noreferrer">Radix UI documentation</a> for more components</li>

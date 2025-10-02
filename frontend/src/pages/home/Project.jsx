@@ -60,7 +60,7 @@ function Project() {
     }, [id])
 
     return (
-        <div>
+        <div >
             <h1>Project</h1>
             {loading ? <p>Loading...</p> : (
                 project && (

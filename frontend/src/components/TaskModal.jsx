@@ -199,7 +199,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
                 {taskData.members?.map(member => (
                   <div
                     key={member.id}
-                    className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                    className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium"
                   >
                     {member.user?.name?.charAt(0) || 'U'}
                   </div>
@@ -327,7 +327,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate }) => {
               
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-purple-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                  <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                     {user?.name?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1">

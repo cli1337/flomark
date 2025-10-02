@@ -201,7 +201,7 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                       className="flex items-center gap-3 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200 ${
-                        isMemberOwner ? 'bg-yellow-500' : 'bg-purple-600'
+                        isMemberOwner ? 'bg-gray-500' : 'bg-gray-600'
                       }`}>
                         {userInitial}
                       </div>
@@ -228,7 +228,7 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                           <button
                             onClick={() => handleUpdateRole(member.id, 'OWNER')}
                             disabled={updatingRole === member.id}
-                            className="p-1 hover:bg-yellow-500/20 rounded transition-colors disabled:opacity-50"
+                            className="p-1 hover:bg-gray-500/20 rounded transition-colors disabled:opacity-50"
                             title="Promote to Owner"
                           >
                             {updatingRole === member.id ? (
