@@ -130,7 +130,7 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
           Labels: {selectedLabels.length > 0 ? selectedLabels.length : 'All'}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-80 p-0">
+      <DropdownMenuContent className="w-72 p-0">
         <div className="p-4 border-b border-white/10">
           <h3 className="text-white font-medium mb-3">Filter By Labels</h3>
           <div className="relative">
@@ -145,7 +145,7 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
           </div>
         </div>
 
-        <div className="max-h-60 overflow-y-auto">
+        <div className="max-h-60 overflow-y-auto custom-scrollbar">
           {loading ? (
             <div className="flex items-center justify-center py-8">
               <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
@@ -203,13 +203,13 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
                     <>
                       <button
                         onClick={() => toggleLabelSelection(label.id)}
-                        className="flex items-center gap-2 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
+                        className="flex items-center gap-2 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors min-w-0"
                       >
                         <div
                           className="w-4 h-4 rounded-full border-2"
                           style={{ backgroundColor: label.color }}
                         />
-                        <span className="text-white text-sm">{label.name || 'Unnamed Label'}</span>
+                        <span className="text-white text-sm truncate max-w-[120px]" title={label.name || 'Unnamed Label'}>{label.name || 'Unnamed Label'}</span>
                         {selectedLabels.includes(label.id) && (
                           <Check className="h-4 w-4 text-green-400 ml-auto" />
                         )}

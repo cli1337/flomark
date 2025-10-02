@@ -114,6 +114,13 @@ const Projects = () => {
       window.location.href = `/projects/${project.id}`
     }
 
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        handleProjectClick()
+      }
+    }
+
     const getProjectMembers = () => {
       if (project.members && project.members.length > 0) {
         return project.members
@@ -126,22 +133,26 @@ const Projects = () => {
 
     return (
       <Card 
-        className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group relative"
+        className="bg-white/5 border-white/10 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/30 transition-all cursor-pointer group relative"
         onClick={handleProjectClick}
+        onKeyDown={handleKeyDown}
+        tabIndex={0}
       >
         {/* Image/Header Section */}
-        <div className="h-24 bg-[#18191b] relative overflow-hidden">
+        <div className="h-24 bg-[#18191b] relative overflow-hidden rounded-t-lg">
           {project.imageHash ? (
             imageLoading ? (
               <div className="w-full h-full bg-[#18191b] flex items-center justify-center">
                 <div className="animate-spin h-6 w-6 border-2 border-white/20 border-t-white/60 rounded-full"></div>
               </div>
             ) : projectImage ? (
-              <img
-                src={projectImage}
-                alt={project.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
+              <div className="w-full h-full overflow-hidden">
+                <img
+                  src={projectImage}
+                  alt={project.name}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+              </div>
             ) : (
               <div className="w-full h-full bg-[#18191b] flex items-center justify-center">
                 <ImageIcon className="h-8 w-8 text-gray-400" />
@@ -158,7 +169,7 @@ const Projects = () => {
           
           {/* Project name overlay on image */}
           <div className="absolute bottom-2 left-3 right-3">
-            <h3 className="text-white font-semibold text-sm truncate drop-shadow-lg">{project.name}</h3>
+            <h3 className="text-white font-semibold text-sm truncate drop-shadow-lg project-name">{project.name}</h3>
           </div>
         </div>
 
@@ -204,7 +215,7 @@ const Projects = () => {
                 return (
                   <div
                     key={member.id || index}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 hover:z-10 relative cursor-pointer transition-all duration-200 member-tooltip-trigger ${
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 hover:z-10 relative cursor-pointer transition-all duration-200 member-tooltip-trigger ${
                       isOwner ? 'bg-yellow-500' : 'bg-purple-600'
                     }`}
                     title={`${userName} - ${userRole}`}
@@ -223,7 +234,7 @@ const Projects = () => {
               })}
               {members.length > 3 && (
                 <div 
-                  className="w-7 h-7 rounded-lg bg-gray-600 flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 cursor-pointer transition-all duration-200 member-tooltip-trigger relative"
+                  className="w-7 h-7 rounded-lg bg-gray-600 flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 cursor-pointer transition-all duration-200 member-tooltip-trigger relative"
                   title={`${members.length - 3} more members`}
                 >
                   +{members.length - 3}
@@ -243,7 +254,7 @@ const Projects = () => {
 
             <div className="flex items-center gap-2">
               {assignmentCount > 0 && (
-                <div className="bg-red-500 text-white text-xs rounded-lg h-5 w-5 flex items-center justify-center font-medium">
+                <div className="bg-red-500 text-white text-xs rounded-lg h-5 w-5 flex items-center justify-center font-medium border border-red-400/30">
                   {assignmentCount}
                 </div>
               )}
@@ -256,7 +267,7 @@ const Projects = () => {
 
   return (
     <Layout>
-      <div className="px-32 py-6">
+      <div className="px-4 sm:px-8 md:px-16 lg:px-24 xl:px-32 py-4 sm:py-6 custom-scrollbar">
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold text-white">Projects</h1>
@@ -268,7 +279,7 @@ const Projects = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                 {projects.map(project => (
                   <ProjectCard key={project.id} project={project} />
                 ))}
@@ -293,7 +304,7 @@ const Projects = () => {
               </div>
 
               {/* Pagination Section */}
-              <div className="flex flex-col items-center gap-6 mt-12">
+              <div className="flex flex-col items-center gap-4 sm:gap-6 mt-8 sm:mt-12">
                 {/* Page Info */}
                 <div className="text-center">
                   <p className="text-gray-400 text-sm">
@@ -302,7 +313,7 @@ const Projects = () => {
                 </div>
 
                 {/* Modern Navigation */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
                   {/* Previous Button */}
                   <Button
                     onClick={() => handlePageChange(currentPage - 1)}
@@ -313,7 +324,7 @@ const Projects = () => {
                   </Button>
 
                   {/* Page Numbers */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap justify-center">
                     {(() => {
                       const pages = []
                       const maxVisible = 3
@@ -407,7 +418,7 @@ const Projects = () => {
 
                 {/* Quick Jump */}
                 {totalPages > 5 && (
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <div className="flex items-center gap-2 text-sm text-gray-400 flex-wrap justify-center">
                     <span>Go to:</span>
                     <input
                       type="number"

@@ -104,9 +104,9 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-[#18191b] border border-white/10 rounded-lg w-full max-w-md">
-        <div className="flex items-center justify-between p-6 border-b border-white/10">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+      <div className="bg-[#18191b] border border-white/10 rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
           <h2 className="text-white text-xl font-semibold">Create New Project</h2>
           <button
             onClick={handleClose}
@@ -153,7 +153,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {step === 1 && (
             <div className="space-y-4">
               <div className="text-center mb-6">

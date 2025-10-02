@@ -66,7 +66,7 @@ function Project() {
                 project && (
                     <>
                         <div>
-                            <h2>{project.name}</h2>
+                            <h2 className="project-name">{project.name}</h2>
                             <p>Project ID: {project.id}</p>
                             <p>Project Created At: {project.createdAt}</p>
                             <p>Project Updated At: {project.updatedAt}</p>
@@ -86,7 +86,7 @@ function Project() {
                         </div>
                         <div>
                             <h2>Labels</h2>
-                            <p>Project Labels: {project.labels?.map(label => label.name).join(', ') || 'No labels'}</p>
+                            <p className="truncate" title={project.labels?.map(label => label.name).join(', ') || 'No labels'}>Project Labels: {project.labels?.map(label => label.name).join(', ') || 'No labels'}</p>
                         </div>
                         <div>
                             <h2>Image</h2>

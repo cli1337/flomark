@@ -67,7 +67,7 @@ function Projects() {
           ) : (
             <>
               {projects.map(project => (
-                <button key={project.id} onClick={() => handleProjectClick(project.id)}>
+                <button key={project.id} onClick={() => handleProjectClick(project.id)} className="project-name">
                   {project.name}
                 </button>
               ))}

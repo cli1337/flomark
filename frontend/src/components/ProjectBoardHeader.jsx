@@ -41,12 +41,12 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
 
   return (
     <div className="p-4 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-white">{project?.name}</h1>
+          <h1 className="text-xl font-bold text-white project-name">{project?.name}</h1>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
               {members.slice(0, 3).map((member, index) => {

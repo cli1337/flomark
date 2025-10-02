@@ -147,7 +147,7 @@ const ProjectDetail = () => {
   )
 
   const Column = ({ list }) => (
-    <div className="flex-1 min-w-64">
+    <div className="flex-1 min-w-64 sm:min-w-72">
       <div className="flex items-center gap-2 mb-6">
         <div className="w-3 h-3 rounded-full bg-blue-500"></div>
         <h2 className="text-gray-400 font-bold text-xs tracking-wider uppercase">
@@ -180,20 +180,20 @@ const ProjectDetail = () => {
           onMembersChange={setSelectedMembers}
         />
 
-        <div className="flex-1 p-6 overflow-auto">
+        <div className="flex-1 p-4 sm:p-6 overflow-auto custom-scrollbar">
           <div className="space-y-6">
             {loading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="text-gray-400">Loading project data...</div>
               </div>
             ) : lists.length > 0 ? (
-              <div className="flex gap-6 min-w-max">
+              <div className="flex gap-4 sm:gap-6 min-w-max overflow-x-auto custom-scrollbar pb-4">
                 {lists.map(list => (
                   <Column key={list.id} list={list} />
                 ))}
                 
                 {showCreateList ? (
-                  <div className="flex-1 min-w-64">
+                  <div className="flex-1 min-w-64 sm:min-w-72">
                     <Card className="bg-white/5 border-white/10">
                       <CardContent className="p-4">
                         <input
@@ -227,7 +227,7 @@ const ProjectDetail = () => {
                     </Card>
                   </div>
                 ) : (
-                  <div className="flex-1 min-w-64 flex items-center justify-center">
+                  <div className="flex-1 min-w-64 sm:min-w-72 flex items-center justify-center">
                     <Card 
                       className="bg-white/5 border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer w-full"
                       onClick={() => setShowCreateList(true)}

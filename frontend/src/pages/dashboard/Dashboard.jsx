@@ -296,7 +296,7 @@ const Dashboard = () => {
                 </div>
               )}
               <div>
-                <h3 className="text-white font-semibold text-lg">{project.name}</h3>
+                <h3 className="text-white font-semibold text-lg project-name">{project.name}</h3>
                 <p className="text-gray-400 text-sm">Created {new Date(project.createdAt).toLocaleDateString()}</p>
               </div>
             </div>
@@ -339,10 +339,10 @@ const Dashboard = () => {
       {/* Animated grid background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f12_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f12_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
       
-      <div className="relative flex h-screen">
+      <div className="relative flex flex-col sm:flex-row h-screen">
         {/* Sidebar */}
         {sidebarOpen && (
-          <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col transition-all duration-300`}>
+          <div className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white/5 backdrop-blur-xl border-r border-white/10 flex flex-col transition-all duration-300 sm:relative absolute z-50 h-full`}>
             {/* Header */}
             <div className="p-6 border-b border-white/10">
               {!sidebarCollapsed ? (
@@ -450,9 +450,9 @@ const Dashboard = () => {
         )}
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col w-full">
           {/* Header */}
-          <div className="p-6 border-b border-white/10 flex items-center justify-between bg-white/5 backdrop-blur-xl">
+          <div className="p-4 sm:p-6 border-b border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white/5 backdrop-blur-xl">
             <div className="flex items-center gap-4">
               {!sidebarOpen && (
                 <button
