@@ -8,6 +8,19 @@ const cache = new Map();
 
 export const getProjects = async (req, res, next) => {
     try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 5;
+        const skip = (page - 1) * limit;
+
+        const total = await prisma.project.count({
+            where: {
+                members: {
+                    some: {
+                        userId: req.user.id
+                    }
+                }
+            }
+        });
 
         const projects = await prisma.project.findMany({
             where: {
@@ -28,9 +41,22 @@ export const getProjects = async (req, res, next) => {
                         tasks: true
                     }
                 }
+            },
+            skip: skip,
+            take: limit,
+            orderBy: {
+                updatedAt: 'desc'
             }
         });
-        res.json({ data: projects, success: true });
+        
+        res.json({ 
+            data: projects, 
+            success: true,
+            total: total,
+            page: page,
+            limit: limit,
+            totalPages: Math.ceil(total / limit)
+        });
     } catch (err) {
         next(err);
     }
@@ -191,7 +217,6 @@ export const createList = async (req, res, next) => {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
-        // Check if user has access to this project
         const project = await prisma.project.findUnique({
             where: { id },
             include: { members: true }
@@ -206,7 +231,6 @@ export const createList = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to create lists in this project", key: "unauthorized", success: false });
         }
 
-        // Get the highest order number for this project
         const lastList = await prisma.list.findFirst({
             where: { projectId: id },
             orderBy: { order: 'desc' }
@@ -218,8 +242,8 @@ export const createList = async (req, res, next) => {
             data: { 
                 name, 
                 projectId: id,
-                order: nextOrder,
-                color: color || "#3b82f6"
+                color: color || "#3b82f6",
+                order: nextOrder
             }
         });
         res.json({ data: list, success: true });
@@ -236,7 +260,6 @@ export const getListsByProject = async (req, res, next) => {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
-        // Check if user has access to this project
         const project = await prisma.project.findUnique({
             where: { id },
             include: { members: true }
@@ -286,7 +309,7 @@ export const createInviteLink = async (req, res, next) => {
         res.json({ data: inviteLink, success: true });
         cache.set(inviteLink, {
             projectId: req.params.id,
-            email: req.body.email
+            email: req.body.email || null // Store email for reference, but it's not used in join logic
         });
     } catch (err) {
         next(err);
@@ -308,30 +331,95 @@ export const joinProject = async (req, res, next) => {
             return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
         }
 
-        const user = await prisma.user.findUnique({ where: { email: invite.email } });
+        // Use the currently authenticated user instead of looking up by email
+        const user = req.user;
         if (!user) {
-            return res.status(404).json({ message: "User not found", key: "user_not_found", success: false });
+            return res.status(401).json({ message: "User not authenticated", key: "user_not_authenticated", success: false });
         }
 
+        // Check if user is already a member
         const existingMember = await prisma.projectMember.findUnique({
             where: {
                 userId_projectId: {
                     userId: user.id,
                     projectId: project.id
                 }
-            }
-        });
-
-        if (existingMember) {
-            return res.status(403).json({ message: "User is already a member of this project", key: "already_a_member", success: false });
-        }
-        
-        const member = await prisma.projectMember.create({
-            data: { projectId: project.id, userId: user.id, role: "MEMBER" },
+            },
             include: {
                 user: true
             }
         });
+
+        if (existingMember) {
+            // User is already a member, return success with existing member
+            const updatedProject = await prisma.project.findUnique({
+                where: { id: project.id },
+                include: {
+                    members: {
+                        include: {
+                            user: true
+                        }
+                    }
+                }
+            });
+            
+            res.json({ 
+                data: { member: existingMember, project: updatedProject }, 
+                success: true,
+                message: "User is already a member of this project"
+            });
+            cache.delete(inviteLink);
+            return;
+        }
+        
+        // Create new member
+        let member;
+        try {
+            member = await prisma.projectMember.create({
+                data: { projectId: project.id, userId: user.id, role: "MEMBER" },
+                include: {
+                    user: true
+                }
+            });
+        } catch (createError) {
+            // Handle unique constraint violation (race condition)
+            if (createError.code === 'P2002' && createError.meta?.target?.includes('userId_projectId')) {
+                // User was added between our check and create, fetch the existing member
+                const existingMember = await prisma.projectMember.findUnique({
+                    where: {
+                        userId_projectId: {
+                            userId: user.id,
+                            projectId: project.id
+                        }
+                    },
+                    include: {
+                        user: true
+                    }
+                });
+                
+                if (existingMember) {
+                    const updatedProject = await prisma.project.findUnique({
+                        where: { id: project.id },
+                        include: {
+                            members: {
+                                include: {
+                                    user: true
+                                }
+                            }
+                        }
+                    });
+                    
+                    res.json({ 
+                        data: { member: existingMember, project: updatedProject }, 
+                        success: true,
+                        message: "User is already a member of this project"
+                    });
+                    cache.delete(inviteLink);
+                    return;
+                }
+            }
+            throw createError;
+        }
         
         const updatedProject = await prisma.project.findUnique({
             where: { id: project.id },
@@ -354,15 +442,33 @@ export const joinProject = async (req, res, next) => {
 export const getMembersByProject = async (req, res, next) => {
     try {
         const { id } = req.params;
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+
+        // Check if the user is a member of the project
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
+        }
+
         const members = await prisma.projectMember.findMany({ 
             where: { projectId: id },
             include: {
                 user: true
             }
         });
-        if (members.some(member => member.projectId !== id)) {
-            return res.status(403).json({ message: "You are not authorized to get this members", key: "unauthorized", success: false });
-        }
+        
         res.json({ data: members, success: true });
     } catch (err) {
         next(err);
@@ -418,8 +524,8 @@ export const updateMemberRole = async (req, res, next) => {
         if (!ObjectId.isValid(memberId)) {
             return res.status(400).json({ message: "Invalid member ID", key: "invalid_member_id", success: false });
         }
-        if (!role || !['OWNER', 'MEMBER'].includes(role)) {
-            return res.status(400).json({ message: "Valid role is required", key: "invalid_role", success: false });
+        if (!role || !['ADMIN', 'MEMBER'].includes(role)) {
+            return res.status(400).json({ message: "Valid role is required. Cannot promote to OWNER.", key: "invalid_role", success: false });
         }
 
         const project = await prisma.project.findUnique({
@@ -431,11 +537,11 @@ export const updateMemberRole = async (req, res, next) => {
             return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
         }
 
-        const isOwner = project.members.some(member => 
-            member.userId === req.user.id && member.role === 'OWNER'
-        );
+        const currentUserMember = project.members.find(member => member.userId === req.user.id);
+        const isOwner = currentUserMember?.role === 'OWNER';
+        const isAdmin = currentUserMember?.role === 'ADMIN';
         
-        if (!isOwner) {
+        if (!isOwner && !isAdmin) {
             return res.status(403).json({ message: "You are not authorized to update member roles", key: "unauthorized", success: false });
         }
 
@@ -453,6 +559,11 @@ export const updateMemberRole = async (req, res, next) => {
 
         if (memberToUpdate.role === "OWNER") {
             return res.status(403).json({ message: "You are not authorized to update the owner", key: "unauthorized", success: false });
+        }
+
+        // Only OWNER can promote to ADMIN
+        if (role === 'ADMIN' && !isOwner) {
+            return res.status(403).json({ message: "Only project owners can promote members to admin", key: "unauthorized", success: false });
         }
 
         const member = await prisma.projectMember.update({
@@ -611,6 +722,30 @@ export const updateLabel = async (req, res, next) => {
             }
         });
         
+        const tasks = await prisma.task.findMany({
+            where: {
+                list: {
+                    projectId: project.id
+                }
+            }
+        });
+
+        for (const task of tasks) {
+            if (task.labels && Array.isArray(task.labels)) {
+                const taskLabels = task.labels.map(label => {
+                    if (label.id === labelId) {
+                        return { ...label, name, color };
+                    }
+                    return label;
+                });
+                
+                await prisma.task.update({
+                    where: { id: task.id },
+                    data: { labels: taskLabels }
+                });
+            }
+        }
+        
         const updatedLabel = updatedLabels.find(label => label.id === labelId);
         res.json({ data: updatedLabel, success: true });
     } catch (err) {
@@ -669,7 +804,6 @@ export const updateList = async (req, res, next) => {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
         
-        // Find the list and check permissions
         const list = await prisma.list.findUnique({
             where: { id: listId },
             include: {
@@ -688,7 +822,6 @@ export const updateList = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to update this list", key: "unauthorized", success: false });
         }
         
-        // Prepare update data
         const updateData = {};
         if (name !== undefined) {
             if (!name.trim()) {
@@ -732,7 +865,6 @@ export const reorderLists = async (req, res, next) => {
             return res.status(400).json({ message: "List IDs array is required", key: "list_ids_required", success: false });
         }
         
-        // Check if user has access to this project
         const project = await prisma.project.findUnique({
             where: { id },
             include: { members: true }
@@ -747,7 +879,6 @@ export const reorderLists = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to reorder lists in this project", key: "unauthorized", success: false });
         }
         
-        // Update the order of each list
         const updatePromises = listIds.map((listId, index) => {
             return prisma.list.update({
                 where: { id: listId },
@@ -757,7 +888,6 @@ export const reorderLists = async (req, res, next) => {
         
         await Promise.all(updatePromises);
         
-        // Return updated lists in new order
         const updatedLists = await prisma.list.findMany({
             where: { projectId: id },
             orderBy: { order: 'asc' }

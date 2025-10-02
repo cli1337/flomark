@@ -3,6 +3,7 @@ import cors from "cors";
 import userRoutes from "./routes/user.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import storageRoutes from "./routes/storage.routes.js";
+import tasksRoutes from "./routes/tasks.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { handleMulterError } from "./config/multer.config.js";
 const mainRoutePath = "/api";
@@ -36,6 +37,7 @@ app.get(`${mainRoutePath}/health`, (req, res) => {
 app.use(`${mainRoutePath}/user`, userRoutes);
 app.use(`${mainRoutePath}/projects`, projectsRoutes);
 app.use(`${mainRoutePath}/storage`, storageRoutes);
+app.use(`${mainRoutePath}/tasks`, tasksRoutes);
 
 if (!fs.existsSync('./storage')) {
   fs.mkdirSync('./storage');
