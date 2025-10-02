@@ -21,7 +21,7 @@ const JoinProject = () => {
   const { user } = useAuth()
   const { showSuccess, showError } = useToast()
   
-  const [status, setStatus] = useState('loading') // loading, success, error, expired, not-found
+  const [status, setStatus] = useState('loading')
   const [countdown, setCountdown] = useState(3)
   const [projectName, setProjectName] = useState('')
 

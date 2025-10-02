@@ -49,19 +49,48 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="flex -space-x-2">
-              {members.slice(0, 5).map((member, index) => (
-                <div
-                  key={member.id || index}
-                  className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-medium border-2 border-[#18191b] hover:z-10 relative cursor-pointer"
-                  title={member.user?.name || member.name || 'Unknown User'}
+              {members.slice(0, 3).map((member, index) => {
+                const userName = member.user?.name || member.name || 'Unknown User'
+                const userRole = member.role || 'MEMBER'
+                const userInitial = userName.charAt(0).toUpperCase()
+                const isOwner = member.role === 'OWNER' || member.isOwner
+                
+                return (
+                  <div
+                    key={member.id || index}
+                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 hover:z-10 relative cursor-pointer transition-all duration-200 group ${
+                      isOwner ? 'bg-yellow-500' : 'bg-purple-600'
+                    }`}
+                    title={`${userName} - ${userRole}`}
+                  >
+                    <span>{userInitial}</span>
+                    
+                    {/* Enhanced tooltip */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 backdrop-blur-xl">
+                      <div className="font-medium text-white">{userName}</div>
+                      <div className="text-gray-400 text-xs">{userRole}</div>
+                      {/* Tooltip arrow */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-white/5"></div>
+                    </div>
+                  </div>
+                )
+              })}
+              {members.length > 3 && (
+                <div 
+                  className="w-8 h-8 rounded-lg bg-gray-600 flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 cursor-pointer transition-all duration-200 group"
+                  title={`${members.length - 3} more members`}
                 >
-                  {member.user?.name ? member.user.name.charAt(0).toUpperCase() : 
-                   member.name ? member.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-              ))}
-              {members.length > 5 && (
-                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-medium border-2 border-[#18191b]">
-                  +{members.length - 5}
+                  +{members.length - 3}
+                  
+                  {/* Tooltip for more members */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 backdrop-blur-xl max-w-xs">
+                    <div className="font-medium text-white">{members.length - 3} more members</div>
+                    <div className="text-gray-400 text-xs">
+                      {members.slice(3).map(m => m.user?.name || m.name || 'Unknown').join(', ')}
+                    </div>
+                    {/* Tooltip arrow */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-white/5"></div>
+                  </div>
                 </div>
               )}
             </div>

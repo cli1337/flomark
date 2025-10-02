@@ -9,7 +9,6 @@ export const useServerStatus = () => {
   const checkServerStatus = useCallback(async () => {
     setIsChecking(true)
     try {
-      // Try to ping a simple endpoint
       const response = await fetch('/api/health', {
         method: 'GET',
         timeout: 5000
@@ -17,8 +16,7 @@ export const useServerStatus = () => {
       
       const wasOffline = !isOnline
       setIsOnline(response.ok)
-      
-      // Show notification if status changed
+
       if (wasOffline && response.ok) {
         showServerStatus(true, 'Server connection restored')
       } else if (isOnline && !response.ok) {
@@ -28,7 +26,6 @@ export const useServerStatus = () => {
       const wasOffline = !isOnline
       setIsOnline(false)
       
-      // Show notification if status changed
       if (isOnline) {
         showServerStatus(false, 'Unable to connect to server')
       }
@@ -45,7 +42,6 @@ export const useServerStatus = () => {
       })
       
       if (response.status === 401) {
-        // Server is online but user is not authenticated (this is normal)
         const wasOffline = !isOnline
         setIsOnline(true)
         
@@ -70,7 +66,6 @@ export const useServerStatus = () => {
     }
   }, [isOnline, showServerStatus])
 
-  // Check server status on mount and when window regains focus
   useEffect(() => {
     checkServerStatus()
     
@@ -99,11 +94,10 @@ export const useServerStatus = () => {
     }
   }, [checkServerStatus])
 
-  // Periodic status check
   useEffect(() => {
     const interval = setInterval(() => {
       checkAuthEndpoint()
-    }, 30000) // Check every 30 seconds
+    }, 30000) 
 
     return () => clearInterval(interval)
   }, [checkAuthEndpoint])

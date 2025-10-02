@@ -46,28 +46,24 @@ import {
 const Dashboard = () => {
   const { user, logout } = useAuth()
   const { showSuccess, showError, showInfo } = useToast()
-  
-  // UI State
+
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(true)
-  const [view, setView] = useState('projects') // 'projects' or 'kanban'
+  const [view, setView] = useState('projects')
   const [selectedProject, setSelectedProject] = useState(null)
-  
-  // Modal State
+
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCreateList, setShowCreateList] = useState(false)
   const [newListName, setNewListName] = useState('')
-  
-  // Data State
+
   const [projects, setProjects] = useState([])
   const [lists, setLists] = useState([])
   const [tasks, setTasks] = useState({})
   const [loading, setLoading] = useState(true)
 
-  // Fetch projects from API
   const fetchProjects = async () => {
     try {
       setLoading(true)
@@ -87,7 +83,6 @@ const Dashboard = () => {
     }
   }
 
-  // Fetch lists and tasks for selected project
   const fetchProjectData = async (projectId) => {
     try {
       setLoading(true)
@@ -97,7 +92,6 @@ const Dashboard = () => {
         const projectLists = listsResponse.data || []
         setLists(projectLists)
         
-        // Fetch tasks for each list
         const tasksData = {}
         for (const list of projectLists) {
           const tasksResponse = await taskService.getTasksByList(list.id)
@@ -121,7 +115,6 @@ const Dashboard = () => {
     }
   }
 
-  // Create new list
   const handleCreateList = async () => {
     if (!newListName.trim() || !selectedProject) return
     
@@ -141,14 +134,12 @@ const Dashboard = () => {
     }
   }
 
-  // Select project and show Kanban board
   const handleProjectSelect = async (project) => {
     setSelectedProject(project)
     setView('kanban')
     await fetchProjectData(project.id)
   }
 
-  // Go back to projects list
   const handleBackToProjects = () => {
     setView('projects')
     setSelectedProject(null)
@@ -156,7 +147,6 @@ const Dashboard = () => {
     setTasks({})
   }
 
-  // Handle task click
   const handleTaskClick = async (task) => {
     try {
       const response = await taskService.getTaskById(task.id)
@@ -170,13 +160,11 @@ const Dashboard = () => {
     }
   }
 
-  // Logout
   const handleLogout = () => {
     logout()
     showInfo('Logged Out', 'You have been logged out successfully')
   }
 
-  // Toggle sidebar collapse
   const toggleSidebarCollapse = () => {
     if (sidebarOpen) {
       setSidebarCollapsed(!sidebarCollapsed)
@@ -186,13 +174,11 @@ const Dashboard = () => {
     }
   }
 
-  // Close sidebar completely
   const closeSidebar = () => {
     setSidebarOpen(false)
     setSidebarCollapsed(false)
   }
 
-  // Load projects on mount
   useEffect(() => {
     fetchProjects()
   }, [])
@@ -256,7 +242,6 @@ const Dashboard = () => {
     const [projectImage, setProjectImage] = useState(null)
     const [imageLoading, setImageLoading] = useState(false)
 
-    // Load project image if available
     useEffect(() => {
       if (project.imageHash && !projectImage) {
         setImageLoading(true)
@@ -623,7 +608,6 @@ const Dashboard = () => {
           setSelectedTask(null)
         }}
         onUpdate={(updatedTask) => {
-          // Update task in local state
           setTasks(prev => {
             const newTasks = { ...prev }
             Object.keys(newTasks).forEach(listId => {

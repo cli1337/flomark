@@ -29,7 +29,6 @@ export const ToastProvider = ({ children }) => {
     
     setToasts(prev => [...prev, newToast])
     
-    // Auto remove after duration
     if (newToast.duration > 0) {
       setTimeout(() => {
         removeToast(id)
@@ -107,7 +106,7 @@ export const ToastProvider = ({ children }) => {
     }}>
       <Toast.Provider swipeDirection="right" duration={300}>
         {children}
-        <Toast.Viewport className="fixed top-4 right-4 z-[100] flex max-h-screen w-full max-w-sm flex-col-reverse gap-2 p-4 sm:flex-col md:max-w-[420px]" />
+        <Toast.Viewport className="fixed top-4 right-4 z-[9999] flex max-h-screen w-full max-w-sm flex-col-reverse gap-2 p-4 sm:flex-col md:max-w-[420px]" />
         {toasts.map((toast) => (
           <Toast.Root
             key={toast.id}

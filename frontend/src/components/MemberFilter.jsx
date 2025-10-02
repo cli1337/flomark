@@ -11,19 +11,26 @@ import {
   Search, 
   Plus,
   Check,
-  Loader2
+  Loader2,
+  Crown,
+  UserMinus,
+  UserPlus,
+  X
 } from 'lucide-react'
 import { memberService } from '../services/memberService'
 import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
 
 const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembersChange }) => {
   const { showSuccess, showError } = useToast()
+  const { user } = useAuth()
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAddMember, setShowAddMember] = useState(false)
   const [searchResults, setSearchResults] = useState([])
   const [searching, setSearching] = useState(false)
+  const [updatingRole, setUpdatingRole] = useState(null)
 
   useEffect(() => {
     if (projectId) {
@@ -99,20 +106,39 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
     }
   }
 
-  const handleRemoveMember = async (userId) => {
-    if (userId === projectOwner?.id) return
+  const handleRemoveMember = async (memberId) => {
+    if (memberId === projectOwner?.id) return
 
     try {
-      const response = await memberService.removeMemberFromProject(projectId, userId)
+      const response = await memberService.removeMemberFromProject(projectId, memberId)
       if (response.success) {
-        setMembers(prev => prev.filter(member => member.id !== userId))
-        onMembersChange?.(selectedMembers.filter(id => id !== userId))
+        setMembers(prev => prev.filter(member => member.id !== memberId))
+        onMembersChange?.(selectedMembers.filter(id => id !== memberId))
         showSuccess('Member Removed', 'User has been removed from the project')
       }
     } catch (error) {
       showError('Failed to Remove Member', 'Could not remove user from project')
     }
   }
+
+  const handleUpdateRole = async (memberId, newRole) => {
+    setUpdatingRole(memberId)
+    try {
+      const response = await memberService.updateMemberRole(projectId, memberId, newRole)
+      if (response.success) {
+        setMembers(prev => prev.map(member => 
+          member.id === memberId ? { ...member, role: newRole } : member
+        ))
+        showSuccess('Role Updated', `Member role has been updated to ${newRole}`)
+      }
+    } catch (error) {
+      showError('Failed to Update Role', 'Could not update member role')
+    } finally {
+      setUpdatingRole(null)
+    }
+  }
+
+  const isOwner = user?.id === projectOwner?.id
 
   const toggleMemberSelection = (memberId) => {
     const newSelection = selectedMembers.includes(memberId)
@@ -122,7 +148,7 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
   }
 
   const filteredMembers = members.filter(member =>
-    member.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (member.name || member.user?.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -161,69 +187,120 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
             </div>
           ) : (
             <div className="p-4 space-y-2">
-              {filteredMembers.map((member) => (
-                <div key={member.id} className="flex items-center gap-3 group">
-                  <button
-                    onClick={() => toggleMemberSelection(member.id)}
-                    className="flex items-center gap-3 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-semibold text-white">
-                      {member.name?.charAt(0)?.toUpperCase() || 'U'}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-white text-sm font-medium">
-                        {member.name}
-                        {member.isOwner && (
-                          <span className="ml-2 text-xs text-yellow-400">Owner</span>
-                        )}
-                      </div>
-                      <div className="text-gray-400 text-xs">{member.email}</div>
-                    </div>
-                    {selectedMembers.includes(member.id) && (
-                      <Check className="h-4 w-4 text-green-400" />
-                    )}
-                  </button>
-                  
-                  {!member.isOwner && (
+              {filteredMembers.map((member) => {
+                const userName = member.user?.name || member.name || 'Unknown User'
+                const userEmail = member.user?.email || member.email || ''
+                const userInitial = userName.charAt(0).toUpperCase()
+                const isMemberOwner = member.role === 'OWNER' || member.isOwner
+                const canManage = isOwner && !isMemberOwner
+                
+                return (
+                  <div key={member.id} className="flex items-center gap-3 group">
                     <button
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-colors"
+                      onClick={() => toggleMemberSelection(member.id)}
+                      className="flex items-center gap-3 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
                     >
-                      <Users className="h-3 w-3 text-red-400" />
+                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200 ${
+                        isMemberOwner ? 'bg-yellow-500' : 'bg-purple-600'
+                      }`}>
+                        {userInitial}
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white text-sm font-medium">
+                          {userName}
+                          {isMemberOwner && (
+                            <span className="text-xs text-yellow-400 flex items-center gap-1">
+                              <Crown className="h-3 w-3" />
+                              Owner
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-gray-400 text-xs">{userEmail}</div>
+                      </div>
+                      {selectedMembers.includes(member.id) && (
+                        <Check className="h-4 w-4 text-green-400" />
+                      )}
                     </button>
-                  )}
-                </div>
-              ))}
+                    
+                    {canManage && (
+                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {member.role === 'MEMBER' ? (
+                          <button
+                            onClick={() => handleUpdateRole(member.id, 'OWNER')}
+                            disabled={updatingRole === member.id}
+                            className="p-1 hover:bg-yellow-500/20 rounded transition-colors disabled:opacity-50"
+                            title="Promote to Owner"
+                          >
+                            {updatingRole === member.id ? (
+                              <Loader2 className="h-3 w-3 text-yellow-400 animate-spin" />
+                            ) : (
+                              <Crown className="h-3 w-3 text-yellow-400" />
+                            )}
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleUpdateRole(member.id, 'MEMBER')}
+                            disabled={updatingRole === member.id}
+                            className="p-1 hover:bg-blue-500/20 rounded transition-colors disabled:opacity-50"
+                            title="Demote to Member"
+                          >
+                            {updatingRole === member.id ? (
+                              <Loader2 className="h-3 w-3 text-blue-400 animate-spin" />
+                            ) : (
+                              <UserMinus className="h-3 w-3 text-blue-400" />
+                            )}
+                          </button>
+                        )}
+                        
+                        <button
+                          onClick={() => handleRemoveMember(member.id)}
+                          className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                          title="Remove Member"
+                        >
+                          <X className="h-3 w-3 text-red-400" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
 
               {searchResults.length > 0 && (
                 <div className="border-t border-white/10 pt-3">
                   <p className="text-gray-300 text-sm mb-2">Add Members:</p>
-                  {searchResults.map((user) => (
-                    <div key={user.id} className="flex items-center gap-3 group">
-                      <div className="flex items-center gap-3 flex-1">
-                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-sm font-semibold text-white">
-                          {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                  {searchResults.map((user) => {
+                    const userName = user.name || 'Unknown User'
+                    const userEmail = user.email || ''
+                    const userInitial = userName.charAt(0).toUpperCase()
+                    
+                    return (
+                      <div key={user.id} className="flex items-center gap-3 group">
+                        <div className="flex items-center gap-3 flex-1">
+                          <div className="w-8 h-8 rounded-lg bg-gray-600 flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200">
+                            {userInitial}
+                          </div>
+                          <div className="flex-1">
+                            <div className="text-white text-sm font-medium">{userName}</div>
+                            <div className="text-gray-400 text-xs">{userEmail}</div>
+                          </div>
                         </div>
-                        <div className="flex-1">
-                          <div className="text-white text-sm font-medium">{user.name}</div>
-                          <div className="text-gray-400 text-xs">{user.email}</div>
-                        </div>
+                        <button
+                          onClick={() => handleAddMember(user.id)}
+                          className="p-1 hover:bg-green-500/20 rounded transition-colors"
+                          title="Add Member"
+                        >
+                          <Plus className="h-4 w-4 text-green-400" />
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleAddMember(user.id)}
-                        className="p-1 hover:bg-green-500/20 rounded transition-colors"
-                      >
-                        <Plus className="h-4 w-4 text-green-400" />
-                      </button>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
 
               {searching && (
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                  <span className="ml-2 text-gray-400 text-sm">Searching...</span>
+                  <span className="text-gray-400 text-sm">Searching...</span>
                 </div>
               )}
             </div>

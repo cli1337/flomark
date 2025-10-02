@@ -16,6 +16,13 @@ export const getProjects = async (req, res, next) => {
                         userId: req.user.id
                     }
                 }
+            },
+            include: {
+                members: {
+                    include: {
+                        user: true
+                    }
+                }
             }
         });
         res.json({ data: projects, success: true });
@@ -39,7 +46,11 @@ export const getProjectById = async (req, res, next) => {
         const project = await prisma.project.findUnique({
             where: { id },
             include: {
-                members: true
+                members: {
+                    include: {
+                        user: true
+                    }
+                }
             }
         });
         
@@ -47,8 +58,9 @@ export const getProjectById = async (req, res, next) => {
             return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
         }
 
-        if (project.members.some(member => member.userId !== req.user.id)) {
-            return res.status(403).json({ message: "You are not authorized to update this project", key: "unauthorized", success: false });
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
         }
         res.json({ data: project, success: true });
     } catch (err) {
@@ -67,7 +79,6 @@ export const createProject = async (req, res, next) => {
             return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
         }
 
-        // optional image
         const projects = await prisma.project.findMany({
             where: {
                 members: {
@@ -89,6 +100,13 @@ export const createProject = async (req, res, next) => {
                     create: {
                         userId: req.user.id,
                         role: 'OWNER'
+                    }
+                }
+            },
+            include: {
+                members: {
+                    include: {
+                        user: true
                     }
                 }
             }
@@ -252,11 +270,331 @@ export const joinProject = async (req, res, next) => {
         }
         
         const member = await prisma.projectMember.create({
-            data: { projectId: project.id, userId: user.id, role: "MEMBER" }
+            data: { projectId: project.id, userId: user.id, role: "MEMBER" },
+            include: {
+                user: true
+            }
         });
-            res.json({ data: { member, project }, success: true });
+        
+        const updatedProject = await prisma.project.findUnique({
+            where: { id: project.id },
+            include: {
+                members: {
+                    include: {
+                        user: true
+                    }
+                }
+            }
+        });
+        
+        res.json({ data: { member, project: updatedProject }, success: true });
         cache.delete(inviteLink);
     } catch (err) {
+        next(err);
+    }
+};
+
+export const getMembersByProject = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const members = await prisma.projectMember.findMany({ 
+            where: { projectId: id },
+            include: {
+                user: true
+            }
+        });
+        if (members.some(member => member.projectId !== id)) {
+            return res.status(403).json({ message: "You are not authorized to get this members", key: "unauthorized", success: false });
+        }
+        res.json({ data: members, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const removeMemberFromProject = async (req, res, next) => {
+    try {
+        const { id, memberId } = req.params;
+        if (!memberId) {
+            return res.status(400).json({ message: "Member ID is required", key: "member_id_required", success: false });
+        }
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+        if (!ObjectId.isValid(memberId)) {
+            return res.status(400).json({ message: "Invalid member ID", key: "invalid_member_id", success: false });
+        }
+        const member = await prisma.projectMember.delete({
+            where: { id: memberId }
+        });
+        if (member.projectId !== id) {
+            return res.status(403).json({ message: "You are not authorized to remove this member", key: "unauthorized", success: false });
+        }
+
+        if (member.role === "OWNER") {
+            return res.status(403).json({ message: "You are not authorized to remove the owner", key: "unauthorized", success: false });
+        }
+
+        res.json({ data: member, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const updateMemberRole = async (req, res, next) => {
+    try {
+        const { id, memberId } = req.params;
+        const { role } = req.body;
+        
+        if (!memberId) {
+            return res.status(400).json({ message: "Member ID is required", key: "member_id_required", success: false });
+        }
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+        if (!ObjectId.isValid(memberId)) {
+            return res.status(400).json({ message: "Invalid member ID", key: "invalid_member_id", success: false });
+        }
+        if (!role || !['OWNER', 'MEMBER'].includes(role)) {
+            return res.status(400).json({ message: "Valid role is required", key: "invalid_role", success: false });
+        }
+
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+
+        const isOwner = project.members.some(member => 
+            member.userId === req.user.id && member.role === 'OWNER'
+        );
+        
+        if (!isOwner) {
+            return res.status(403).json({ message: "You are not authorized to update member roles", key: "unauthorized", success: false });
+        }
+
+        const memberToUpdate = await prisma.projectMember.findUnique({
+            where: { id: memberId }
+        });
+
+        if (!memberToUpdate) {
+            return res.status(404).json({ message: "Member not found", key: "member_not_found", success: false });
+        }
+
+        if (memberToUpdate.projectId !== id) {
+            return res.status(403).json({ message: "You are not authorized to update this member", key: "unauthorized", success: false });
+        }
+
+        if (memberToUpdate.role === "OWNER") {
+            return res.status(403).json({ message: "You are not authorized to update the owner", key: "unauthorized", success: false });
+        }
+
+        const member = await prisma.projectMember.update({
+            where: { id: memberId },
+            data: { role },
+            include: {
+                user: true
+            }
+        });
+        res.json({ data: member, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getMemberById = async (req, res, next) => {
+    try {
+        const { id, memberId } = req.params;
+        const member = await prisma.projectMember.findUnique({ where: { id: memberId } });
+        if (member.projectId !== id) {
+            return res.status(403).json({ message: "You are not authorized to get this member", key: "unauthorized", success: false });
+        }
+        res.json({ data: member, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const getLabelsByProject = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
+        }
+        
+        const labels = (project.labels || []).map((label, index) => ({
+            id: label.id || `label-${index}`,
+            name: label.name || 'Unnamed Label',
+            color: label.color || '#3b82f6'
+        }));
+        res.json({ data: labels, success: true });
+    } catch (err) {
+        console.error('getLabelsByProject error:', err);
+        next(err);
+    }
+};
+
+export const createLabel = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name, color } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ message: "Label name is required", key: "name_required", success: false });
+        }
+        
+        if (!color) {
+            return res.status(400).json({ message: "Label color is required", key: "color_required", success: false });
+        }
+        
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
+        }
+        
+        const existingLabels = project.labels || [];
+        const labelExists = existingLabels.some(label => 
+            (typeof label === 'string' ? label : label.name) === name
+        );
+        
+        if (labelExists) {
+            return res.status(400).json({ message: "Label already exists", key: "label_exists", success: false });
+        }
+        
+        const newLabel = {
+            id: `label-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            name,
+            color
+        };
+        
+        const updatedProject = await prisma.project.update({
+            where: { id },
+            data: {
+                labels: [...existingLabels, newLabel]
+            }
+        });
+        
+        res.json({ data: newLabel, success: true });
+    } catch (err) {
+        console.error('createLabel error:', err);
+        next(err);
+    }
+};
+
+export const updateLabel = async (req, res, next) => {
+    try {
+        const { labelId } = req.params;
+        const { name, color } = req.body;
+        
+        if (!name) {
+            return res.status(400).json({ message: "Label name is required", key: "name_required", success: false });
+        }
+        
+        if (!color) {
+            return res.status(400).json({ message: "Label color is required", key: "color_required", success: false });
+        }
+        
+        const allProjects = await prisma.project.findMany({
+            include: { members: true }
+        });
+        
+        const project = allProjects.find(p => 
+            p.labels && p.labels.some(label => label.id === labelId)
+        );
+        
+        if (!project) {
+            return res.status(404).json({ message: "Label not found", key: "label_not_found", success: false });
+        }
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to update this label", key: "unauthorized", success: false });
+        }
+        
+        const existingLabels = project.labels || [];
+        const updatedLabels = existingLabels.map(label => {
+            if (label.id === labelId) {
+                return { ...label, name, color };
+            }
+            return label;
+        });
+        
+        const updatedProject = await prisma.project.update({
+            where: { id: project.id },
+            data: {
+                labels: updatedLabels
+            }
+        });
+        
+        const updatedLabel = updatedLabels.find(label => label.id === labelId);
+        res.json({ data: updatedLabel, success: true });
+    } catch (err) {
+        console.error('updateLabel error:', err);
+        next(err);
+    }
+};
+
+export const deleteLabel = async (req, res, next) => {
+    try {
+        const { labelId } = req.params;
+        
+        const allProjects = await prisma.project.findMany({
+            include: { members: true }
+        });
+        
+        const project = allProjects.find(p => 
+            p.labels && p.labels.some(label => label.id === labelId)
+        );
+        
+        if (!project) {
+            return res.status(404).json({ message: "Label not found", key: "label_not_found", success: false });
+        }
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to delete this label", key: "unauthorized", success: false });
+        }
+        
+        const existingLabels = project.labels || [];
+        const updatedLabels = existingLabels.filter(label => label.id !== labelId);
+        
+        const updatedProject = await prisma.project.update({
+            where: { id: project.id },
+            data: {
+                labels: updatedLabels
+            }
+        });
+        
+        res.json({ data: { id: labelId }, success: true });
+    } catch (err) {
+        console.error('deleteLabel error:', err);
         next(err);
     }
 };

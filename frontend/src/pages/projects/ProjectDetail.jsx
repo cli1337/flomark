@@ -269,7 +269,6 @@ const ProjectDetail = () => {
           setSelectedTask(null)
         }}
         onUpdate={(updatedTask) => {
-          // Update task in local state
           setTasks(prev => {
             const newTasks = { ...prev }
             Object.keys(newTasks).forEach(listId => {

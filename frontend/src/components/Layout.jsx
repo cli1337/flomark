@@ -58,8 +58,8 @@ const Layout = ({ children }) => {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors">
-                <div className="h-8 w-8 rounded-full bg-purple-600 flex items-center justify-center text-sm font-semibold text-white">
+              <button className="flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors group">
+                <div className="h-8 w-8 rounded-lg bg-purple-600 flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200">
                   {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div className="text-left">

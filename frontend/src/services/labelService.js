@@ -23,7 +23,7 @@ const labelService = {
 
   async updateLabel(labelId, labelData) {
     try {
-      const response = await api.put(`/labels/${labelId}`, labelData)
+      const response = await api.put(`/projects/labels/${labelId}`, labelData)
       return response.data
     } catch (error) {
       console.error('Error updating label:', error)
@@ -33,7 +33,7 @@ const labelService = {
 
   async deleteLabel(labelId) {
     try {
-      const response = await api.delete(`/labels/${labelId}`)
+      const response = await api.delete(`/projects/labels/${labelId}`)
       return response.data
     } catch (error) {
       console.error('Error deleting label:', error)

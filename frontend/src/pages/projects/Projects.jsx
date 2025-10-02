@@ -49,12 +49,15 @@ const Projects = () => {
       const response = await projectService.getAllProjects(page, projectsPerPage)
       if (response.success) {
         setProjects(response.data || [])
-        setTotalPages(Math.ceil(response.total / projectsPerPage))
-        setTotalProjects(response.total)
+        const total = response.total || (response.data ? response.data.length : 0)
+        setTotalPages(Math.ceil(total / projectsPerPage))
+        setTotalProjects(total)
         setCurrentPage(page)
       } else {
         showError('Failed to load projects', response.message)
         setProjects([])
+        setTotalProjects(0)
+        setTotalPages(1)
       }
     } catch (error) {
       console.error('Error fetching projects:', error)
@@ -81,21 +84,18 @@ const Projects = () => {
       if (project.imageHash) {
         const cacheKey = `${project.id}-${project.imageHash}`
         
-        // Check if image is already in cache
         if (imageCache.current.has(cacheKey)) {
           setProjectImage(imageCache.current.get(cacheKey))
           setImageLoading(false)
           return
         }
 
-        // If not in cache, load the image
         setImageLoading(true)
         setImageLoadError(false)
         
         projectService.getProjectImage(project.id)
           .then(imageData => {
             if (imageData) {
-              // Store in cache
               imageCache.current.set(cacheKey, imageData)
               setProjectImage(imageData)
             }
@@ -126,14 +126,15 @@ const Projects = () => {
 
     return (
       <Card 
-        className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group overflow-hidden relative"
+        className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group relative"
         onClick={handleProjectClick}
       >
+        {/* Image/Header Section */}
         <div className="h-24 bg-[#18191b] relative overflow-hidden">
           {project.imageHash ? (
             imageLoading ? (
               <div className="w-full h-full bg-[#18191b] flex items-center justify-center">
-                <div className="animate-spin h-5 w-5 border-2 border-white/20 border-t-white/60 rounded-full"></div>
+                <div className="animate-spin h-6 w-6 border-2 border-white/20 border-t-white/60 rounded-full"></div>
               </div>
             ) : projectImage ? (
               <img
@@ -143,31 +144,33 @@ const Projects = () => {
               />
             ) : (
               <div className="w-full h-full bg-[#18191b] flex items-center justify-center">
-                <ImageIcon className="h-6 w-6 text-gray-400" />
+                <ImageIcon className="h-8 w-8 text-gray-400" />
               </div>
             )
           ) : (
-            <div className="w-full h-full bg-gradient-to-br from-gray-700/30 to-gray-800/30 flex items-center justify-center">
-              <div className="w-12 h-12 rounded-full bg-gray-600/20 flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-gray-400" />
+            <div className="w-full h-full bg-[#18191b] flex items-center justify-center">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-gray-600/30 to-gray-700/30 flex items-center justify-center">
+                <Building2 className="h-8 w-8 text-gray-400" />
               </div>
             </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+          
+          {/* Project name overlay on image */}
+          <div className="absolute bottom-2 left-3 right-3">
+            <h3 className="text-white font-semibold text-sm truncate drop-shadow-lg">{project.name}</h3>
+          </div>
         </div>
 
         <CardContent className="p-4">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <div className="min-w-0 flex-1">
-                <h3 className="text-white font-semibold text-base truncate">{project.name}</h3>
-                <p className="text-gray-400 text-xs">Created {new Date(project.createdAt).toLocaleDateString()}</p>
-              </div>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-gray-400 text-xs">Created {new Date(project.createdAt).toLocaleDateString()}</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button 
-                  className="p-1 hover:bg-white/10 rounded transition-colors flex-shrink-0"
+                  className="p-1.5 hover:bg-white/10 rounded-lg transition-colors flex-shrink-0"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <MoreVertical className="h-4 w-4 text-gray-400" />
@@ -191,33 +194,60 @@ const Projects = () => {
           </div>
           
           <div className="flex items-center justify-between">
-            <div className="flex -space-x-2">
-              {members.slice(0, 4).map((member, index) => (
-                <div
-                  key={member.id || index}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium border-2 border-[#18191b] hover:z-10 relative cursor-pointer ${
-                    member.isOwner || (member.user && member.user.id === user?.id) 
-                      ? 'bg-yellow-500' 
-                      : 'bg-purple-600'
-                  }`}
-                  title={`${member.user?.name || member.name || 'Unknown User'}${member.isOwner || (member.user && member.user.id === user?.id) ? ' (Owner)' : ''}`}
+            <div className="flex -space-x-1">
+              {members.slice(0, 3).map((member, index) => {
+                const userName = member.user?.name || member.name || 'Unknown User'
+                const userRole = member.role || (member.isOwner || (member.user && member.user.id === user?.id) ? 'OWNER' : 'MEMBER')
+                const userInitial = userName.charAt(0).toUpperCase()
+                const isOwner = member.isOwner || (member.user && member.user.id === user?.id)
+                
+                return (
+                  <div
+                    key={member.id || index}
+                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 hover:z-10 relative cursor-pointer transition-all duration-200 member-tooltip-trigger ${
+                      isOwner ? 'bg-yellow-500' : 'bg-purple-600'
+                    }`}
+                    title={`${userName} - ${userRole}`}
+                  >
+                    <span>{userInitial}</span>
+                    
+                    {/* Enhanced tooltip */}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs whitespace-nowrap opacity-0 member-tooltip transition-opacity duration-200 pointer-events-none z-[9999] backdrop-blur-xl">
+                      <div className="font-medium text-white">{userName}</div>
+                      <div className="text-gray-400 text-xs">{userRole}</div>
+                      {/* Tooltip arrow */}
+                      <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-white/5"></div>
+                    </div>
+                  </div>
+                )
+              })}
+              {members.length > 3 && (
+                <div 
+                  className="w-7 h-7 rounded-lg bg-gray-600 flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 cursor-pointer transition-all duration-200 member-tooltip-trigger relative"
+                  title={`${members.length - 3} more members`}
                 >
-                  {member.user?.name ? member.user.name.charAt(0).toUpperCase() : 
-                   member.name ? member.name.charAt(0).toUpperCase() : 'U'}
-                </div>
-              ))}
-              {members.length > 4 && (
-                <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-white text-sm font-medium border-2 border-[#18191b]">
-                  +{members.length - 4}
+                  +{members.length - 3}
+                  
+                  {/* Enhanced tooltip for more members */}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs whitespace-nowrap opacity-0 member-tooltip transition-opacity duration-200 pointer-events-none z-[9999] backdrop-blur-xl max-w-xs">
+                    <div className="font-medium text-white">{members.length - 3} more members</div>
+                    <div className="text-gray-400 text-xs">
+                      {members.slice(3).map(m => m.user?.name || m.name || 'Unknown').join(', ')}
+                    </div>
+                    {/* Tooltip arrow */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-b-white/5"></div>
+                  </div>
                 </div>
               )}
             </div>
 
-            {assignmentCount > 0 && (
-              <div className="bg-red-500 text-white text-xs rounded-full h-6 w-6 flex items-center justify-center font-medium">
-                {assignmentCount}
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {assignmentCount > 0 && (
+                <div className="bg-red-500 text-white text-xs rounded-lg h-5 w-5 flex items-center justify-center font-medium">
+                  {assignmentCount}
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -238,56 +268,55 @@ const Projects = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {projects.map(project => (
                   <ProjectCard key={project.id} project={project} />
                 ))}
                 
                 {projects.length > 0 && (
-                  <Card 
+                  <Card
                     className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group overflow-hidden border-dashed"
                     onClick={() => setShowCreateProject(true)}
                   >
-                    <CardContent className="p-8 flex flex-col items-center justify-center min-h-[160px]">
-                      <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors mb-3">
-                        <Plus className="h-6 w-6 text-white" />
+                    <div className="h-24 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
+                        <Plus className="h-8 w-8 text-white" />
                       </div>
-                      <h3 className="text-white font-semibold text-base mb-1">Create Project</h3>
+                    </div>
+                    <CardContent className="p-4 flex flex-col items-center justify-center">
+                      <h3 className="text-white font-semibold text-sm mb-1">Create Project</h3>
                       <p className="text-gray-400 text-xs text-center">Start organizing tasks</p>
                     </CardContent>
                   </Card>
+
                 )}
               </div>
 
-              {totalPages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
-                  {/* First Page */}
-                  <Button
-                    onClick={() => handlePageChange(1)}
-                    disabled={currentPage === 1 || loading}
-                    variant="ghost"
-                    className="text-white hover:bg-white/10 disabled:opacity-50"
-                    title="First page"
-                  >
-                    <ChevronsLeft className="h-4 w-4" />
-                  </Button>
-                  
-                  {/* Previous Page */}
+              {/* Pagination Section */}
+              <div className="flex flex-col items-center gap-6 mt-12">
+                {/* Page Info */}
+                <div className="text-center">
+                  <p className="text-gray-400 text-sm">
+                    Page {currentPage} of {totalPages} • {projects.length} projects
+                  </p>
+                </div>
+
+                {/* Modern Navigation */}
+                <div className="flex items-center gap-2">
+                  {/* Previous Button */}
                   <Button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1 || loading}
-                    variant="ghost"
-                    className="text-white hover:bg-white/10 disabled:opacity-50"
-                    title="Previous page"
+                    className="flex items-center gap-2 p-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg border border-white/10 transition-all"
                   >
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
-                  
+
                   {/* Page Numbers */}
                   <div className="flex items-center gap-1">
                     {(() => {
                       const pages = []
-                      const maxVisible = 5
+                      const maxVisible = 3
                       let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2))
                       let endPage = Math.min(totalPages, startPage + maxVisible - 1)
                       
@@ -295,49 +324,107 @@ const Projects = () => {
                         startPage = Math.max(1, endPage - maxVisible + 1)
                       }
                       
+                      // First page + ellipsis
+                      if (startPage > 1) {
+                        pages.push(
+                          <Button
+                            key={1}
+                            onClick={() => handlePageChange(1)}
+                            disabled={loading}
+                            className={`w-8 h-8 text-sm rounded-lg transition-all ${
+                              1 === currentPage
+                                ? 'bg-white text-black font-medium'
+                                : 'text-gray-400 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            1
+                          </Button>
+                        )
+                        if (startPage > 2) {
+                          pages.push(
+                            <span key="ellipsis1" className="text-gray-400 px-2">
+                              ...
+                            </span>
+                          )
+                        }
+                      }
+                      
+                      // Page numbers
                       for (let i = startPage; i <= endPage; i++) {
                         pages.push(
                           <Button
                             key={i}
                             onClick={() => handlePageChange(i)}
                             disabled={loading}
-                            className={`w-10 h-10 ${
+                            className={`w-8 h-8 text-sm rounded-lg transition-all ${
                               i === currentPage
-                                ? 'bg-white text-black hover:bg-gray-100'
-                                : 'text-white hover:bg-white/10'
+                                ? 'bg-white text-black font-medium'
+                                : 'text-gray-400 hover:text-white hover:bg-white/10'
                             }`}
                           >
                             {i}
                           </Button>
                         )
                       }
+                      
+                      // Ellipsis + last page
+                      if (endPage < totalPages) {
+                        if (endPage < totalPages - 1) {
+                          pages.push(
+                            <span key="ellipsis2" className="text-gray-400 px-2">
+                              ...
+                            </span>
+                          )
+                        }
+                        pages.push(
+                          <Button
+                            key={totalPages}
+                            onClick={() => handlePageChange(totalPages)}
+                            disabled={loading}
+                            className={`w-8 h-8 text-sm rounded-lg transition-all ${
+                              totalPages === currentPage
+                                ? 'bg-white text-black font-medium'
+                                : 'text-gray-400 hover:text-white hover:bg-white/10'
+                            }`}
+                          >
+                            {totalPages}
+                          </Button>
+                        )
+                      }
+                      
                       return pages
                     })()}
                   </div>
-                  
-                  {/* Next Page */}
+
                   <Button
                     onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages || loading}
-                    variant="ghost"
-                    className="text-white hover:bg-white/10 disabled:opacity-50"
-                    title="Next page"
+                    disabled={currentPage >= totalPages || loading}
+                    className="flex items-center gap-2 p-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg border border-white/10 transition-all"
                   >
                     <ChevronRight className="h-4 w-4" />
                   </Button>
-                  
-                  {/* Last Page */}
-                  <Button
-                    onClick={() => handlePageChange(totalPages)}
-                    disabled={currentPage === totalPages || loading}
-                    variant="ghost"
-                    className="text-white hover:bg-white/10 disabled:opacity-50"
-                    title="Last page"
-                  >
-                    <ChevronsRight className="h-4 w-4" />
-                  </Button>
                 </div>
-              )}
+
+                {/* Quick Jump */}
+                {totalPages > 5 && (
+                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                    <span>Go to:</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max={totalPages}
+                      value={currentPage}
+                      onChange={(e) => {
+                        const page = parseInt(e.target.value)
+                        if (page >= 1 && page <= totalPages) {
+                          handlePageChange(page)
+                        }
+                      }}
+                      className="w-12 px-2 py-1 bg-white/5 border border-white/10 rounded text-white text-center text-sm focus:outline-none focus:border-white/30"
+                    />
+                  </div>
+                )}
+              </div>
 
               {projects.length === 0 && (
                 <Card className="bg-white/5 border-white/10 backdrop-blur-xl border-dashed">

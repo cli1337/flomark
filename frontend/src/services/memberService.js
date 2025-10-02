@@ -39,6 +39,16 @@ const memberService = {
       console.error('Error searching users:', error)
       throw error
     }
+  },
+
+  async updateMemberRole(projectId, memberId, role) {
+    try {
+      const response = await api.put(`/projects/${projectId}/members/${memberId}/role`, { role })
+      return response.data
+    } catch (error) {
+      console.error('Error updating member role:', error)
+      throw error
+    }
   }
 }
 

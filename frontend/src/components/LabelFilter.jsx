@@ -116,7 +116,7 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
   }
 
   const filteredLabels = labels.filter(label =>
-    label.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (label.name || '').toLowerCase().includes(searchQuery.toLowerCase())
   )
 
   return (
@@ -152,36 +152,85 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
             </div>
           ) : (
             <div className="p-4 space-y-2">
-              {filteredLabels.map((label) => (
-                <div key={label.id} className="flex items-center gap-3 group">
-                  <button
-                    onClick={() => toggleLabelSelection(label.id)}
-                    className="flex items-center gap-2 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
-                  >
-                    <div
-                      className="w-4 h-4 rounded-full border-2"
-                      style={{ backgroundColor: label.color }}
-                    />
-                    <span className="text-white text-sm">{label.name}</span>
-                    {selectedLabels.includes(label.id) && (
-                      <Check className="h-4 w-4 text-green-400 ml-auto" />
-                    )}
-                  </button>
-                  
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                    <button
-                      onClick={() => setEditingLabel(label)}
-                      className="p-1 hover:bg-white/10 rounded transition-colors"
-                    >
-                      <Edit className="h-3 w-3 text-gray-400" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteLabel(label.id)}
-                      className="p-1 hover:bg-red-500/20 rounded transition-colors"
-                    >
-                      <Trash2 className="h-3 w-3 text-red-400" />
-                    </button>
-                  </div>
+              {filteredLabels.map((label, index) => (
+                <div key={label.id || `label-${index}`} className="flex items-center gap-3 group">
+                  {editingLabel && editingLabel.id === label.id ? (
+                    <Card className="bg-white/5 border-white/10 flex-1">
+                      <CardContent className="p-3 space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Label name..."
+                          value={editingLabel.name}
+                          onChange={(e) => setEditingLabel({...editingLabel, name: e.target.value})}
+                          className="w-full px-2 py-1 bg-white/5 border border-white/10 rounded text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-1 focus:ring-white/20 text-sm"
+                        />
+                        
+                        <div>
+                          <p className="text-gray-300 text-xs mb-1">Color:</p>
+                          <div className="grid grid-cols-6 gap-1">
+                            {labelColors.map((color) => (
+                              <button
+                                key={color}
+                                onClick={() => setEditingLabel({...editingLabel, color})}
+                                className={`w-4 h-4 rounded-full border ${
+                                  editingLabel.color === color ? 'border-white' : 'border-transparent'
+                                }`}
+                                style={{ backgroundColor: color }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-1">
+                          <Button
+                            onClick={() => handleUpdateLabel(editingLabel.id, editingLabel.name, editingLabel.color)}
+                            disabled={!editingLabel.name.trim()}
+                            className="flex-1 bg-white hover:bg-gray-100 text-black text-xs py-1"
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            onClick={() => setEditingLabel(null)}
+                            variant="ghost"
+                            className="text-gray-300 hover:text-white text-xs py-1 px-2"
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => toggleLabelSelection(label.id)}
+                        className="flex items-center gap-2 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
+                      >
+                        <div
+                          className="w-4 h-4 rounded-full border-2"
+                          style={{ backgroundColor: label.color }}
+                        />
+                        <span className="text-white text-sm">{label.name || 'Unnamed Label'}</span>
+                        {selectedLabels.includes(label.id) && (
+                          <Check className="h-4 w-4 text-green-400 ml-auto" />
+                        )}
+                      </button>
+                      
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                        <button
+                          onClick={() => setEditingLabel(label)}
+                          className="p-1 hover:bg-white/10 rounded transition-colors"
+                        >
+                          <Edit className="h-3 w-3 text-gray-400" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteLabel(label.id)}
+                          className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                        >
+                          <Trash2 className="h-3 w-3 text-red-400" />
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               ))}
 

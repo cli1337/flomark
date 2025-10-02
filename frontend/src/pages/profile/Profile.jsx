@@ -205,7 +205,7 @@ const Profile = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className="w-24 h-24 rounded-full bg-purple-600 flex items-center justify-center text-white text-2xl font-bold">
+                    <div className="w-24 h-24 rounded-xl bg-purple-600 flex items-center justify-center text-white text-2xl font-bold border border-white/20">
                       {profileImagePreview ? (
                         <img
                           src={profileImagePreview}

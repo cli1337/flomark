@@ -32,7 +32,6 @@ function Register() {
     e.preventDefault()
     setLoading(true)
 
-    // Client-side validation
     if (!validatePassword(password)) {
       showError('Invalid Password', 'Password must be at least 8 characters with 1 uppercase letter and 1 special character')
       setLoading(false)
