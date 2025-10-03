@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { projectService } from '../services/projectService'
 import { useToast } from '../contexts/ToastContext'
+import LoadingSpinner from './ui/LoadingSpinner'
 
 const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
   const { showSuccess, showError } = useToast()
@@ -17,8 +18,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
   const [projectData, setProjectData] = useState({
     name: '',
     image: null,
-    imagePreview: null,
-    skipImage: false
+    imagePreview: null
   })
   const [loading, setLoading] = useState(false)
 
@@ -49,7 +49,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
       
       if (response.success) {
         const projectId = response.data.id
-        if (projectData.image && !projectData.skipImage) {
+        if (projectData.image) {
           try {
             const imageResponse = await projectService.uploadProjectImage(projectId, projectData.image)
             if (imageResponse.success) {
@@ -80,8 +80,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
     setProjectData({
       name: '',
       image: null,
-      imagePreview: null,
-      skipImage: false
+      imagePreview: null
     })
     onClose()
   }
@@ -207,19 +206,6 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
                 </div>
               )}
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setProjectData(prev => ({ ...prev, skipImage: !prev.skipImage }))}
-                  className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                    projectData.skipImage 
-                      ? 'bg-white border-white' 
-                      : 'border-gray-400 hover:border-gray-300'
-                  }`}
-                >
-                  {projectData.skipImage && <Check className="h-2 w-2 text-black" />}
-                </button>
-                <span className="text-gray-400 text-xs">Skip image for now</span>
-              </div>
             </div>
           )}
 
@@ -242,7 +228,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
                   <ImageIcon className="h-4 w-4 text-gray-400" />
                   <span className="text-gray-400 text-sm">Image:</span>
                   <span className="text-white text-sm font-medium">
-                    {projectData.skipImage ? 'Skipped' : (projectData.image ? 'Included' : 'Not provided')}
+                    {projectData.image ? 'Included' : 'Not provided'}
                   </span>
                 </div>
               </div>
@@ -274,7 +260,7 @@ const CreateProjectModal = ({ isOpen, onClose, onProjectCreated }) => {
             >
               {loading ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                  <LoadingSpinner size="h-4 w-4" className="text-white" />
                   Creating...
                 </>
               ) : (

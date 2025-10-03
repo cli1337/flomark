@@ -4,8 +4,8 @@ import axios from 'axios'
 const API_BASE_URL = '/api'
 
 export const projectService = {
-  async getAllProjects() {
-    const response = await api.get('/projects')
+  async getAllProjects(page = 1, limit = 5) {
+    const response = await api.get(`/projects?page=${page}&limit=${limit}`)
     return response.data
   },
 
@@ -56,5 +56,30 @@ export const projectService = {
       })
     }
     return null
+  },
+
+  async getLabelsByProject(projectId) {
+    const response = await api.get(`/projects/${projectId}/labels`)
+    return response.data
+  },
+
+  async createLabel(projectId, labelData) {
+    const response = await api.post(`/projects/${projectId}/labels`, labelData)
+    return response.data
+  },
+
+  async updateLabel(labelId, labelData) {
+    const response = await api.put(`/labels/${labelId}`, labelData)
+    return response.data
+  },
+
+  async deleteLabel(labelId) {
+    const response = await api.delete(`/labels/${labelId}`)
+    return response.data
+  },
+
+  async getMembersByProject(projectId) {
+    const response = await api.get(`/projects/${projectId}/members`)
+    return response.data
   }
 }

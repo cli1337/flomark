@@ -14,6 +14,8 @@ model User {
   email String @unique
   password String
   role  Role @default(USER)
+  registerIP String?
+  lastIP String?
   
   projectMemberships ProjectMember[]
   taskAssignments    TaskMember[]

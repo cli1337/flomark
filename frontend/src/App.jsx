@@ -9,6 +9,7 @@ import JoinProject from './pages/join/JoinProject'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { useServerStatus } from './hooks/useServerStatus'
+import LoadingState from './components/ui/LoadingState'
 
 function LogoutRoute() {
   const { logout } = useAuth()
@@ -19,7 +20,11 @@ function LogoutRoute() {
     navigate('/login', { replace: true })
   }, [logout, navigate])
 
-  return <div className="container">Logging out...</div>
+  return (
+    <div className="min-h-screen bg-[#18191b] flex items-center justify-center">
+      <LoadingState message="Logging out..." />
+    </div>
+  )
 }
 
 function App() {
@@ -49,7 +54,11 @@ function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   
   if (loading) {
-    return <div className="container">Loading...</div>
+    return (
+      <div className="min-h-screen bg-[#18191b] flex items-center justify-center">
+        <LoadingState message="Loading..." />
+      </div>
+    )
   }
   
   return user ? children : <Navigate to="/login" />
@@ -59,9 +68,13 @@ function PublicRoute({ children }) {
   const { user, loading } = useAuth()
   
   if (loading) {
-    return <div className="container">Loading...</div>
+    return (
+      <div className="min-h-screen bg-[#18191b] flex items-center justify-center">
+        <LoadingState message="Loading..." />
+      </div>
+    )
   }
-    
+  
   return user ? <Navigate to="/projects" replace /> : children
 }
 

@@ -22,8 +22,17 @@ export const createUser = async (req, res, next) => {
     if (existingUser) {
       return res.status(400).json({ message: "User already exists", key: "user_exists", success: false });
     }
+    
+    const registerIP = req.clientIP || req.ip || 'unknown';
+    
     const user = await prisma.user.create({
-      data: { name, email, password: hashedPassword },
+      data: { 
+        name, 
+        email, 
+        password: hashedPassword,
+        registerIP,
+        lastIP: registerIP
+      },
     });
     res.json({ data: user, success: true });
   } catch (err) {
@@ -47,6 +56,14 @@ export const authenticateUser = async (req, res, next) => {
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid password", key: "invalid_password", success: false });
     }
+    
+    const lastIP = req.clientIP || req.ip || 'unknown';
+    
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { lastIP }
+    });
+    
     const token = generateToken({ userId: user.id, email: user.email });
     const refreshToken = generateRefreshToken({ userId: user.id });
     

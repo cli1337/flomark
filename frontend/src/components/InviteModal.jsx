@@ -117,7 +117,7 @@ const InviteModal = ({ isOpen, onClose, projectId, projectName }) => {
           <button
             onClick={handleClose}
             disabled={isGenerating}
-            className="px-4 py-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+            className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors disabled:opacity-50 rounded-lg border border-transparent hover:border-white/20"
           >
             Cancel
           </button>
@@ -126,7 +126,7 @@ const InviteModal = ({ isOpen, onClose, projectId, projectName }) => {
             <button
               onClick={handleGenerateLink}
               disabled={!email.trim() || isGenerating}
-              className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm bg-white hover:bg-gray-100 text-black rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
             >
               {isGenerating ? (
                 <>
@@ -141,13 +141,13 @@ const InviteModal = ({ isOpen, onClose, projectId, projectName }) => {
             <>
               <button
                 onClick={handleReset}
-                className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg border border-transparent hover:border-white/20"
               >
                 Generate Another
               </button>
               <button
                 onClick={handleCopyLink}
-                className="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors flex items-center gap-2 font-medium"
               >
                 <Copy className="h-4 w-4" />
                 {isCopied ? 'Copied!' : 'Copy Link'}

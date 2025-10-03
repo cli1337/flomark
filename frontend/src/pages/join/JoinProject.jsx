@@ -5,6 +5,7 @@ import { Button } from '../../components/ui/Button'
 import { inviteService } from '../../services/inviteService'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
+import usePageTitle from '../../hooks/usePageTitle'
 import { 
   CheckCircle, 
   XCircle, 
@@ -20,6 +21,8 @@ const JoinProject = () => {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { showSuccess, showError } = useToast()
+  
+  usePageTitle('Join Project')
   
   const [status, setStatus] = useState('loading')
   const [countdown, setCountdown] = useState(3)

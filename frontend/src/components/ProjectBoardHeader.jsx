@@ -14,20 +14,23 @@ import {
   Share2,
   MoreVertical,
   Plus,
-  Mail
+  Mail,
+  X
 } from 'lucide-react'
 import LabelFilter from './LabelFilter'
 import MemberFilter from './MemberFilter'
 import InviteModal from './InviteModal'
 
-const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMember, onLabelsChange, onMembersChange }) => {
+const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMember, onLabelsChange, onMembersChange, onLabelsUpdated, onSearchChange }) => {
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [selectedLabels, setSelectedLabels] = useState([])
   const [selectedMembers, setSelectedMembers] = useState([])
+  const [searchQuery, setSearchQuery] = useState('')
 
-  const isOwner = project?.members?.some(member => 
-    member.userId === projectOwner?.id && member.role === 'OWNER'
-  )
+  const currentUserMember = project?.members?.find(member => member.userId === projectOwner?.id)
+  const isOwner = currentUserMember?.role === 'OWNER'
+  const isAdmin = currentUserMember?.role === 'ADMIN'
+  const canManageProject = isOwner || isAdmin
 
   const handleLabelsChange = (labels) => {
     setSelectedLabels(labels)
@@ -37,6 +40,12 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
   const handleMembersChange = (members) => {
     setSelectedMembers(members)
     onMembersChange?.(members)
+  }
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value
+    setSearchQuery(query)
+    onSearchChange?.(query)
   }
 
   return (
@@ -95,7 +104,7 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
               )}
             </div>
             
-            {isOwner && (
+            {canManageProject && (
               <Button
                 onClick={() => setShowInviteModal(true)}
                 className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 text-sm rounded-lg"
@@ -118,14 +127,36 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
               projectId={project?.id}
               selectedLabels={selectedLabels}
               onLabelsChange={handleLabelsChange}
+              onLabelsUpdated={onLabelsUpdated}
             />
+
+            {/* Clear Filters Button */}
+            {(selectedLabels.length > 0 || selectedMembers.length > 0 || searchQuery) && (
+              <Button
+                onClick={() => {
+                  setSelectedLabels([])
+                  setSelectedMembers([])
+                  setSearchQuery('')
+                  onLabelsChange?.([])
+                  onMembersChange?.([])
+                  onSearchChange?.('')
+                }}
+                variant="ghost"
+                className="text-gray-400 hover:text-white hover:bg-white/10"
+              >
+                <X className="h-4 w-4 mr-1" />
+                Clear Filters
+              </Button>
+            )}
           </div>
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search cards..."
+              placeholder="Search cards by name, labels, or members..."
+              value={searchQuery}
+              onChange={handleSearchChange}
               className="w-64 pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20"
             />
           </div>

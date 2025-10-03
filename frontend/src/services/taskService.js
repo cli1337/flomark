@@ -2,12 +2,12 @@ import api from './api'
 
 export const taskService = {
   async getTasksByList(listId) {
-    const response = await api.get(`/lists/${listId}/tasks`)
+    const response = await api.get(`/tasks/lists/${listId}/tasks`)
     return response.data
   },
 
   async createTask(listId, data) {
-    const response = await api.post(`/lists/${listId}/tasks`, data)
+    const response = await api.post(`/tasks/lists/${listId}/tasks`, data)
     return response.data
   },
 
@@ -31,6 +31,11 @@ export const taskService = {
     return response.data
   },
 
+  async reorderTasks(listId, taskIds) {
+    const response = await api.put(`/tasks/lists/${listId}/reorder`, { taskIds })
+    return response.data
+  },
+
   async assignMember(taskId, userId) {
     const response = await api.post(`/tasks/${taskId}/members`, { userId })
     return response.data
@@ -47,12 +52,17 @@ export const taskService = {
   },
 
   async updateSubTask(subTaskId, data) {
-    const response = await api.put(`/subtasks/${subTaskId}`, data)
+    const response = await api.put(`/tasks/subtasks/${subTaskId}`, data)
     return response.data
   },
 
   async deleteSubTask(subTaskId) {
-    const response = await api.delete(`/subtasks/${subTaskId}`)
+    const response = await api.delete(`/tasks/subtasks/${subTaskId}`)
+    return response.data
+  },
+
+  async removeLabel(taskId, labelId) {
+    const response = await api.delete(`/tasks/${taskId}/labels/${labelId}`)
     return response.data
   }
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { projectService } from '../../services/projectService'
 import { useParams, useNavigate } from 'react-router-dom'
+import LoadingState from '../../components/ui/LoadingState'
 
 function Project() {
     const { id } = useParams()
@@ -62,7 +63,7 @@ function Project() {
     return (
         <div >
             <h1>Project</h1>
-            {loading ? <p>Loading...</p> : (
+            {loading ? <LoadingState message="Loading project..." /> : (
                 project && (
                     <>
                         <div>

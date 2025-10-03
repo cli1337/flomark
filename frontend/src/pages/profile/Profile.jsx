@@ -2,9 +2,11 @@ import React, { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
+import usePageTitle from '../../hooks/usePageTitle'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/Card'
 import Layout from '../../components/Layout'
+import LoadingSpinner from '../../components/ui/LoadingSpinner'
 import { 
   User, 
   Lock, 
@@ -20,6 +22,8 @@ const Profile = () => {
   const { showSuccess, showError } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
+  
+  usePageTitle('Profile')
   
   const [name, setName] = useState(user?.name || '')
   const [email, setEmail] = useState(user?.email || '')
@@ -176,7 +180,7 @@ const Profile = () => {
                   >
                     {updatingProfile ? (
                       <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <LoadingSpinner size="h-4 w-4" />
                         Updating...
                       </div>
                     ) : profileSuccess ? (
@@ -253,7 +257,7 @@ const Profile = () => {
                   >
                     {uploadingImage ? (
                       <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <LoadingSpinner size="h-4 w-4" />
                         Uploading...
                       </div>
                     ) : imageSuccess ? (
@@ -335,7 +339,7 @@ const Profile = () => {
                 >
                   {updatingPassword ? (
                     <div className="flex items-center gap-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <LoadingSpinner size="h-4 w-4" />
                       Updating...
                     </div>
                   ) : passwordSuccess ? (

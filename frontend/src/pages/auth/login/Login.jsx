@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useToast } from '../../../contexts/ToastContext'
+import usePageTitle from '../../../hooks/usePageTitle'
 import { Button } from '../../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/Card'
 import { LockKeyhole, Mail, Eye, EyeOff } from 'lucide-react'
@@ -16,6 +17,8 @@ function Login() {
   const { login } = useAuth()
   const { showError, showSuccess } = useToast()
   const navigate = useNavigate()
+  
+  usePageTitle('Sign In')
 
   const handleSubmit = async (e) => {
     e.preventDefault()

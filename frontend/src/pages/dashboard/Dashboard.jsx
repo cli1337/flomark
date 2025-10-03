@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
+import usePageTitle from '../../hooks/usePageTitle'
 import { projectService } from '../../services/projectService'
 import { listService } from '../../services/listService'
 import { taskService } from '../../services/taskService'
@@ -8,6 +9,7 @@ import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import { Switch } from '../../components/ui/Switch'
 import { Separator } from '../../components/ui/Separator'
+import LoadingState from '../../components/ui/LoadingState'
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
@@ -46,6 +48,8 @@ import {
 const Dashboard = () => {
   const { user, logout } = useAuth()
   const { showSuccess, showError, showInfo } = useToast()
+  
+  usePageTitle('Dashboard')
 
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
@@ -482,29 +486,28 @@ const Dashboard = () => {
               <div className="space-y-6">
                 {/* Projects Grid */}
                 {loading ? (
+                  <LoadingState message="Loading projects..." />
+                ) : projects.length === 0 ? (
                   <div className="flex items-center justify-center py-12">
-                    <div className="text-gray-400">Loading projects...</div>
+                    <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+                      <CardContent className="p-12 text-center">
+                        <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-white font-semibold text-lg mb-2">No projects yet</h3>
+                        <p className="text-gray-400 mb-6">Create your first project to get started</p>
+                        <Button 
+                          onClick={() => setShowCreateProject(true)}
+                          className="bg-white hover:bg-gray-100 text-black px-6 py-2 rounded-lg font-medium"
+                        >
+                          Create Project
+                        </Button>
+                      </CardContent>
+                    </Card>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {projects.map(project => (
                       <ProjectCard key={project.id} project={project} />
                     ))}
-                    {projects.length === 0 && (
-                      <Card className="bg-white/5 border-white/10 backdrop-blur-xl col-span-full">
-                        <CardContent className="p-12 text-center">
-                          <Building2 className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                          <h3 className="text-white font-semibold text-lg mb-2">No projects yet</h3>
-                          <p className="text-gray-400 mb-6">Create your first project to get started</p>
-                          <Button 
-                            onClick={() => setShowCreateProject(true)}
-                            className="bg-white hover:bg-gray-100 text-black px-6 py-2 rounded-lg font-medium"
-                          >
-                            Create Project
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    )}
                   </div>
                 )}
               </div>
@@ -512,9 +515,7 @@ const Dashboard = () => {
               /* Kanban Board */
               <div className="space-y-6">
                 {loading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="text-gray-400">Loading project data...</div>
-                  </div>
+                  <LoadingState message="Loading project data..." />
                 ) : lists.length > 0 ? (
                   <div className="flex gap-6 min-w-max">
                     {lists.map(list => (

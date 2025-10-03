@@ -309,7 +309,7 @@ export const createInviteLink = async (req, res, next) => {
         res.json({ data: inviteLink, success: true });
         cache.set(inviteLink, {
             projectId: req.params.id,
-            email: req.body.email || null // Store email for reference, but it's not used in join logic
+            email: req.body.email || null
         });
     } catch (err) {
         next(err);
@@ -331,13 +331,11 @@ export const joinProject = async (req, res, next) => {
             return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
         }
 
-        // Use the currently authenticated user instead of looking up by email
         const user = req.user;
         if (!user) {
             return res.status(401).json({ message: "User not authenticated", key: "user_not_authenticated", success: false });
         }
 
-        // Check if user is already a member
         const existingMember = await prisma.projectMember.findUnique({
             where: {
                 userId_projectId: {
@@ -351,7 +349,6 @@ export const joinProject = async (req, res, next) => {
         });
 
         if (existingMember) {
-            // User is already a member, return success with existing member
             const updatedProject = await prisma.project.findUnique({
                 where: { id: project.id },
                 include: {
@@ -372,7 +369,6 @@ export const joinProject = async (req, res, next) => {
             return;
         }
         
-        // Create new member
         let member;
         try {
             member = await prisma.projectMember.create({
@@ -382,9 +378,7 @@ export const joinProject = async (req, res, next) => {
                 }
             });
         } catch (createError) {
-            // Handle unique constraint violation (race condition)
             if (createError.code === 'P2002' && createError.meta?.target?.includes('userId_projectId')) {
-                // User was added between our check and create, fetch the existing member
                 const existingMember = await prisma.projectMember.findUnique({
                     where: {
                         userId_projectId: {
@@ -447,7 +441,6 @@ export const getMembersByProject = async (req, res, next) => {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
-        // Check if the user is a member of the project
         const project = await prisma.project.findUnique({
             where: { id },
             include: { members: true }
@@ -561,7 +554,6 @@ export const updateMemberRole = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to update the owner", key: "unauthorized", success: false });
         }
 
-        // Only OWNER can promote to ADMIN
         if (role === 'ADMIN' && !isOwner) {
             return res.status(403).json({ message: "Only project owners can promote members to admin", key: "unauthorized", success: false });
         }

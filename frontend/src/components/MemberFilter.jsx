@@ -6,12 +6,12 @@ import {
   DropdownMenuItem 
 } from './ui/DropdownMenu'
 import { Button } from './ui/Button'
+import LoadingSpinner from './ui/LoadingSpinner'
 import { 
   Users, 
   Search, 
   Plus,
   Check,
-  Loader2,
   Crown,
   UserMinus,
   UserPlus,
@@ -139,6 +139,11 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
   }
 
   const isOwner = user?.id === projectOwner?.id
+  
+  // Check if current user is admin or owner
+  const currentUserMember = members.find(member => member.userId === user?.id)
+  const isAdmin = currentUserMember?.role === 'ADMIN'
+  const canManageRoles = isOwner || isAdmin
 
   const toggleMemberSelection = (memberId) => {
     const newSelection = selectedMembers.includes(memberId)
@@ -183,7 +188,7 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
         <div className="max-h-60 overflow-y-auto">
           {loading ? (
             <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+              <LoadingSpinner size="h-6 w-6" className="text-gray-400" />
             </div>
           ) : (
             <div className="p-4 space-y-2">
@@ -192,7 +197,8 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                 const userEmail = member.user?.email || member.email || ''
                 const userInitial = userName.charAt(0).toUpperCase()
                 const isMemberOwner = member.role === 'OWNER' || member.isOwner
-                const canManage = isOwner && !isMemberOwner
+                const isMemberAdmin = member.role === 'ADMIN'
+                const canManage = canManageRoles && !isMemberOwner
                 
                 return (
                   <div key={member.id} className="flex items-center gap-3 group">
@@ -201,7 +207,7 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                       className="flex items-center gap-3 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
                     >
                       <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200 ${
-                        isMemberOwner ? 'bg-gray-500' : 'bg-gray-600'
+                        isMemberOwner ? 'bg-yellow-500' : isMemberAdmin ? 'bg-blue-500' : 'bg-gray-600'
                       }`}>
                         {userInitial}
                       </div>
@@ -214,6 +220,12 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                               Owner
                             </span>
                           )}
+                          {isMemberAdmin && !isMemberOwner && (
+                            <span className="text-xs text-blue-400 flex items-center gap-1">
+                              <UserPlus className="h-3 w-3" />
+                              Admin
+                            </span>
+                          )}
                         </div>
                         <div className="text-gray-400 text-xs">{userEmail}</div>
                       </div>
@@ -224,30 +236,36 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                     
                     {canManage && (
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {member.role === 'MEMBER' ? (
-                          <button
-                            onClick={() => handleUpdateRole(member.id, 'OWNER')}
-                            disabled={updatingRole === member.id}
-                            className="p-1 hover:bg-gray-500/20 rounded transition-colors disabled:opacity-50"
-                            title="Promote to Owner"
-                          >
-                            {updatingRole === member.id ? (
-                              <Loader2 className="h-3 w-3 text-yellow-400 animate-spin" />
-                            ) : (
-                              <Crown className="h-3 w-3 text-yellow-400" />
+                        {member.role === 'MEMBER' && (
+                          <>
+                            {isOwner && (
+                              <button
+                                onClick={() => handleUpdateRole(member.id, 'ADMIN')}
+                                disabled={updatingRole === member.id}
+                                className="p-1 hover:bg-blue-500/20 rounded transition-colors disabled:opacity-50"
+                                title="Promote to Admin"
+                              >
+                                {updatingRole === member.id ? (
+                                  <LoadingSpinner size="h-3 w-3" className="text-blue-400" />
+                                ) : (
+                                  <UserPlus className="h-3 w-3 text-blue-400" />
+                                )}
+                              </button>
                             )}
-                          </button>
-                        ) : (
+                          </>
+                        )}
+                        
+                        {member.role === 'ADMIN' && (
                           <button
                             onClick={() => handleUpdateRole(member.id, 'MEMBER')}
                             disabled={updatingRole === member.id}
-                            className="p-1 hover:bg-blue-500/20 rounded transition-colors disabled:opacity-50"
+                            className="p-1 hover:bg-gray-500/20 rounded transition-colors disabled:opacity-50"
                             title="Demote to Member"
                           >
                             {updatingRole === member.id ? (
-                              <Loader2 className="h-3 w-3 text-blue-400 animate-spin" />
+                              <LoadingSpinner size="h-3 w-3" className="text-gray-400" />
                             ) : (
-                              <UserMinus className="h-3 w-3 text-blue-400" />
+                              <UserMinus className="h-3 w-3 text-gray-400" />
                             )}
                           </button>
                         )}
@@ -299,7 +317,7 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
 
               {searching && (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  <LoadingSpinner size="h-4 w-4" className="text-gray-400" />
                   <span className="text-gray-400 text-sm">Searching...</span>
                 </div>
               )}

@@ -1,24 +1,50 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragOverlay,
+  useDroppable,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  horizontalListSortingStrategy,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import {
+  useSortable,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
+import usePageTitle from '../../hooks/usePageTitle'
+import useMobileDetection from '../../hooks/useMobileDetection'
 import { projectService } from '../../services/projectService'
 import { listService } from '../../services/listService'
 import { taskService } from '../../services/taskService'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
+import LoadingState from '../../components/ui/LoadingState'
 import TaskModal from '../../components/TaskModal'
 import CreateColumnModal from '../../components/CreateColumnModal'
+import AddCardModal from '../../components/AddCardModal'
 import ProjectBoardHeader from '../../components/ProjectBoardHeader'
 import Layout from '../../components/Layout'
-import useDragAndDrop from '../../hooks/useDragAndDrop'
 import { 
   Plus, 
   List,
-  GripVertical,
   Edit2,
   Check,
-  X
+  X,
+  Calendar,
+  Users,
+  GripVertical
 } from 'lucide-react'
 
 const ProjectDetail = () => {
@@ -26,14 +52,18 @@ const ProjectDetail = () => {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { showSuccess, showError, showInfo } = useToast()
-  
-  const [isDarkMode, setIsDarkMode] = useState(true)
+  const isMobile = useMobileDetection()
   
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCreateColumnModal, setShowCreateColumnModal] = useState(false)
+  const [showAddCardModal, setShowAddCardModal] = useState(false)
+  const [selectedListForCard, setSelectedListForCard] = useState(null)
   const [selectedLabels, setSelectedLabels] = useState([])
   const [selectedMembers, setSelectedMembers] = useState([])
+  const [labelsUpdated, setLabelsUpdated] = useState(0) // Counter to trigger label refresh
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredTasks, setFilteredTasks] = useState({})
   const [editingColumnId, setEditingColumnId] = useState(null)
   const [editingColumnName, setEditingColumnName] = useState('')
   
@@ -42,14 +72,45 @@ const ProjectDetail = () => {
   const [tasks, setTasks] = useState({})
   const [members, setMembers] = useState([])
   const [loading, setLoading] = useState(true)
-  const fetchProjectData = async () => {
+  const [processingCards, setProcessingCards] = useState(new Set())
+  const [activeId, setActiveId] = useState(null)
+  
+  // Set dynamic page title based on project name
+  usePageTitle(project ? project.name : 'Project')
+
+  // Configure drag and drop sensors - disable on mobile
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: isMobile ? 999999 : 8, // Disable on mobile by setting huge distance
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  )
+
+  // Helper function to check if we're dragging a column
+  const isDraggingColumn = activeId && lists.some(list => list.id === activeId)
+  
+  // Helper function to check if we're dragging a card
+  const isDraggingCard = activeId && Object.values(tasks).flat().some(task => task.id === activeId)
+
+  const fetchProjectData = useCallback(async () => {
     try {
       setLoading(true)
       
       const projectResponse = await projectService.getProjectById(id)
       if (projectResponse.success) {
         setProject(projectResponse.data)
-        setMembers(projectResponse.data.members || [])
+        
+        // Get members separately to ensure we have the latest data
+        const membersResponse = await projectService.getMembersByProject(id)
+        if (membersResponse.success) {
+          setMembers(membersResponse.data || [])
+        } else {
+          setMembers(projectResponse.data.members || [])
+        }
         
         const listsResponse = await listService.getListsByProject(id)
         if (listsResponse.success) {
@@ -79,31 +140,12 @@ const ProjectDetail = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id, showError, navigate])
 
   const handleColumnCreated = async (newColumn) => {
     await fetchProjectData()
   }
 
-  const handleColumnReorder = async (newOrder) => {
-    try {
-      // Update local state immediately for better UX
-      setLists(newOrder)
-      
-      const response = await listService.reorderLists(project.id, newOrder.map(col => col.id))
-      
-      if (response.success) {
-        showSuccess('Columns reordered', 'Column order has been updated')
-      } else {
-        throw new Error(response.message)
-      }
-    } catch (error) {
-      console.error('Error reordering columns:', error)
-      showError('Failed to reorder columns', 'Please try again later')
-      // Revert to original order on error
-      await fetchProjectData()
-    }
-  }
 
   const handleStartEditColumn = (column) => {
     setEditingColumnId(column.id)
@@ -144,6 +186,39 @@ const ProjectDetail = () => {
     setEditingColumnName('')
   }
 
+  const handleAddCard = (list) => {
+    setSelectedListForCard(list)
+    setShowAddCardModal(true)
+  }
+
+  const handleCardCreated = async (newCard) => {
+    // Add the new card to the appropriate list
+    setTasks(prev => ({
+      ...prev,
+      [selectedListForCard.id]: [...(prev[selectedListForCard.id] || []), newCard]
+    }))
+    setShowAddCardModal(false)
+    setSelectedListForCard(null)
+  }
+
+
+  const handleReorderColumns = useCallback(async (newLists) => {
+    try {
+      const response = await listService.reorderLists(id, newLists.map(list => list.id))
+      
+      if (response.success) {
+        showSuccess('Columns reordered', 'Column order has been updated')
+      } else {
+        throw new Error(response.message)
+      }
+    } catch (error) {
+      console.error('Error reordering columns:', error)
+      showError('Failed to reorder columns', 'Please try again later')
+      // Refresh data to revert changes
+      await fetchProjectData()
+    }
+  }, [id, showSuccess, showError, fetchProjectData])
+
   const handleTaskClick = async (task) => {
     try {
       const response = await taskService.getTaskById(task.id)
@@ -157,8 +232,238 @@ const ProjectDetail = () => {
     }
   }
 
-  // Initialize drag and drop
-  const { getDragProps } = useDragAndDrop(lists, handleColumnReorder)
+  const handleLabelsUpdated = (labelId, labelData) => {
+    // Increment counter to trigger label refresh in TaskModal
+    setLabelsUpdated(prev => prev + 1)
+  }
+
+  const handleSearchChange = (query) => {
+    setSearchQuery(query)
+  }
+
+  // Filter tasks based on search query, selected labels, and selected members
+  const filterTasks = (tasks, query, labelFilters, memberFilters) => {
+    if (!query && labelFilters.length === 0 && memberFilters.length === 0) {
+      return tasks
+    }
+
+    return tasks.filter(task => {
+      // Search by task name
+      const matchesSearch = !query || 
+        task.name.toLowerCase().includes(query.toLowerCase()) ||
+        (task.description && task.description.toLowerCase().includes(query.toLowerCase()))
+
+      // Filter by labels
+      const matchesLabels = labelFilters.length === 0 || 
+        labelFilters.some(labelId => 
+          task.labels && task.labels.some(label => 
+            typeof label === 'string' ? label === labelId : label.id === labelId
+          )
+        )
+
+      // Filter by members
+      const matchesMembers = memberFilters.length === 0 ||
+        memberFilters.some(memberId =>
+          task.members && task.members.some(member => member.userId === memberId)
+        )
+
+      return matchesSearch && matchesLabels && matchesMembers
+    })
+  }
+
+  // Update filtered tasks when filters change
+  useEffect(() => {
+    const filtered = {}
+    Object.keys(tasks).forEach(listId => {
+      filtered[listId] = filterTasks(tasks[listId], searchQuery, selectedLabels, selectedMembers)
+    })
+    setFilteredTasks(filtered)
+  }, [tasks, searchQuery, selectedLabels, selectedMembers])
+
+  // Handle drag start for @dnd-kit
+  const handleDragStart = useCallback((event) => {
+    setActiveId(event.active.id)
+  }, [])
+
+  // Handle drag end for @dnd-kit
+  const handleDragEnd = useCallback(async (event) => {
+    const { active, over } = event
+    setActiveId(null)
+    
+    console.log('Drag end:', { activeId: active.id, overId: over?.id })
+    
+    if (!over || active.id === over.id) {
+      return
+    }
+
+    // Check if we're dragging a column (list) - prioritize column detection
+    const activeList = lists.find(list => list.id === active.id)
+    const overList = lists.find(list => list.id === over.id)
+    
+    // If both active and over are lists, it's definitely column reordering
+    if (activeList && overList) {
+      // Column reordering
+      const oldIndex = lists.findIndex(list => list.id === active.id)
+      const newIndex = lists.findIndex(list => list.id === over.id)
+      
+      if (oldIndex === -1 || newIndex === -1) {
+      return
+    }
+
+      const newLists = arrayMove(lists, oldIndex, newIndex)
+      
+      // Update UI immediately
+      setLists(newLists)
+      
+      // Make server request in background
+      handleReorderColumns(newLists)
+    } else {
+      // Task reordering - only proceed if active is not a list
+      const activeTask = Object.values(tasks).flat().find(task => task.id === active.id)
+      
+      // Only handle task reordering if we're actually dragging a task
+      if (!activeTask) {
+        return
+      }
+      
+      // Check if dropping on a droppable area (empty column)
+      const overDroppableId = over.id.toString().startsWith('droppable-') ? over.id : null
+      const overTask = !overDroppableId ? Object.values(tasks).flat().find(task => task.id === over.id) : null
+      
+      // Find which list contains the active task
+      const activeListId = Object.keys(tasks).find(listId => 
+        tasks[listId].some(task => task.id === active.id)
+      )
+      
+      if (activeListId) {
+        const activeListTasks = tasks[activeListId] || []
+        
+        if (overDroppableId) {
+          // Dropping on a droppable area (entire column)
+          const targetListId = overDroppableId.replace('droppable-', '')
+          
+          if (activeListId !== targetListId) {
+            // Moving between different lists
+            const taskToMove = activeListTasks.find(task => task.id === active.id)
+            
+            if (taskToMove) {
+              // Remove from old list
+              const newActiveListTasks = activeListTasks.filter(task => task.id !== active.id)
+              
+              // Add to new list (at the end)
+              const targetListTasks = tasks[targetListId] || []
+              const newTargetListTasks = [...targetListTasks, { ...taskToMove, listId: targetListId }]
+              
+              setTasks(prev => ({
+                ...prev,
+                [activeListId]: newActiveListTasks,
+                [targetListId]: newTargetListTasks
+              }))
+              
+              // Make server request to move task between lists
+              try {
+                // First move the task to the new list
+                await taskService.moveTask(active.id, targetListId)
+                
+                // Then reorder tasks in the target list (add to end)
+                const taskIds = newTargetListTasks.map(task => task.id)
+                await taskService.reorderTasks(targetListId, taskIds)
+                
+                console.log('Task moved to column on server:', { 
+                  taskId: active.id, 
+                  fromList: activeListId, 
+                  toList: targetListId,
+                  newOrder: taskIds
+                })
+              } catch (error) {
+                console.error('Failed to move task to column:', error)
+                showError('Failed to move task', 'Please try again')
+                // Revert the change
+                await fetchProjectData()
+              }
+            }
+          }
+        } else if (overTask) {
+          // Dropping on another task
+          const overListId = Object.keys(tasks).find(listId => 
+            tasks[listId].some(task => task.id === over.id)
+          )
+          
+          if (overListId) {
+            const overListTasks = tasks[overListId] || []
+            
+            if (activeListId === overListId) {
+              // Moving within the same list
+              const oldIndex = activeListTasks.findIndex(task => task.id === active.id)
+              const newIndex = overListTasks.findIndex(task => task.id === over.id)
+              
+              if (oldIndex !== -1 && newIndex !== -1) {
+                const newTasks = arrayMove(activeListTasks, oldIndex, newIndex)
+                
+                setTasks(prev => ({
+                  ...prev,
+                  [activeListId]: newTasks
+                }))
+                
+                // Make server request to update task order
+                try {
+                  const taskIds = newTasks.map(task => task.id)
+                  await taskService.reorderTasks(activeListId, taskIds)
+                  console.log('Task order updated on server:', { activeListId, taskIds })
+                } catch (error) {
+                  console.error('Failed to update task order:', error)
+                  showError('Failed to update task order', 'Please try again')
+                  // Revert the change
+                  await fetchProjectData()
+                }
+              }
+            } else {
+              // Moving between different lists - insert above the target task
+              const taskToMove = activeListTasks.find(task => task.id === active.id)
+              const targetIndex = overListTasks.findIndex(task => task.id === over.id)
+              
+              if (taskToMove && targetIndex !== -1) {
+                // Remove from old list
+                const newActiveListTasks = activeListTasks.filter(task => task.id !== active.id)
+                
+                // Add to new list at the target position (above the target task)
+                const newOverListTasks = [...overListTasks]
+                newOverListTasks.splice(targetIndex, 0, { ...taskToMove, listId: overListId })
+                
+                setTasks(prev => ({
+                  ...prev,
+                  [activeListId]: newActiveListTasks,
+                  [overListId]: newOverListTasks
+                }))
+                
+                // Make server request to move task between lists
+                try {
+                  // First move the task to the new list
+                  await taskService.moveTask(active.id, overListId)
+                  
+                  // Then reorder tasks in the target list
+                  const taskIds = newOverListTasks.map(task => task.id)
+                  await taskService.reorderTasks(overListId, taskIds)
+                  
+                  console.log('Task moved between lists on server:', { 
+                    taskId: active.id, 
+                    fromList: activeListId, 
+                    toList: overListId,
+                    newOrder: taskIds
+                  })
+                } catch (error) {
+                  console.error('Failed to move task between lists:', error)
+                  showError('Failed to move task', 'Please try again')
+                  // Revert the change
+                  await fetchProjectData()
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }, [lists, tasks, handleReorderColumns])
 
   useEffect(() => {
     if (id) {
@@ -166,125 +471,352 @@ const ProjectDetail = () => {
     }
   }, [id])
 
-  const TaskCard = ({ task }) => (
-    <Card 
-      className="bg-white/5 border-white/10 hover:bg-white/10 transition-colors cursor-pointer mb-3"
-      onClick={() => handleTaskClick(task)}
-    >
-      <CardContent className="p-4">
-        <h3 className="text-white font-medium text-sm mb-2">{task.name}</h3>
-        {task.description && (
-          <p className="text-gray-400 text-xs mb-2 line-clamp-2">{task.description}</p>
-        )}
-        {task.subTasks && task.subTasks.length > 0 && (
-          <p className="text-gray-400 text-xs">
-            {task.subTasks.filter(sub => sub.isCompleted).length} of {task.subTasks.length} subtasks
-          </p>
-        )}
-        {task.members && task.members.length > 0 && (
-          <div className="flex items-center gap-1 mt-2">
-            {task.members.slice(0, 3).map(member => (
-              <div
-                key={member.id}
-                className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium"
-              >
-                {member.user?.name?.charAt(0) || 'U'}
-              </div>
-            ))}
-            {task.members.length > 3 && (
-              <span className="text-gray-400 text-xs">+{task.members.length - 3}</span>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  )
+  const SortableTaskCard = ({ task, index }) => {
+    const isProcessing = processingCards.has(task.id)
+    
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: task.id })
 
-  const Column = ({ list }) => {
-    const isEditing = editingColumnId === list.id
+    const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+      id: task.id,
+      disabled: isDraggingColumn, // Disable when dragging a column
+    })
 
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    }
+
+    const completedSubtasks = task.subTasks?.filter(sub => sub.isCompleted).length || 0
+    const totalSubtasks = task.subTasks?.length || 0
+    const progressPercentage = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0
+    
+    // Format deadline if exists
+    const formatDeadline = (deadline) => {
+      if (!deadline) return null
+      const date = new Date(deadline)
+      const now = new Date()
+      const diffTime = date - now
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+      
+      if (diffDays < 0) {
+        return { text: 'Overdue', className: 'text-red-400' }
+      } else if (diffDays === 0) {
+        return { text: 'Today', className: 'text-orange-400' }
+      } else if (diffDays === 1) {
+        return { text: 'Tomorrow', className: 'text-yellow-400' }
+      } else if (diffDays <= 7) {
+        return { text: `${diffDays}d left`, className: 'text-yellow-400' }
+      } else {
+        return { text: date.toLocaleDateString(), className: 'text-gray-400' }
+      }
+    }
+    
+    const deadlineInfo = formatDeadline(task.dueDate)
+    
     return (
-      <div 
-        className="flex-1 min-w-64 sm:min-w-72 group"
-        {...getDragProps(list)}
+      <div
+        ref={(node) => {
+          setNodeRef(node)
+          setDroppableRef(node)
+        }}
+        style={style}
+        className={`bg-white/5 border border-white/10 transition-all group shadow-sm rounded-lg relative mb-3 ${
+          isProcessing 
+            ? 'opacity-50 cursor-not-allowed' 
+            : isDragging
+            ? 'opacity-50 rotate-1 scale-105 ring-2 ring-blue-400 ring-opacity-50'
+            : isOver && !isDraggingColumn
+            ? 'ring-2 ring-blue-400 ring-opacity-50 bg-blue-500/10'
+            : 'hover:bg-white/10 cursor-pointer'
+        }`}
+        onClick={() => {
+          if (!isProcessing && !isDragging && !isDraggingColumn) {
+            handleTaskClick(task)
+          }
+        }}
       >
-        {/* Column Header */}
-        <div className="bg-white/5 border border-white/10 rounded-lg p-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-1">
-              <GripVertical className="h-4 w-4 text-gray-600 cursor-grab hover:text-gray-400 transition-colors" />
-              <div 
-                className="w-3 h-3 rounded-full" 
-                style={{ backgroundColor: list.color || '#3b82f6' }}
-              ></div>
-              
-              {isEditing ? (
-                <div className="flex items-center gap-2 flex-1">
-                  <input
-                    type="text"
-                    value={editingColumnName}
-                    onChange={(e) => setEditingColumnName(e.target.value)}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSaveColumnName()
-                      }
+        <div className="p-4">
+          {/* Labels Row - Top */}
+          {task.labels && task.labels.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {task.labels.slice(0, 5).map((label, index) => {
+                const labelName = typeof label === 'string' ? label : label.name
+                const truncatedName = labelName.length > 10 ? labelName.substring(0, 10) + '...' : labelName
+                
+                return (
+                  <span
+                    key={index}
+                    className="px-2 py-0.5 text-xs font-medium text-white rounded-full"
+                    style={{ 
+                      backgroundColor: typeof label === 'string' ? '#ef4444' : (label.color || '#ef4444')
                     }}
-                    className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-white/40 flex-1"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleSaveColumnName}
-                    className="p-1 hover:bg-white/10 rounded transition-colors"
-                    title="Save"
+                    title={labelName} // Show full name on hover
                   >
-                    <Check className="h-4 w-4 text-green-400" />
-                  </button>
-                  <button
-                    onClick={handleCancelEditColumn}
-                    className="p-1 hover:bg-white/10 rounded transition-colors"
-                    title="Cancel"
-                  >
-                    <X className="h-4 w-4 text-red-400" />
-                  </button>
-                </div>
+                    {truncatedName}
+                  </span>
+                )
+              })}
+            </div>
+          )}
+          
+          {/* Task Title */}
+          <div className="mb-3">
+            <h3 className="text-white font-medium text-sm line-clamp-2">{task.name}</h3>
+          </div>
+          
+          {/* Subtasks Progress - Middle */}
+          <div className="flex items-center gap-3 mb-3">
+            <div className="flex-1 bg-gray-700 rounded-full h-2">
+              <div 
+                className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+            <span className="text-xs text-gray-400 font-medium">
+              {totalSubtasks > 0 ? `${completedSubtasks}/${totalSubtasks}` : '0/0'}
+            </span>
+          </div>
+          
+          {/* Bottom Row - Deadline and Members */}
+          <div className="flex items-center justify-between gap-2">
+            {/* Deadline */}
+            {deadlineInfo && (
+              <div className="flex items-center gap-1">
+                <Calendar className="h-3 w-3 text-gray-400" />
+                <span className={`text-xs font-medium ${deadlineInfo.className}`}>
+                  {deadlineInfo.text}
+                </span>
+              </div>
+            )}
+            
+            {/* Members - Bottom Right */}
+            <div className="flex -space-x-1">
+              {task.members && task.members.length > 0 ? (
+                <>
+                  {task.members.slice(0, 3).map(member => (
+                    <div
+                      key={member.id}
+                      className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white/20"
+                      style={{
+                        backgroundImage: member.user?.avatar ? `url(${member.user.avatar})` : 'none',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center'
+                      }}
+                      title={member.user?.name || 'Unknown'}
+                    >
+                      {!member.user?.avatar && (member.user?.name?.charAt(0) || 'U')}
+                    </div>
+                  ))}
+                  {task.members.length > 3 && (
+                    <div className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 border-white/20">
+                      +{task.members.length - 3}
+                    </div>
+                  )}
+                </>
               ) : (
-                <div className="flex items-center gap-2 flex-1">
-                  <h2 className="text-gray-400 font-bold text-xs tracking-wider uppercase flex-1">
-                    {list.name} ({tasks[list.id]?.length || 0})
-                  </h2>
-                  <button
-                    onClick={() => handleStartEditColumn(list)}
-                    className="p-1 hover:bg-white/10 rounded transition-colors opacity-0 group-hover:opacity-100"
-                    title="Edit column name"
-                  >
-                    <Edit2 className="h-4 w-4 text-gray-400 hover:text-white" />
-                  </button>
+                <div 
+                  className="w-6 h-6 bg-gray-600 rounded-full flex items-center justify-center text-gray-400 text-xs font-medium border-2 border-white/20"
+                  title="No users assigned"
+                >
+                  <Users className="h-3 w-3" />
                 </div>
               )}
             </div>
-            
-            {/* Add Task Button */}
-            <button
-              className="ml-2 p-1.5 hover:bg-white/10 rounded transition-colors"
-              title="Add task"
-            >
-              <Plus className="h-4 w-4 text-gray-400 hover:text-white" />
-            </button>
           </div>
         </div>
-
-        {/* Tasks */}
-        <div className="space-y-3">
-          {tasks[list.id]?.map(task => (
-            <TaskCard key={task.id} task={task} />
-          ))}
-          <Card className="bg-white/5 border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer">
-            <CardContent className="p-4 text-center">
-              <span className="text-gray-400 text-sm">Add card</span>
-            </CardContent>
-          </Card>
+        
+        {/* Drag Handle and Edit Button - Top Right */}
+        <div className="absolute top-2 right-2 flex gap-1">
+          {/* Drag Handle - Hidden on mobile */}
+          {!isMobile && !isDraggingColumn && (
+            <div 
+              {...attributes}
+              {...listeners}
+              className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-white/10 rounded cursor-grab hover:cursor-grabbing"
+              style={{ touchAction: 'none' }}
+            >
+              <GripVertical className="h-3 w-3 text-gray-400 hover:text-white" />
+            </div>
+          )}
+          
+          {/* Edit Button - Always visible on mobile */}
+          {!isProcessing && !isDraggingColumn && (
+            <button 
+              className={`transition-opacity p-1 hover:bg-white/10 rounded ${
+                isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+              }`}
+              onClick={(e) => {
+                e.stopPropagation()
+                if (!isDragging && !isDraggingColumn) {
+                  handleTaskClick(task)
+                }
+              }}
+            >
+              <Edit2 className="h-3 w-3 text-gray-400 hover:text-white" />
+            </button>
+          )}
         </div>
       </div>
+    )
+  }
+
+  const SortableColumn = ({ list }) => {
+    const isEditing = editingColumnId === list.id
+    const listTasks = filteredTasks[list.id] || []
+    
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: list.id })
+
+    const { setNodeRef: setDroppableRef, isOver } = useDroppable({
+      id: `droppable-${list.id}`,
+      disabled: isDraggingCard && listTasks.length > 0, // Only disable when dragging a card AND column has tasks
+    })
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+    }
+
+    return (
+          <div
+        ref={setNodeRef}
+        style={style}
+            className={`w-80 min-w-80 max-w-80 flex-shrink-0 group overflow-visible bg-white/5 border border-white/10 rounded-lg p-3 transition-all relative ${
+          isDragging ? 'opacity-50 rotate-2 scale-105 ring-2 ring-gray-400 ring-opacity-50' : ''
+            }`}
+          >
+            {/* Column Header - Draggable */}
+            <div 
+              {...(!isDraggingCard && !isMobile ? attributes : {})}
+              {...(!isDraggingCard && !isMobile ? listeners : {})}
+              className={`p-3 mb-3 rounded transition-colors ${
+                !isDraggingCard && !isMobile
+                  ? 'cursor-grab hover:cursor-grabbing hover:bg-white/5' 
+                  : 'cursor-default'
+              }`}
+              style={{ touchAction: 'none' }}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-1">
+              {/* Drag Handle - Hidden on mobile */}
+              {!isMobile && <GripVertical className="h-4 w-4 text-gray-400" />}
+                  {/* Color indicator */}
+                  <div 
+                    className="w-3 h-3 rounded-full" 
+                    style={{ backgroundColor: list.color || '#3b82f6' }}
+                  ></div>
+                      
+                  {isEditing ? (
+                    <div className="flex items-center gap-2 flex-1">
+                      <input
+                        type="text"
+                        value={editingColumnName}
+                        onChange={(e) => setEditingColumnName(e.target.value)}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            handleSaveColumnName()
+                          }
+                        }}
+                        className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-white/40 flex-1"
+                        autoFocus
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleSaveColumnName()
+                        }}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                        title="Save"
+                      >
+                        <Check className="h-4 w-4 text-green-400" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleCancelEditColumn()
+                        }}
+                        className="p-1 hover:bg-white/10 rounded transition-colors"
+                        title="Cancel"
+                      >
+                        <X className="h-4 w-4 text-red-400" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 flex-1">
+                      <h2 className="text-gray-400 font-bold text-xs tracking-wider uppercase flex-1">
+                        {list.name} ({listTasks.length})
+                      </h2>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      if (!isDraggingCard) {
+                        handleStartEditColumn(list)
+                      }
+                    }}
+                    className={`p-1 rounded transition-colors ${
+                      !isDraggingCard 
+                        ? 'hover:bg-white/10' 
+                        : 'cursor-default'
+                    }`}
+                    title="Edit column name"
+                    disabled={isDraggingCard}
+                  >
+                    <Edit2 className="h-3 w-3 text-gray-400 hover:text-white" />
+                  </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+        {/* Tasks Area - Droppable */}
+        <div 
+          ref={setDroppableRef}
+          className={`min-h-[120px] p-2 transition-colors ${
+            isOver && (!isDraggingCard || listTasks.length === 0) ? 'bg-blue-500/10 rounded-lg border-2 border-dashed border-blue-400' : ''
+          }`}
+        >
+          <SortableContext items={listTasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+              {listTasks.map((task, taskIndex) => (
+              <SortableTaskCard key={task.id} task={task} index={taskIndex} />
+              ))}
+          </SortableContext>
+              
+          {/* Add Card Button */}
+          <Card 
+            className={`bg-white/5 border border-white/10 border-dashed transition-colors mt-2 rounded-lg ${
+              !isDraggingCard 
+                ? 'hover:bg-white/10 cursor-pointer' 
+                : 'cursor-default opacity-50'
+            }`}
+            onClick={(e) => {
+              e.stopPropagation()
+              if (!isDraggingCard) {
+                handleAddCard(list)
+              }
+            }}
+          >
+                <CardContent className="p-3 text-center">
+                  <Plus className="h-3 w-3 text-gray-400 mx-auto mb-1" />
+                  <span className="text-gray-400 text-xs">Add card</span>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
     )
   }
 
@@ -299,35 +831,81 @@ const ProjectDetail = () => {
           projectOwner={user}
           onLabelsChange={setSelectedLabels}
           onMembersChange={setSelectedMembers}
+          onLabelsUpdated={handleLabelsUpdated}
+          onSearchChange={handleSearchChange}
         />
 
         <div className="flex-1 px-16 py-4 sm:px-24 sm:py-6 overflow-auto custom-scrollbar">
-          <div className="space-y-6">
-            {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-gray-400">Loading project data...</div>
-              </div>
-            ) : lists.length > 0 ? (
-              <div className="flex gap-4 sm:gap-6 min-w-max overflow-x-auto custom-scrollbar pb-4">
-                {lists.map(list => (
-                  <Column key={list.id} list={list} />
-                ))}
-                
-                <div className="flex-1 min-w-64 sm:min-w-72 flex items-center justify-center">
-                  <Card 
-                    className="bg-white/5 border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer w-full"
-                    onClick={() => setShowCreateColumnModal(true)}
-                  >
-                    <CardContent className="p-8 text-center">
-                      <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                      <span className="text-gray-400 text-lg font-medium">Create Column</span>
-                    </CardContent>
-                  </Card>
+          {/* Search Results Indicator */}
+          {(searchQuery || selectedLabels.length > 0 || selectedMembers.length > 0) && (
+            <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Search className="h-4 w-4 text-blue-400" />
+                  <span className="text-blue-400 text-sm font-medium">
+                    {Object.values(filteredTasks).flat().length} task(s) found
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  {searchQuery && <span>Search: "{searchQuery}"</span>}
+                  {selectedLabels.length > 0 && <span>{selectedLabels.length} label(s)</span>}
+                  {selectedMembers.length > 0 && <span>{selectedMembers.length} member(s)</span>}
                 </div>
               </div>
+            </div>
+          )}
+
+          <div className="space-y-6">
+            {loading ? (
+              <LoadingState message="Loading project data..." />
+            ) : lists.length > 0 ? (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext items={lists.map(list => list.id)} strategy={horizontalListSortingStrategy}>
+                  <div className="flex gap-4 sm:gap-6 min-w-max overflow-x-auto custom-scrollbar pb-4" style={{ paddingRight: '4rem' }}>
+                    {lists.map((list) => (
+                      <SortableColumn key={list.id} list={list} />
+                    ))}
+                      
+                      <div className="min-w-96 sm:min-w-[28rem] flex-shrink-0 h-24">
+                        <Card 
+                          className="bg-white/5 border border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer w-full rounded-lg"
+                          onClick={() => setShowCreateColumnModal(true)}
+                          style={{ animation: 'none' }}
+                        >
+                          <CardContent className="p-8 text-center">
+                            <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                            <span className="text-gray-400 text-lg font-medium">Create Column</span>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                </SortableContext>
+                
+                <DragOverlay>
+                  {activeId ? (
+                    <div className="bg-white/10 border border-white/20 rounded-lg p-4 shadow-lg opacity-90 max-w-xs">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="h-4 w-4 text-gray-400" />
+                        <span className="text-white text-sm font-medium truncate">
+                          {(() => {
+                            const task = Object.values(tasks).flat().find(t => t.id === activeId)
+                            const list = lists.find(l => l.id === activeId)
+                            return task ? task.name : list ? list.name : 'Dragging...'
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+                  ) : null}
+                </DragOverlay>
+              </DndContext>
             ) : (
               <div className="flex items-center justify-center py-12">
-                <Card className="bg-white/5 border-white/10 backdrop-blur-xl">
+                <Card className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-lg">
                   <CardContent className="p-12 text-center">
                     <List className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-white font-semibold text-lg mb-2">No columns yet</h3>
@@ -349,20 +927,30 @@ const ProjectDetail = () => {
       <TaskModal
         task={selectedTask}
         isOpen={showTaskModal}
+        labelsUpdated={labelsUpdated}
         onClose={() => {
           setShowTaskModal(false)
           setSelectedTask(null)
         }}
-        onUpdate={(updatedTask) => {
-          setTasks(prev => {
-            const newTasks = { ...prev }
-            Object.keys(newTasks).forEach(listId => {
-              newTasks[listId] = newTasks[listId].map(task => 
-                task.id === updatedTask.id ? updatedTask : task
-              )
-            })
-            return newTasks
-          })
+        onUpdate={async (updatedTask) => {
+          // Update the selected task
+          setSelectedTask(updatedTask)
+          
+          // Refresh the entire tasks data for the list containing this task
+          const listId = updatedTask.listId
+          if (listId) {
+            try {
+              const tasksResponse = await taskService.getTasksByList(listId)
+              if (tasksResponse.success) {
+                setTasks(prev => ({
+                  ...prev,
+                  [listId]: tasksResponse.data || []
+                }))
+              }
+            } catch (error) {
+              console.error('Error refreshing tasks:', error)
+            }
+          }
         }}
       />
 
@@ -371,6 +959,17 @@ const ProjectDetail = () => {
         onClose={() => setShowCreateColumnModal(false)}
         projectId={project?.id}
         onColumnCreated={handleColumnCreated}
+      />
+
+      <AddCardModal
+        isOpen={showAddCardModal}
+        onClose={() => {
+          setShowAddCardModal(false)
+          setSelectedListForCard(null)
+        }}
+        listId={selectedListForCard?.id}
+        listName={selectedListForCard?.name}
+        onCardCreated={handleCardCreated}
       />
     </Layout>
   )

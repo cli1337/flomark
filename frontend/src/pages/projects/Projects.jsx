@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { projectService } from '../../services/projectService'
+import usePageTitle from '../../hooks/usePageTitle'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
+import LoadingState from '../../components/ui/LoadingState'
 import { 
   DropdownMenu, 
   DropdownMenuTrigger, 
@@ -33,6 +35,8 @@ const Projects = () => {
   const { user } = useAuth()
   const { showSuccess, showError } = useToast()
   
+  usePageTitle('Projects')
+  
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -49,7 +53,7 @@ const Projects = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalProjects, setTotalProjects] = useState(0)
-  const projectsPerPage = 9
+  const projectsPerPage = 5
   
   const imageCache = useRef(new Map())
   const fetchProjects = async (page = 1) => {
@@ -58,10 +62,9 @@ const Projects = () => {
       const response = await projectService.getAllProjects(page, projectsPerPage)
       if (response.success) {
         setProjects(response.data || [])
-        const total = response.total || (response.data ? response.data.length : 0)
-        setTotalPages(Math.ceil(total / projectsPerPage))
-        setTotalProjects(total)
-        setCurrentPage(page)
+        setTotalProjects(response.total || 0)
+        setTotalPages(response.totalPages || 1)
+        setCurrentPage(response.page || page)
       } else {
         showError('Failed to load projects', response.message)
         setProjects([])
@@ -275,12 +278,13 @@ const Projects = () => {
                 const userRole = member.role || (member.isOwner || (member.user && member.user.id === user?.id) ? 'OWNER' : 'MEMBER')
                 const userInitial = userName.charAt(0).toUpperCase()
                 const isOwner = member.isOwner || (member.user && member.user.id === user?.id)
+                const isAdmin = member.role === 'ADMIN'
                 
                 return (
                   <div
                     key={member.id || index}
                     className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 hover:z-10 relative cursor-pointer transition-all duration-200 member-tooltip-trigger ${
-                      isOwner ? 'bg-gray-500' : 'bg-gray-600'
+                      isOwner ? 'bg-yellow-500' : isAdmin ? 'bg-blue-500' : 'bg-gray-600'
                     }`}
                     title={`${userName} - ${userRole}`}
                   >
@@ -424,13 +428,15 @@ const Projects = () => {
               const userInitial = userName.charAt(0).toUpperCase()
               const isOwner = member.isOwner || (member.user && member.user.id === user?.id)
               
+              const isAdmin = member.role === 'ADMIN'
+              
               return (
                 <div
                   key={member.id || index}
                   className={`w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 hover:z-10 relative cursor-pointer transition-all duration-200 ${
-                    isOwner ? 'bg-gray-500' : 'bg-gray-600'
+                    isOwner ? 'bg-yellow-500' : isAdmin ? 'bg-blue-500' : 'bg-gray-600'
                   }`}
-                  title={`${userName} - ${isOwner ? 'OWNER' : 'MEMBER'}`}
+                  title={`${userName} - ${member.role || (isOwner ? 'OWNER' : 'MEMBER')}`}
                 >
                   <span>{userInitial}</span>
                 </div>
@@ -721,9 +727,7 @@ const Projects = () => {
           </div>
 
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="text-gray-400">Loading projects...</div>
-            </div>
+            <LoadingState message="Loading projects..." />
           ) : (
             <>
               {viewMode === 'grid' ? (
@@ -782,8 +786,9 @@ const Projects = () => {
                 </div>
               )}
 
-              {/* Pagination Section */}
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 mt-8 sm:mt-12">
+              {/* Pagination Section - Only show if more than 1 page */}
+              {totalPages > 1 && (
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6 mt-8 sm:mt-12">
                 {/* Left Side - Page Info and Quick Jump */}
                 <div className="flex items-center gap-4">
                   {/* Page Info */}
@@ -942,6 +947,7 @@ const Projects = () => {
                   </div>
                 </div>
               </div>
+              )}
 
               {projects.length === 0 && (
                 <Card className="bg-white/5 border-white/10 backdrop-blur-xl border-dashed">

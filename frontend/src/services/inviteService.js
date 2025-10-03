@@ -1,7 +1,7 @@
 import api from './api'
 
 export const inviteService = {
-  async createInviteLink(projectId, email) {
+  async createInviteLink(projectId, email = null) {
     const response = await api.post(`/projects/${projectId}/invite`, { email })
     return response.data
   },

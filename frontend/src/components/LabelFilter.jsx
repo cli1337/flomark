@@ -20,7 +20,7 @@ import {
 import { labelService } from '../services/labelService'
 import { useToast } from '../contexts/ToastContext'
 
-const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
+const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange, onLabelsUpdated }) => {
   const { showSuccess, showError } = useToast()
   const [labels, setLabels] = useState([])
   const [loading, setLoading] = useState(false)
@@ -72,6 +72,9 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
         setNewLabelName('')
         setShowCreateForm(false)
         showSuccess('Label Created', 'New label has been created successfully')
+        
+        // Notify parent components that a new label has been created
+        onLabelsUpdated?.(response.data.id, response.data)
       }
     } catch (error) {
       showError('Failed to Create Label', 'Could not create new label')
@@ -89,6 +92,9 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
         ))
         setEditingLabel(null)
         showSuccess('Label Updated', 'Label has been updated successfully')
+        
+        // Notify parent components that labels have been updated
+        onLabelsUpdated?.(labelId, { name, color })
       }
     } catch (error) {
       showError('Failed to Update Label', 'Could not update label')
@@ -102,6 +108,9 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange }) => {
         setLabels(prev => prev.filter(label => label.id !== labelId))
         onLabelsChange?.(selectedLabels.filter(id => id !== labelId))
         showSuccess('Label Deleted', 'Label has been deleted successfully')
+        
+        // Notify parent components that a label has been deleted
+        onLabelsUpdated?.(labelId, null)
       }
     } catch (error) {
       showError('Failed to Delete Label', 'Could not delete label')
