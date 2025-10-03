@@ -28,7 +28,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Grid3X3,
-  List
+  List,
+  LogOut
 } from 'lucide-react'
 
 const Projects = () => {
@@ -40,6 +41,7 @@ const Projects = () => {
   const [showCreateProject, setShowCreateProject] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
+  const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
   const [viewMode, setViewMode] = useState(() => {
     // Load view mode from localStorage, default to 'grid'
@@ -97,6 +99,35 @@ const Projects = () => {
   const handleDeleteProject = (project) => {
     setSelectedProject(project)
     setShowDeleteModal(true)
+  }
+
+  const handleLeaveProject = (project) => {
+    setSelectedProject(project)
+    setShowLeaveModal(true)
+  }
+
+  const confirmLeaveProject = async () => {
+    try {
+      // TODO: Implement leave project API call
+      showSuccess('Left Project', `You have left ${selectedProject.name}`)
+      setShowLeaveModal(false)
+      fetchProjects(currentPage)
+    } catch (error) {
+      showError('Failed to Leave Project', 'Please try again later')
+    }
+  }
+
+  // Helper function to get user's role in a project
+  const getUserRoleInProject = (project) => {
+    if (!user || !project.members) return 'MEMBER'
+    
+    const userMember = project.members.find(member => 
+      member.userId === user.id || member.user?.id === user.id
+    )
+    
+    if (!userMember) return 'MEMBER'
+    
+    return userMember.role || (userMember.isOwner ? 'OWNER' : 'MEMBER')
   }
   useEffect(() => {
     fetchProjects()
@@ -224,26 +255,75 @@ const Projects = () => {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-48">
-                <DropdownMenuItem 
-                  className="cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleEditProject(project)
-                  }}
-                >
-                  <Edit className="h-4 w-4 mr-2" />
-                  Edit Project
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    handleDeleteProject(project)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </DropdownMenuItem>
+                {(() => {
+                  const userRole = getUserRoleInProject(project)
+                  
+                  if (userRole === 'OWNER') {
+                    return (
+                      <>
+                        <DropdownMenuItem 
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditProject(project)
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Project
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleDeleteProject(project)
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </>
+                    )
+                  } else if (userRole === 'ADMIN') {
+                    return (
+                      <>
+                        <DropdownMenuItem 
+                          className="cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleEditProject(project)
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit Project
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            handleLeaveProject(project)
+                          }}
+                        >
+                          <LogOut className="h-4 w-4 mr-2" />
+                          Leave
+                        </DropdownMenuItem>
+                      </>
+                    )
+                  } else {
+                    // MEMBER role
+                    return (
+                      <DropdownMenuItem 
+                        className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleLeaveProject(project)
+                        }}
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Leave
+                      </DropdownMenuItem>
+                    )
+                  }
+                })()}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -468,26 +548,75 @@ const Projects = () => {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-48">
-              <DropdownMenuItem 
-                className="cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleEditProject(project)
-                }}
-              >
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Project
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  handleDeleteProject(project)
-                }}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
+              {(() => {
+                const userRole = getUserRoleInProject(project)
+                
+                if (userRole === 'OWNER') {
+                  return (
+                    <>
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditProject(project)
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Project
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteProject(project)
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </>
+                  )
+                } else if (userRole === 'ADMIN') {
+                  return (
+                    <>
+                      <DropdownMenuItem 
+                        className="cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditProject(project)
+                        }}
+                      >
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit Project
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleLeaveProject(project)
+                        }}
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Leave
+                      </DropdownMenuItem>
+                    </>
+                  )
+                } else {
+                  // MEMBER role
+                  return (
+                    <DropdownMenuItem 
+                      className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleLeaveProject(project)
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Leave
+                    </DropdownMenuItem>
+                  )
+                }
+              })()}
             </DropdownMenuContent>
           </DropdownMenu>
         </td>
@@ -684,6 +813,69 @@ const Projects = () => {
                 </>
               ) : (
                 'Update Project'
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Leave Confirmation Modal Component
+  const LeaveConfirmationModal = ({ isOpen, onClose, project }) => {
+    const [isLeaving, setIsLeaving] = useState(false)
+
+    const handleLeave = async () => {
+      setIsLeaving(true)
+      try {
+        // TODO: Implement leave project API call
+        showSuccess('Left Project', `You have left ${project.name}`)
+        onClose()
+        fetchProjects(currentPage)
+      } catch (error) {
+        showError('Failed to Leave Project', 'Please try again later')
+      } finally {
+        setIsLeaving(false)
+      }
+    }
+
+    const handleClose = () => {
+      setIsLeaving(false)
+      onClose()
+    }
+
+    if (!isOpen || !project) return null
+
+    return (
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white/10 border border-white/20 rounded-lg p-6 w-full max-w-md backdrop-blur-xl">
+          <h2 className="text-xl font-semibold text-white mb-4">Leave Project</h2>
+          <p className="text-gray-300 mb-4">
+            Do you really want to leave <span className="font-semibold text-white">{project.name}</span>?
+          </p>
+          <p className="text-gray-400 text-sm mb-6">
+            You will no longer have access to this project and all its tasks.
+          </p>
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={handleClose}
+              disabled={isLeaving}
+              className="px-4 py-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+            >
+              No
+            </button>
+            <button
+              onClick={handleLeave}
+              disabled={isLeaving}
+              className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            >
+              {isLeaving ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                  Leaving...
+                </>
+              ) : (
+                'Yes, Leave'
               )}
             </button>
           </div>
@@ -986,6 +1178,12 @@ const Projects = () => {
       <EditProjectModal
         isOpen={showEditModal}
         onClose={() => setShowEditModal(false)}
+        project={selectedProject}
+      />
+
+      <LeaveConfirmationModal
+        isOpen={showLeaveModal}
+        onClose={() => setShowLeaveModal(false)}
         project={selectedProject}
       />
     </Layout>

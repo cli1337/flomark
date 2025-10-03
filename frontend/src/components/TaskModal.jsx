@@ -31,6 +31,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
   const { user } = useAuth()
   const isMobile = useMobileDetection()
   const [taskData, setTaskData] = useState(task)
+  const [canManageMembers, setCanManageMembers] = useState(false)
   const [newSubTask, setNewSubTask] = useState('')
   const [newComment, setNewComment] = useState('')
   const [isEditingName, setIsEditingName] = useState(false)
@@ -210,6 +211,14 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
           const assignedMemberIds = taskData.members?.map(m => m.userId) || []
           const available = response.data.filter(m => !assignedMemberIds.includes(m.userId))
           setAvailableMembers(available)
+          
+          // Check if current user can manage members
+          const currentUserMember = response.data.find(member => 
+            member.userId === user?.id || member.id === user?.id
+          )
+          const isOwner = currentUserMember?.role === 'OWNER' || currentUserMember?.isOwner
+          const isAdmin = currentUserMember?.role === 'ADMIN'
+          setCanManageMembers(isOwner || isAdmin)
         }
       }
     } catch (error) {
@@ -265,6 +274,12 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
   }
 
   const handleRemoveMember = async (memberId) => {
+    // Prevent users from removing themselves from tasks
+    if (memberId === user?.id) {
+      showError('Cannot Remove Yourself', 'You cannot remove yourself from this task.')
+      return
+    }
+
     try {
       const response = await taskService.removeMember(taskData.id, memberId)
       if (response.success) {
@@ -441,12 +456,15 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
                       {member.user?.name?.charAt(0) || 'U'}
                     </div>
                     <span className="text-white text-xs">{member.user?.name}</span>
-                    <button
-                      onClick={() => handleRemoveMember(member.userId)}
-                      className="p-0.5 hover:bg-red-500/20 rounded transition-colors"
-                    >
-                      <XIcon className="h-3 w-3 text-red-400" />
-                    </button>
+                    {canManageMembers && member.userId !== user?.id && (
+                      <button
+                        onClick={() => handleRemoveMember(member.userId)}
+                        className="p-0.5 hover:bg-red-500/20 rounded transition-colors"
+                        title="Remove member from task"
+                      >
+                        <XIcon className="h-3 w-3 text-red-400" />
+                      </button>
+                    )}
                   </div>
                 ))}
                 <button 

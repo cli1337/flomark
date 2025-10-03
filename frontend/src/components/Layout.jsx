@@ -15,6 +15,7 @@ import {
   MoreVertical,
   ArrowLeft
 } from 'lucide-react'
+import NotificationDropdown from './NotificationDropdown'
 
 const Layout = ({ children }) => {
   const { user, logout } = useAuth()
@@ -56,7 +57,10 @@ const Layout = ({ children }) => {
             )}
           </div>
           
-          <DropdownMenu>
+          <div className="flex items-center gap-3">
+            <NotificationDropdown />
+            
+            <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors group">
                 <div className="h-8 w-8 rounded-lg bg-gray-600 flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200">
@@ -90,6 +94,7 @@ const Layout = ({ children }) => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          </div>
         </div>
 
         <div className="flex-1 overflow-auto">

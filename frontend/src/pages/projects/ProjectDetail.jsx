@@ -720,7 +720,7 @@ const ProjectDetail = () => {
                   ></div>
                       
                   {isEditing ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
                       <input
                         type="text"
                         value={editingColumnName}
@@ -730,30 +730,11 @@ const ProjectDetail = () => {
                             handleSaveColumnName()
                           }
                         }}
-                        className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-white/40 flex-1"
+                        className="bg-white/10 border border-white/20 rounded px-2 py-1 text-white text-sm font-bold uppercase tracking-wider focus:outline-none focus:border-white/40 flex-1 min-w-0 max-w-full"
                         autoFocus
                         onClick={(e) => e.stopPropagation()}
+                        style={{ maxWidth: '150px' }}
                       />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleSaveColumnName()
-                        }}
-                        className="p-1 hover:bg-white/10 rounded transition-colors"
-                        title="Save"
-                      >
-                        <Check className="h-4 w-4 text-green-400" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleCancelEditColumn()
-                        }}
-                        className="p-1 hover:bg-white/10 rounded transition-colors"
-                        title="Cancel"
-                      >
-                        <X className="h-4 w-4 text-red-400" />
-                      </button>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 flex-1">
@@ -780,6 +761,32 @@ const ProjectDetail = () => {
                     </div>
                   )}
                 </div>
+                
+                {/* Action buttons for editing mode */}
+                {isEditing && (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleSaveColumnName()
+                      }}
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                      title="Save"
+                    >
+                      <Check className="h-4 w-4 text-green-400" />
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleCancelEditColumn()
+                      }}
+                      className="p-1 hover:bg-white/10 rounded transition-colors"
+                      title="Cancel"
+                    >
+                      <X className="h-4 w-4 text-red-400" />
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

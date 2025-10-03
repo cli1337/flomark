@@ -336,6 +336,15 @@ export const joinProject = async (req, res, next) => {
             return res.status(401).json({ message: "User not authenticated", key: "user_not_authenticated", success: false });
         }
 
+        // Check if invite is email-specific and validate user's email
+        if (invite.email && user.email !== invite.email) {
+            return res.status(403).json({ 
+                message: "This invite is only valid for the email address it was sent to", 
+                key: "email_mismatch", 
+                success: false 
+            });
+        }
+
         const existingMember = await prisma.projectMember.findUnique({
             where: {
                 userId_projectId: {

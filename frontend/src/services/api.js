@@ -20,9 +20,15 @@ const createApiInstance = (contentType = 'application/json') => {
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  if (token) {
+  
+  // Only attach token if it exists and is not empty
+  if (token && token.trim() !== '') {
     config.headers.Authorization = `Bearer ${token}`
+  } else {
+    // Log when requests are made without valid tokens for debugging
+    console.warn(`Request to ${config.url} made without valid token`)
   }
+  
   return config
 })
 
@@ -33,7 +39,9 @@ api.interceptors.response.use(
 
     if (error.response?.status === 401) {
       const refreshToken = localStorage.getItem('refreshToken');
-      if (refreshToken) {
+      
+      // Only attempt refresh if we have a valid refresh token
+      if (refreshToken && refreshToken.trim() !== '') {
         try {
           const response = await axios.post(`${API_BASE_URL}/user/refresh`, {
             refreshToken,
@@ -46,11 +54,18 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${token}`;
           return api.request(originalRequest);
         } catch (refreshError) {
+          console.log('Token refresh failed, redirecting to login');
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           window.location.href = '/login';
           return Promise.reject(refreshError);
         }
+      } else {
+        // No valid refresh token, redirect to login
+        console.log('No valid refresh token, redirecting to login');
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
       }
     }
 

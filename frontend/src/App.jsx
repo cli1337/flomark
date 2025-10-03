@@ -8,6 +8,7 @@ import Profile from './pages/profile/Profile'
 import JoinProject from './pages/join/JoinProject'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { NotificationProvider } from './contexts/NotificationContext'
 import { useServerStatus } from './hooks/useServerStatus'
 import LoadingState from './components/ui/LoadingState'
 
@@ -32,20 +33,22 @@ function App() {
 
   return (
         <AuthProvider>
-          <Router>
-            <div className="App">
-              <Routes>
-                <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-                <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-                <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                <Route path="/join/:inviteLink" element={<JoinProject />} />
-                <Route path="/logout" element={<LogoutRoute />} />
-                <Route path="/" element={<Navigate to="/projects" />} />
-              </Routes>
-            </div>
-          </Router>
+          <NotificationProvider>
+            <Router>
+              <div className="App">
+                <Routes>
+                  <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                  <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                  <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+                  <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/join/:inviteLink" element={<JoinProject />} />
+                  <Route path="/logout" element={<LogoutRoute />} />
+                  <Route path="/" element={<Navigate to="/projects" />} />
+                </Routes>
+              </div>
+            </Router>
+          </NotificationProvider>
         </AuthProvider>
   )
 }

@@ -14,7 +14,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     const token = localStorage.getItem('token')
 
-    if (token) {
+    // Validate token exists and is not empty
+    if (token && token.trim() !== '') {
       authService.getProfile()
         .then(userData => {
           setUser(userData)
@@ -28,6 +29,11 @@ export function AuthProvider({ children }) {
           setLoading(false)
         })
     } else {
+      // Clear any invalid tokens
+      if (token === '') {
+        localStorage.removeItem('token')
+        localStorage.removeItem('refreshToken')
+      }
       setLoading(false)
     }
   }, [])

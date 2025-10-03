@@ -77,6 +77,9 @@ const JoinProject = () => {
         setStatus('error')
         showError('User Not Found', 'The email associated with this invite was not found')
         break
+      case 'email_mismatch':
+        setStatus('email-mismatch')
+        break
       case 'already_a_member':
         setStatus('already-member')
         break
@@ -154,6 +157,26 @@ const JoinProject = () => {
             </p>
             <p className="text-gray-400 mb-6">
               The project may have been deleted or the invite is invalid
+            </p>
+            <Button
+              onClick={handleGoToProjects}
+              className="w-full bg-white text-black font-medium py-2.5 px-4 rounded-lg border border-white hover:border-gray-300 hover:bg-gray-50 transition-all duration-200"
+            >
+              Go to Projects
+            </Button>
+          </div>
+        )
+
+      case 'email-mismatch':
+        return (
+          <div className="text-center">
+            <XCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-white mb-2">Email Mismatch</h2>
+            <p className="text-gray-300 mb-4">
+              This invite link was created for a specific email address
+            </p>
+            <p className="text-gray-400 mb-6">
+              You can only join this project with the email address the invite was sent to
             </p>
             <Button
               onClick={handleGoToProjects}

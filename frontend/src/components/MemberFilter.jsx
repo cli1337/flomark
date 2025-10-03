@@ -15,6 +15,7 @@ import {
   Crown,
   UserMinus,
   UserPlus,
+  User,
   X
 } from 'lucide-react'
 import { memberService } from '../services/memberService'
@@ -107,7 +108,14 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
   }
 
   const handleRemoveMember = async (memberId) => {
+    // Prevent removing project owner
     if (memberId === projectOwner?.id) return
+    
+    // Prevent users from removing themselves
+    if (memberId === user?.id) {
+      showError('Cannot Remove Yourself', 'You cannot remove yourself from the project. Ask another admin to remove you if needed.')
+      return
+    }
 
     try {
       const response = await memberService.removeMemberFromProject(projectId, memberId)
@@ -141,9 +149,9 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
   const isOwner = user?.id === projectOwner?.id
   
   // Check if current user is admin or owner
-  const currentUserMember = members.find(member => member.userId === user?.id)
+  const currentUserMember = members.find(member => member.userId === user?.id || member.id === user?.id)
   const isAdmin = currentUserMember?.role === 'ADMIN'
-  const canManageRoles = isOwner || isAdmin
+  const canManageRoles = isOwner // Only owners can manage roles (promote/demote), not admins
 
   const toggleMemberSelection = (memberId) => {
     const newSelection = selectedMembers.includes(memberId)
@@ -198,7 +206,8 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                 const userInitial = userName.charAt(0).toUpperCase()
                 const isMemberOwner = member.role === 'OWNER' || member.isOwner
                 const isMemberAdmin = member.role === 'ADMIN'
-                const canManage = canManageRoles && !isMemberOwner
+                const isCurrentUser = member.userId === user?.id || member.id === user?.id
+                const canManage = canManageRoles && !isMemberOwner && !isCurrentUser
                 
                 return (
                   <div key={member.id} className="flex items-center gap-3 group">
@@ -214,6 +223,9 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                       <div className="flex-1">
                         <div className="text-white text-sm font-medium">
                           {userName}
+                          {(member.userId === user?.id || member.id === user?.id) && (
+                            <span className="text-xs text-gray-300 ml-1">(you)</span>
+                          )}
                           {isMemberOwner && (
                             <span className="text-xs text-yellow-400 flex items-center gap-1">
                               <Crown className="h-3 w-3" />
@@ -224,6 +236,12 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                             <span className="text-xs text-blue-400 flex items-center gap-1">
                               <UserPlus className="h-3 w-3" />
                               Admin
+                            </span>
+                          )}
+                          {!isMemberOwner && !isMemberAdmin && (
+                            <span className="text-xs text-gray-400 flex items-center gap-1">
+                              <User className="h-3 w-3" />
+                              Member
                             </span>
                           )}
                         </div>
@@ -270,13 +288,16 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                           </button>
                         )}
                         
-                        <button
-                          onClick={() => handleRemoveMember(member.id)}
-                          className="p-1 hover:bg-red-500/20 rounded transition-colors"
-                          title="Remove Member"
-                        >
-                          <X className="h-3 w-3 text-red-400" />
-                        </button>
+                        {/* Only show remove button if it's not the current user */}
+                        {member.userId !== user?.id && member.id !== user?.id && (
+                          <button
+                            onClick={() => handleRemoveMember(member.id)}
+                            className="p-1 hover:bg-red-500/20 rounded transition-colors"
+                            title="Remove Member"
+                          >
+                            <X className="h-3 w-3 text-red-400" />
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
