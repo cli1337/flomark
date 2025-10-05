@@ -14,11 +14,15 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
-  const { login } = useAuth()
+  const { login, completeTwoFactorLogin } = useAuth()
   const { showError, showSuccess } = useToast()
   const navigate = useNavigate()
   
   usePageTitle('Sign In')
+
+  const [needs2FA, setNeeds2FA] = useState(false)
+  const [pendingToken, setPendingToken] = useState('')
+  const [totp, setTotp] = useState('')
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -26,13 +30,29 @@ function Login() {
 
     const result = await login(email, password)
 
-        if (result.success) {
+        if (result.success && result.needs2FA) {
+          setNeeds2FA(true)
+          setPendingToken(result.pendingToken)
+        } else if (result.success) {
           showSuccess('Login Successful', 'Welcome back!')
           navigate('/projects')
         } else {
       showError('Login Failed', result.message)
     }
 
+    setLoading(false)
+  }
+
+  const handleVerify2FA = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    const result = await completeTwoFactorLogin(pendingToken, totp)
+    if (result.success) {
+      showSuccess('Login Successful', 'Welcome back!')
+      navigate('/projects')
+    } else {
+      showError('Login Failed', result.message)
+    }
     setLoading(false)
   }
 
@@ -52,6 +72,7 @@ function Login() {
             <CardDescription className="text-gray-400">Enter your credentials to access your account</CardDescription>
           </CardHeader>
               <CardContent>
+            {!needs2FA ? (
             <Form.Root onSubmit={handleSubmit} className="space-y-4">
               {/* Email Field */}
               <Form.Field name="email" className="space-y-2">
@@ -171,6 +192,32 @@ function Login() {
                 </Link>
               </p>
             </Form.Root>
+            ) : (
+            <form onSubmit={handleVerify2FA} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="totp" className="text-sm font-medium text-gray-200">Authentication Code</label>
+                <input
+                  id="totp"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Enter 6-digit code"
+                  required
+                  value={totp}
+                  onChange={(e) => setTotp(e.target.value)}
+                  className="w-full rounded-lg border border-white/10 bg-white/5 py-2.5 px-4 text-white placeholder:text-gray-500 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-white text-black font-medium py-2.5 px-4 rounded-lg border border-white hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? 'Verifying...' : 'Verify Code'}
+              </Button>
+            </form>
+            )}
           </CardContent>
         </Card>
       </div>

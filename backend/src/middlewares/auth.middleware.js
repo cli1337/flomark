@@ -24,6 +24,7 @@ export const authenticateToken = async (req, res, next) => {
         email: true,
         createdAt: true,
         role: true,
+        twoFactorEnabled: true,
       },
     });
 

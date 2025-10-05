@@ -16,6 +16,8 @@ model User {
   role  Role @default(USER)
   registerIP String?
   lastIP String?
+  twoFactorEnabled Boolean @default(false)
+  twoFactorSecret  String?
   
   projectMemberships ProjectMember[]
   taskAssignments    TaskMember[]

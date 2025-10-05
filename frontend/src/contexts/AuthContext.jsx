@@ -43,6 +43,9 @@ export function AuthProvider({ children }) {
       const response = await authService.login(email, password)
       
       if (response.success) {
+        if (response.data?.requires2fa && response.data?.pendingToken) {
+          return { success: true, needs2FA: true, pendingToken: response.data.pendingToken }
+        }
         localStorage.setItem('token', response.data.token)
         localStorage.setItem('refreshToken', response.data.refreshToken)
         setUser(response.data.user)
@@ -56,6 +59,24 @@ export function AuthProvider({ children }) {
         return { success: false, message: error.data.message }
       }
       return { success: false, message: error.message || 'An error occurred during login' }
+    }
+  }
+
+  const completeTwoFactorLogin = async (pendingToken, code) => {
+    try {
+      const response = await authService.verify2FALogin(pendingToken, code)
+      if (response.success) {
+        localStorage.setItem('token', response.data.token)
+        localStorage.setItem('refreshToken', response.data.refreshToken)
+        setUser(response.data.user)
+        return { success: true }
+      }
+      return { success: false, message: response.message }
+    } catch (error) {
+      if (error.error && error.data) {
+        return { success: false, message: error.data.message }
+      }
+      return { success: false, message: error.message || 'Failed to verify 2FA code' }
     }
   }
 
@@ -86,6 +107,7 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     login,
+    completeTwoFactorLogin,
     register,
     logout,
     loading

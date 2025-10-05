@@ -25,5 +25,25 @@ export const authService = {
   async refreshToken(refreshToken) {
     const response = await api.post('/user/refresh', { refreshToken })
     return response.data.data
+  },
+
+  async init2FA() {
+    const response = await api.post('/user/2fa/init')
+    return response.data
+  },
+
+  async verify2FASetup(code) {
+    const response = await api.post('/user/2fa/verify-setup', { code })
+    return response.data
+  },
+
+  async disable2FA(code) {
+    const response = await api.post('/user/2fa/disable', { code })
+    return response.data
+  },
+
+  async verify2FALogin(pendingToken, code) {
+    const response = await api.post('/user/2fa/verify-login', { pendingToken, code })
+    return response.data
   }
 }
