@@ -549,9 +549,9 @@ const ProjectDetail = () => {
 
 
       const matchesMembers = memberFilters.length === 0 ||
-        memberFilters.some(memberId =>
+        memberFilters.some(userId =>
           task.members && task.members.some(member => 
-            member.userId === memberId || member.id === memberId
+            member.userId === userId
           )
         )
 

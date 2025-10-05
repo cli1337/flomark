@@ -151,9 +151,13 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
   const canManageRoles = isOwner
 
   const toggleMemberSelection = (memberId) => {
-    const newSelection = selectedMembers.includes(memberId)
-      ? selectedMembers.filter(id => id !== memberId)
-      : [...selectedMembers, memberId]
+    // Use the userId instead of the memberId for filtering
+    const member = members.find(m => m.id === memberId)
+    const userId = member?.userId || member?.id
+    
+    const newSelection = selectedMembers.includes(userId)
+      ? selectedMembers.filter(id => id !== userId)
+      : [...selectedMembers, userId]
     onMembersChange?.(newSelection)
   }
 
@@ -244,7 +248,7 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                         </div>
                         <div className="text-gray-400 text-xs">{userEmail}</div>
                       </div>
-                      {selectedMembers.includes(member.id) && (
+                      {selectedMembers.includes(member.userId || member.id) && (
                         <Check className="h-4 w-4 text-green-400" />
                       )}
                     </button>
