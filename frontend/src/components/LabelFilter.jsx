@@ -73,7 +73,6 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange, onLabelsU
         setShowCreateForm(false)
         showSuccess('Label Created', 'New label has been created successfully')
         
-        // Notify parent components that a new label has been created
         onLabelsUpdated?.(response.data.id, response.data)
       }
     } catch (error) {
@@ -93,7 +92,6 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange, onLabelsU
         setEditingLabel(null)
         showSuccess('Label Updated', 'Label has been updated successfully')
         
-        // Notify parent components that labels have been updated
         onLabelsUpdated?.(labelId, { name, color })
       }
     } catch (error) {
@@ -109,7 +107,6 @@ const LabelFilter = ({ projectId, selectedLabels = [], onLabelsChange, onLabelsU
         onLabelsChange?.(selectedLabels.filter(id => id !== labelId))
         showSuccess('Label Deleted', 'Label has been deleted successfully')
         
-        // Notify parent components that a label has been deleted
         onLabelsUpdated?.(labelId, null)
       }
     } catch (error) {

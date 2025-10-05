@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { projectService } from '../../services/projectService'
 import usePageTitle from '../../hooks/usePageTitle'
+import useWebSocketEvents from '../../hooks/useWebSocketEvents'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent } from '../../components/ui/Card'
 import LoadingState from '../../components/ui/LoadingState'
@@ -44,7 +45,7 @@ const Projects = () => {
   const [showLeaveModal, setShowLeaveModal] = useState(false)
   const [selectedProject, setSelectedProject] = useState(null)
   const [viewMode, setViewMode] = useState(() => {
-    // Load view mode from localStorage, default to 'grid'
+
     const savedViewMode = localStorage.getItem('projectViewMode')
     return savedViewMode || 'grid'
   })
@@ -58,6 +59,95 @@ const Projects = () => {
   const projectsPerPage = 5
   
   const imageCache = useRef(new Map())
+
+
+  const handleProjectCreated = useCallback((data) => {
+    if (data.payload?.project) {
+      setProjects(prev => [data.payload.project, ...prev])
+      setTotalProjects(prev => prev + 1)
+      showSuccess('New Project', `${data.userName} created a new project`)
+    }
+  }, [showSuccess])
+
+  const handleProjectUpdated = useCallback((data) => {
+    if (data.payload?.project) {
+      setProjects(prev => prev.map(project => 
+        project.id === data.payload.project.id ? data.payload.project : project
+      ))
+      showSuccess('Project Updated', `${data.userName} updated the project`)
+    }
+  }, [showSuccess])
+
+  const handleProjectImageUpdated = useCallback((data) => {
+    if (data.payload?.project) {
+      setProjects(prev => prev.map(project => 
+        project.id === data.payload.project.id ? data.payload.project : project
+      ))
+
+      const cacheKey = `${data.payload.project.id}-${data.payload.imageHash}`
+      imageCache.current.delete(cacheKey)
+      showSuccess('Project Image Updated', `${data.userName} updated the project image`)
+    }
+  }, [showSuccess])
+
+  const handleMemberJoined = useCallback((data) => {
+    if (data.payload?.project) {
+      setProjects(prev => prev.map(project => 
+        project.id === data.payload.project.id ? data.payload.project : project
+      ))
+      showSuccess('New Member', `${data.userName} joined the project`)
+    }
+  }, [showSuccess])
+
+  const handleMemberRemoved = useCallback((data) => {
+    if (data.payload?.member) {
+      setProjects(prev => prev.map(project => 
+        project.id === data.projectId 
+          ? {
+              ...project,
+              members: project.members.filter(member => member.id !== data.payload.member.id)
+            }
+          : project
+      ))
+      showSuccess('Member Removed', `${data.userName} removed a member from the project`)
+    }
+  }, [showSuccess])
+
+  const handleMemberRoleUpdated = useCallback((data) => {
+    if (data.payload?.member) {
+      setProjects(prev => prev.map(project => 
+        project.id === data.projectId 
+          ? {
+              ...project,
+              members: project.members.map(member => 
+                member.id === data.payload.member.id ? data.payload.member : member
+              )
+            }
+          : project
+      ))
+      showSuccess('Member Role Updated', `${data.userName} updated a member's role`)
+    }
+  }, [showSuccess])
+
+  const handleProjectDeleted = useCallback((data) => {
+    if (data.payload?.projectId) {
+      setProjects(prev => prev.filter(project => project.id !== data.payload.projectId))
+      setTotalProjects(prev => prev - 1)
+      showSuccess('Project Deleted', `${data.userName} deleted the project`)
+    }
+  }, [showSuccess])
+
+
+  useWebSocketEvents(null, {
+    onProjectCreated: handleProjectCreated,
+    onProjectUpdated: handleProjectUpdated,
+    onProjectImageUpdated: handleProjectImageUpdated,
+    onProjectDeleted: handleProjectDeleted,
+    onMemberJoined: handleMemberJoined,
+    onMemberRemoved: handleMemberRemoved,
+    onMemberRoleUpdated: handleMemberRoleUpdated
+  })
+
   const fetchProjects = async (page = 1) => {
     try {
       setLoading(true)
@@ -108,7 +198,7 @@ const Projects = () => {
 
   const confirmLeaveProject = async () => {
     try {
-      // TODO: Implement leave project API call
+
       showSuccess('Left Project', `You have left ${selectedProject.name}`)
       setShowLeaveModal(false)
       fetchProjects(currentPage)
@@ -117,7 +207,7 @@ const Projects = () => {
     }
   }
 
-  // Helper function to get user's role in a project
+
   const getUserRoleInProject = (project) => {
     if (!user || !project.members) return 'MEMBER'
     
@@ -188,14 +278,14 @@ const Projects = () => {
 
     const members = getProjectMembers()
     
-    // Calculate project statistics
+
     const totalTasks = project.lists?.reduce((acc, list) => acc + (list.tasks?.length || 0), 0) || 0
     const completedTasks = project.lists?.reduce((acc, list) => 
       acc + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0
     const totalLists = project.lists?.length || 0
     const assignmentCount = Math.floor(Math.random() * 5)
     
-    // Get last activity (most recent task update or project update)
+
     const lastActivity = project.updatedAt
 
     return (
@@ -309,7 +399,7 @@ const Projects = () => {
                       </>
                     )
                   } else {
-                    // MEMBER role
+
                     return (
                       <DropdownMenuItem 
                         className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
@@ -450,7 +540,7 @@ const Projects = () => {
 
     const members = getProjectMembers()
     
-    // Calculate project statistics
+
     const totalTasks = project.lists?.reduce((acc, list) => acc + (list.tasks?.length || 0), 0) || 0
     const completedTasks = project.lists?.reduce((acc, list) => 
       acc + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0
@@ -602,7 +692,7 @@ const Projects = () => {
                     </>
                   )
                 } else {
-                  // MEMBER role
+
                   return (
                     <DropdownMenuItem 
                       className="text-red-400 hover:bg-red-500/10 hover:text-red-300 cursor-pointer"
@@ -624,7 +714,7 @@ const Projects = () => {
     )
   }
 
-  // Delete Confirmation Modal Component
+
   const DeleteConfirmationModal = ({ isOpen, onClose, project }) => {
     const [confirmName, setConfirmName] = useState('')
     const [isDeleting, setIsDeleting] = useState(false)
@@ -637,10 +727,14 @@ const Projects = () => {
 
       setIsDeleting(true)
       try {
-        // TODO: Implement delete project API call
-        showSuccess('Project deleted successfully')
-        onClose()
-        fetchProjects(currentPage)
+        const response = await projectService.deleteProject(project.id)
+        if (response.success) {
+          showSuccess('Project deleted successfully')
+          onClose()
+          fetchProjects(currentPage)
+        } else {
+          showError('Failed to delete project', response.message || 'Please try again later')
+        }
       } catch (error) {
         showError('Failed to delete project', 'Please try again later')
       } finally {
@@ -701,7 +795,7 @@ const Projects = () => {
     )
   }
 
-  // Edit Project Modal Component
+
   const EditProjectModal = ({ isOpen, onClose, project }) => {
     const [projectName, setProjectName] = useState('')
     const [selectedImage, setSelectedImage] = useState(null)
@@ -727,14 +821,31 @@ const Projects = () => {
         return
       }
 
+      if (projectName.trim() === project.name) {
+        showError('No changes made', 'Please enter a different project name')
+        return
+      }
+
       setIsUpdating(true)
       try {
-        // TODO: Implement update project API call
-        showSuccess('Project updated successfully')
-        onClose()
-        fetchProjects(currentPage)
+
+        const updateResponse = await projectService.updateProject(project.id, projectName.trim())
+        
+        if (updateResponse.success) {
+
+          if (selectedImage) {
+            await projectService.uploadProjectImage(project.id, selectedImage)
+          }
+          
+          showSuccess('Project updated successfully')
+          onClose()
+          fetchProjects(currentPage)
+        } else {
+          showError('Failed to update project', updateResponse.message || 'Please try again later')
+        }
       } catch (error) {
-        showError('Failed to update project', 'Please try again later')
+        console.error('Error updating project:', error)
+        showError('Failed to update project', error.message || 'Please try again later')
       } finally {
         setIsUpdating(false)
       }
@@ -803,7 +914,7 @@ const Projects = () => {
             </button>
             <button
               onClick={handleUpdate}
-              disabled={isUpdating || !projectName.trim()}
+              disabled={isUpdating || !projectName.trim() || projectName.trim() === project.name}
               className="px-4 py-2 bg-white hover:bg-gray-100 text-black rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isUpdating ? (
@@ -821,14 +932,14 @@ const Projects = () => {
     )
   }
 
-  // Leave Confirmation Modal Component
+
   const LeaveConfirmationModal = ({ isOpen, onClose, project }) => {
     const [isLeaving, setIsLeaving] = useState(false)
 
     const handleLeave = async () => {
       setIsLeaving(true)
       try {
-        // TODO: Implement leave project API call
+
         showSuccess('Left Project', `You have left ${project.name}`)
         onClose()
         fetchProjects(currentPage)
@@ -1045,7 +1156,7 @@ const Projects = () => {
                         startPage = Math.max(1, endPage - maxVisible + 1)
                       }
                       
-                      // First page + ellipsis
+
                       if (startPage > 1) {
                         pages.push(
                           <button
@@ -1070,7 +1181,7 @@ const Projects = () => {
                         }
                       }
                       
-                      // Page numbers
+
                       for (let i = startPage; i <= endPage; i++) {
                         pages.push(
                           <button
@@ -1088,7 +1199,7 @@ const Projects = () => {
                         )
                       }
                       
-                      // Ellipsis + last page
+
                       if (endPage < totalPages) {
                         if (endPage < totalPages - 1) {
                           pages.push(

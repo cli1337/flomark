@@ -1,6 +1,65 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Optimistic update animations */
+@keyframes optimistic-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(10px);
+    opacity: 0;
+  }
+}
+
+.optimistic-pending {
+  animation: optimistic-pulse 1.5s ease-in-out infinite;
+}
+
+.slide-in {
+  animation: slide-in 0.2s ease-out;
+}
+
+.slide-out {
+  animation: slide-out 0.2s ease-out;
+}
+
+/* Smooth transitions for drag and drop */
+.dnd-item {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.dnd-item.dragging {
+  transform: rotate(2deg) scale(1.05);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+.dnd-item.drag-over {
+  transform: scale(1.02);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
 /* Custom scrollbar styles */
 .scrollbar-thin {
   scrollbar-width: thin;
@@ -215,6 +274,20 @@
   .project-name {
     text-transform: uppercase;
     letter-spacing: 0.05em;
+  }
+  
+  /* Ensure project name doesn't have unwanted hover effects */
+  .project-name:not([data-editable="true"]) {
+    cursor: default !important;
+    pointer-events: none;
+  }
+  
+  /* Override any hover effects on project names */
+  .project-name:hover {
+    background-color: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
   }
 }
 /* Custom tooltip behavior for member icons */

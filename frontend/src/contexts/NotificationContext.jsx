@@ -10,7 +10,7 @@ export function NotificationProvider({ children }) {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
 
-  // Load notifications from localStorage on mount
+
   useEffect(() => {
     const savedNotifications = localStorage.getItem('notifications')
     if (savedNotifications) {
@@ -18,7 +18,7 @@ export function NotificationProvider({ children }) {
       setNotifications(parsed)
       setUnreadCount(parsed.filter(n => !n.read).length)
     } else {
-      // Add some example notifications for demo
+
       const exampleNotifications = [
         {
           id: 1,
@@ -72,7 +72,7 @@ export function NotificationProvider({ children }) {
     }
   }, [])
 
-  // Save notifications to localStorage whenever they change
+
   useEffect(() => {
     localStorage.setItem('notifications', JSON.stringify(notifications))
   }, [notifications])

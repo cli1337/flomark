@@ -1,5 +1,21 @@
 import { prisma } from "../config/database.js";
 import { ObjectId } from "mongodb";
+import { SocketService } from "../services/socket.service.js";
+
+
+const broadcastTaskUpdate = (projectId, type, payload, userId, userName) => {
+  if (SocketService.instance) {
+
+    SocketService.instance.broadcastToProject(projectId, type, {
+      projectId,
+      type,
+      payload,
+      userId,
+      userName,
+      timestamp: new Date().toISOString()
+    });
+  }
+};
 
 export const getTasksByList = async (req, res, next) => {
     try {
@@ -106,6 +122,11 @@ export const createTask = async (req, res, next) => {
                 subTasks: true
             }
         });
+
+
+        broadcastTaskUpdate(list.project.id, "task-created", {
+            task: task
+        }, req.user.id, req.user.name);
         
         res.json({ data: task, success: true });
     } catch (err) {
@@ -230,6 +251,11 @@ export const updateTask = async (req, res, next) => {
                 subTasks: true
             }
         });
+
+
+        broadcastTaskUpdate(task.list.project.id, "task-updated", {
+            task: updatedTask
+        }, req.user.id, req.user.name);
         
         res.json({ data: updatedTask, success: true });
     } catch (err) {
@@ -313,6 +339,13 @@ export const moveTask = async (req, res, next) => {
                 subTasks: true
             }
         });
+
+
+        broadcastTaskUpdate(task.list.project.id, "task-moved", {
+            task: movedTask,
+            fromListId: task.listId,
+            toListId: newListId
+        }, req.user.id, req.user.name);
         
         res.json({ data: movedTask, success: true });
     } catch (err) {
@@ -356,7 +389,7 @@ export const reorderTasks = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to reorder tasks in this list", key: "unauthorized", success: false });
         }
 
-        // TODO: Implement proper reordering when order field is available
+
         const updatedTasks = await prisma.task.findMany({
             where: { listId },
             include: {
@@ -414,6 +447,12 @@ export const deleteTask = async (req, res, next) => {
         await prisma.task.delete({
             where: { id: taskId }
         });
+
+
+        broadcastTaskUpdate(task.list.project.id, "task-deleted", {
+            taskId: taskId,
+            listId: task.listId
+        }, req.user.id, req.user.name);
         
         res.json({ data: { id: taskId }, success: true });
     } catch (err) {

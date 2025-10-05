@@ -14,11 +14,11 @@ import {
   Trash2,
   Plus,
   Check,
-  X as XIcon,
   Loader2,
   Upload,
   Tag,
-  AlertTriangle
+  AlertTriangle,
+  Pencil
 } from 'lucide-react'
 import { taskService } from '../services/taskService'
 import { projectService } from '../services/projectService'
@@ -42,7 +42,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
   const [tempName, setTempName] = useState(task?.name || '')
   const [tempDescription, setTempDescription] = useState(task?.description || '')
   
-  // New state for enhanced features
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showFileUpload, setShowFileUpload] = useState(false)
   const [showDueDatePicker, setShowDueDatePicker] = useState(false)
@@ -69,7 +69,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
     }
   }, [task])
 
-  // Load available members and labels when modal opens
+
   useEffect(() => {
     if (isOpen && task) {
       loadAvailableMembers()
@@ -77,7 +77,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
     }
   }, [isOpen, task])
 
-  // Refresh labels when labels are updated elsewhere
+
   useEffect(() => {
     if (isOpen && task && labelsUpdated > 0) {
       loadAvailableLabels()
@@ -126,7 +126,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
         setNewSubTask('')
         showSuccess('Subtask Added', 'Subtask has been added successfully')
         
-        // Notify parent component of the update
+
         onUpdate?.(updatedTaskData)
       }
     } catch (error) {
@@ -151,15 +151,15 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
         
         setTaskData(updatedTaskData)
         
-        // Update the parent task progress
+
         const newCompletedCount = updatedSubTasks.filter(sub => sub.isCompleted).length
         const newTotalCount = updatedSubTasks.length
         const newProgressPercentage = newTotalCount > 0 ? Math.round((newCompletedCount / newTotalCount) * 100) : 0
         
-        // Update task progress in the backend (optional - you might want to add this endpoint)
-        // await handleUpdateTask({ progress: newProgressPercentage })
+
+
         
-        // Notify parent component of the update
+
         onUpdate?.(updatedTaskData)
       }
     } catch (error) {
@@ -178,7 +178,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
         setTaskData(updatedTaskData)
         showSuccess('Subtask Deleted', 'Subtask has been deleted')
         
-        // Notify parent component of the update
+
         onUpdate?.(updatedTaskData)
       }
     } catch (error) {
@@ -200,10 +200,10 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
     }
   }
 
-  // New handler functions for enhanced features
+
   const loadAvailableMembers = async () => {
     try {
-      // Get project members and filter out already assigned ones
+
       const projectId = taskData.list?.projectId
       if (projectId) {
         const response = await projectService.getMembersByProject(projectId)
@@ -212,7 +212,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
           const available = response.data.filter(m => !assignedMemberIds.includes(m.userId))
           setAvailableMembers(available)
           
-          // Check if current user can manage members
+
           const currentUserMember = response.data.find(member => 
             member.userId === user?.id || member.id === user?.id
           )
@@ -265,7 +265,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
         setAvailableMembers(prev => prev.filter(m => m.userId !== memberId))
         showSuccess('Member Assigned', 'Member has been assigned to task')
         
-        // Notify parent component of the update
+
         onUpdate?.(updatedTaskData)
       }
     } catch (error) {
@@ -274,7 +274,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
   }
 
   const handleRemoveMember = async (memberId) => {
-    // Prevent users from removing themselves from tasks
+
     if (memberId === user?.id) {
       showError('Cannot Remove Yourself', 'You cannot remove yourself from this task.')
       return
@@ -290,7 +290,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
         setTaskData(updatedTaskData)
         showSuccess('Member Removed', 'Member has been removed from task')
         
-        // Notify parent component of the update
+
         onUpdate?.(updatedTaskData)
       }
     } catch (error) {
@@ -327,10 +327,10 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
         setTaskData(updatedTaskData)
         setShowLabelsModal(false)
         
-        // Refresh available labels to get any updates
+
         await loadAvailableLabels()
         
-        // Notify parent component of the update
+
         onUpdate?.(updatedTaskData)
       }
     } catch (error) {
@@ -350,7 +350,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
         setSelectedLabels(prev => prev.filter(label => label.id !== labelId))
         showSuccess('Label Removed', 'Label has been removed from task')
         
-        // Notify parent component of the update
+
         onUpdate?.(updatedTaskData)
       }
     } catch (error) {
@@ -375,7 +375,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
 
   const uploadFiles = async () => {
     try {
-      // TODO: Implement file upload to backend
+
       showSuccess('Files Uploaded', 'Files have been uploaded successfully')
       setShowFileUpload(false)
       setSelectedFiles([])
@@ -395,49 +395,51 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
       <div className={`bg-[#18191b] border border-white/10 rounded-lg w-full max-h-[95vh] overflow-hidden ${
         isMobile ? 'max-w-full mx-2' : 'max-w-4xl'
       }`}>
-        <div className="flex items-start justify-between p-4 sm:p-6 border-b border-white/10">
-          <div className="flex-1">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
             {isEditingName ? (
-              <div className="flex items-center gap-2">
-                <textarea
-                  value={tempName}
-                  onChange={(e) => setTempName(e.target.value)}
-                  className="w-full bg-transparent text-white text-xl font-semibold resize-none border-none outline-none"
-                  rows={1}
-                  autoFocus
-                />
-                <button
-                  onClick={handleNameSave}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
-                >
-                  <Check className="h-4 w-4 text-green-400" />
-                </button>
-                <button
-                  onClick={() => {
-                    setTempName(taskData.name)
-                    setIsEditingName(false)
-                  }}
-                  className="p-1 hover:bg-white/10 rounded transition-colors"
-                >
-                  <XIcon className="h-4 w-4 text-red-400" />
-                </button>
+              <div className="flex">
+                <div className="flex items-center gap-5">
+                  <textarea
+                    value={tempName}
+                    onChange={(e) => setTempName(e.target.value)}
+                    className="w-full bg-transparent text-white text-xl font-semibold resize-none border-none outline-none"
+                    rows={1}
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleNameSave}
+                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <Check className="h-4 w-4 text-green-400" />
+                  </button>
+                  <button
+                    onClick={() => {
+                      setTempName(taskData.name)
+                      setIsEditingName(false)
+                    }}
+                    className="p-1 hover:bg-white/10 rounded transition-colors"
+                  >
+                    <X className="h-4 w-4 text-red-400" />
+                  </button>
+                </div>
               </div>
             ) : (
-              <h1 
-                className="text-white text-xl font-semibold cursor-pointer hover:bg-white/5 p-2 -m-2 rounded"
-                onClick={() => setIsEditingName(true)}
-              >
-                {taskData.name}
-              </h1>
+              <div>
+                  <h1 
+                    className="text-white text-xl font-semibold cursor-pointer hover:bg-white/5 p-2 -m-2 rounded"
+                    onClick={() => setIsEditingName(true)}
+                  >
+                    {taskData.name}
+                  </h1>
+              </div>
             )}
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <X className="h-5 w-5 text-gray-400" />
+            </button>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-          >
-            <X className="h-5 w-5 text-gray-400" />
-          </button>
-        </div>
 
         <div className={`flex ${isMobile ? 'flex-col' : ''}`}>
           <div className={`flex-1 space-y-6 ${isMobile ? 'p-4' : 'p-6'}`}>
@@ -462,7 +464,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
                         className="p-0.5 hover:bg-red-500/20 rounded transition-colors"
                         title="Remove member from task"
                       >
-                        <XIcon className="h-3 w-3 text-red-400" />
+                        <X className="h-3 w-3 text-red-400" />
                       </button>
                     )}
                   </div>
@@ -543,7 +545,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
                       onClick={() => handleRemoveLabel(label.id)}
                       className="p-0.5 hover:bg-red-500/20 rounded transition-colors"
                     >
-                      <XIcon className="h-3 w-3 text-red-400" />
+                      <X className="h-3 w-3 text-red-400" />
                     </button>
                   </div>
                 ))}
@@ -830,7 +832,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
                       onClick={() => removeFile(index)}
                       className="p-1 hover:bg-red-500/20 rounded transition-colors"
                     >
-                      <XIcon className="h-4 w-4 text-red-400" />
+                      <X className="h-4 w-4 text-red-400" />
                     </button>
                   </div>
                 ))}

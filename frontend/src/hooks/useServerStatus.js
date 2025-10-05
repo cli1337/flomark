@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../contexts/ToastContext'
+import api from '../services/api'
 
 export const useServerStatus = () => {
   const [isOnline, setIsOnline] = useState(true)
@@ -9,18 +10,13 @@ export const useServerStatus = () => {
   const checkServerStatus = useCallback(async () => {
     setIsChecking(true)
     try {
-      const response = await fetch('/api/health', {
-        method: 'GET',
-        timeout: 5000
-      })
+      const response = await api.get('/health')
       
       const wasOffline = !isOnline
-      setIsOnline(response.ok)
+      setIsOnline(true)
 
-      if (wasOffline && response.ok) {
+      if (wasOffline) {
         showServerStatus(true, 'Server connection restored')
-      } else if (isOnline && !response.ok) {
-        showServerStatus(false, 'Server connection lost')
       }
     } catch (error) {
       const wasOffline = !isOnline
@@ -36,32 +32,32 @@ export const useServerStatus = () => {
 
   const checkAuthEndpoint = useCallback(async () => {
     try {
-      const response = await fetch('/api/user/profile', {
-        method: 'GET',
-        credentials: 'include'
-      })
+      const response = await api.get('/user/profile')
       
-      if (response.status === 401) {
-        const wasOffline = !isOnline
-        setIsOnline(true)
-        
-        if (wasOffline) {
-          showServerStatus(true, 'Server connection restored')
-        }
-      } else if (response.ok) {
-        const wasOffline = !isOnline
-        setIsOnline(true)
-        
-        if (wasOffline) {
-          showServerStatus(true, 'Server connection restored')
-        }
+      const wasOffline = !isOnline
+      setIsOnline(true)
+      
+      if (wasOffline) {
+        showServerStatus(true, 'Server connection restored')
       }
     } catch (error) {
-      const wasOffline = !isOnline
-      setIsOnline(false)
-      
-      if (isOnline) {
-        showServerStatus(false, 'Server connection lost')
+
+
+      if (error.status === 401) {
+        const wasOffline = !isOnline
+        setIsOnline(true)
+        
+        if (wasOffline) {
+          showServerStatus(true, 'Server connection restored')
+        }
+      } else {
+
+        const wasOffline = !isOnline
+        setIsOnline(false)
+        
+        if (isOnline) {
+          showServerStatus(false, 'Server connection lost')
+        }
       }
     }
   }, [isOnline, showServerStatus])

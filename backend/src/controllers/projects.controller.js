@@ -3,8 +3,36 @@ import { ObjectId } from "mongodb";
 import fs from "fs";
 import crypto from "crypto";
 import { ENV } from "../config/env.js";
+import { SocketService } from "../services/socket.service.js";
 
 const cache = new Map();
+
+const broadcastProjectUpdate = (projectId, type, payload, userId, userName) => {
+  if (SocketService.instance) {
+
+    SocketService.instance.broadcastToProject(projectId, "project-updated", {
+      projectId,
+      type,
+      payload,
+      userId,
+      userName,
+      timestamp: new Date().toISOString()
+    });
+    
+
+    const importantTypes = ['project-created', 'project-updated', 'project-deleted', 'project-image-updated', 'member-joined', 'member-removed'];
+    if (importantTypes.includes(type)) {
+      SocketService.instance.broadcastToAll("project-updated", {
+        projectId,
+        type,
+        payload,
+        userId,
+        userName,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+};
 
 export const getProjects = async (req, res, next) => {
     try {
@@ -143,7 +171,82 @@ export const createProject = async (req, res, next) => {
             }
         });
         
+
+        broadcastProjectUpdate(project.id, "project-created", {
+            project: project
+        }, req.user.id, req.user.name);
+        
         res.json({ data: project, success: true });
+    } catch (err) {
+        next(err);
+    }
+};
+
+export const updateProject = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { name } = req.body;
+
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+
+        if (!name) {
+            return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
+        }
+
+        if (name.length < 3 || name.length > 20) {
+            return res.status(400).json({ message: "Name must be between 3 and 20 characters", key: "invalid_name", success: false });
+        }
+
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: {
+                members: true
+            }
+        });
+
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to update this project", key: "unauthorized", success: false });
+        }
+
+        const updatedProject = await prisma.project.update({
+            where: { id },
+            data: { name },
+            include: {
+                members: {
+                    include: {
+                        user: true
+                    }
+                },
+                lists: {
+                    include: {
+                        tasks: true
+                    }
+                }
+            }
+        });
+
+
+        broadcastProjectUpdate(id, "project-updated", {
+            project: updatedProject,
+            changes: { name: name }
+        }, req.user.id, req.user.name);
+
+        res.json({ 
+            data: updatedProject, 
+            success: true,
+            message: "Project updated successfully"
+        });
     } catch (err) {
         next(err);
     }
@@ -190,6 +293,12 @@ export const uploadProjectImage = async (req, res, next) => {
         if (!updatedProject) {
             return res.status(400).json({ message: "Failed to update project image", key: "failed_to_update_project_image", success: false });
         }
+
+
+        broadcastProjectUpdate(req.params.id, "project-image-updated", {
+            project: updatedProject,
+            imageHash: imagePath
+        }, req.user.id, req.user.name);
         
         res.json({ 
             data: updatedProject, 
@@ -246,6 +355,12 @@ export const createList = async (req, res, next) => {
                 order: nextOrder
             }
         });
+
+
+        broadcastProjectUpdate(id, "list-created", {
+            list: list
+        }, req.user.id, req.user.name);
+
         res.json({ data: list, success: true });
     } catch (err) {
         next(err);
@@ -336,7 +451,6 @@ export const joinProject = async (req, res, next) => {
             return res.status(401).json({ message: "User not authenticated", key: "user_not_authenticated", success: false });
         }
 
-        // Check if invite is email-specific and validate user's email
         if (invite.email && user.email !== invite.email) {
             return res.status(403).json({ 
                 message: "This invite is only valid for the email address it was sent to", 
@@ -435,6 +549,12 @@ export const joinProject = async (req, res, next) => {
             }
         });
         
+
+        broadcastProjectUpdate(project.id, "member-joined", {
+            member: member,
+            project: updatedProject
+        }, user.id, user.name);
+
         res.json({ data: { member, project: updatedProject }, success: true });
         cache.delete(inviteLink);
     } catch (err) {
@@ -502,6 +622,11 @@ export const removeMemberFromProject = async (req, res, next) => {
         if (member.role === "OWNER") {
             return res.status(403).json({ message: "You are not authorized to remove the owner", key: "unauthorized", success: false });
         }
+
+
+        broadcastProjectUpdate(id, "member-removed", {
+            member: member
+        }, req.user.id, req.user.name);
 
         res.json({ data: member, success: true });
     } catch (err) {
@@ -574,6 +699,12 @@ export const updateMemberRole = async (req, res, next) => {
                 user: true
             }
         });
+
+
+        broadcastProjectUpdate(id, "member-role-updated", {
+            member: member
+        }, req.user.id, req.user.name);
+
         res.json({ data: member, success: true });
     } catch (err) {
         next(err);
@@ -671,6 +802,11 @@ export const createLabel = async (req, res, next) => {
                 labels: [...existingLabels, newLabel]
             }
         });
+
+
+        broadcastProjectUpdate(id, "label-created", {
+            label: newLabel
+        }, req.user.id, req.user.name);
         
         res.json({ data: newLabel, success: true });
     } catch (err) {
@@ -748,6 +884,12 @@ export const updateLabel = async (req, res, next) => {
         }
         
         const updatedLabel = updatedLabels.find(label => label.id === labelId);
+
+
+        broadcastProjectUpdate(project.id, "label-updated", {
+            label: updatedLabel
+        }, req.user.id, req.user.name);
+
         res.json({ data: updatedLabel, success: true });
     } catch (err) {
         console.error('updateLabel error:', err);
@@ -784,6 +926,11 @@ export const deleteLabel = async (req, res, next) => {
                 labels: updatedLabels
             }
         });
+
+
+        broadcastProjectUpdate(project.id, "label-deleted", {
+            labelId: labelId
+        }, req.user.id, req.user.name);
         
         res.json({ data: { id: labelId }, success: true });
     } catch (err) {
@@ -841,6 +988,11 @@ export const updateList = async (req, res, next) => {
             where: { id: listId },
             data: updateData
         });
+
+
+        broadcastProjectUpdate(list.project.projectId, "list-updated", {
+            list: updatedList
+        }, req.user.id, req.user.name);
         
         res.json({ data: updatedList, success: true });
     } catch (err) {
@@ -893,10 +1045,65 @@ export const reorderLists = async (req, res, next) => {
             where: { projectId: id },
             orderBy: { order: 'asc' }
         });
+
+
+        broadcastProjectUpdate(id, "lists-reordered", {
+            lists: updatedLists
+        }, req.user.id, req.user.name);
         
         res.json({ data: updatedLists, success: true });
     } catch (err) {
         console.error('reorderLists error:', err);
+        next(err);
+    }
+};
+
+export const deleteProject = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+        
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: { members: true }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isOwner = project.members.some(member => 
+            member.userId === req.user.id && member.role === 'OWNER'
+        );
+        
+        if (!isOwner) {
+            return res.status(403).json({ message: "Only project owners can delete projects", key: "unauthorized", success: false });
+        }
+        
+
+        await prisma.project.delete({
+            where: { id }
+        });
+        
+
+        broadcastProjectUpdate(id, "project-deleted", {
+            projectId: id,
+            projectName: project.name
+        }, req.user.id, req.user.name);
+        
+        res.json({ 
+            message: "Project deleted successfully", 
+            success: true 
+        });
+    } catch (err) {
+        console.error('deleteProject error:', err);
         next(err);
     }
 };

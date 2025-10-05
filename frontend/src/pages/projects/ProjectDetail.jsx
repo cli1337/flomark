@@ -25,6 +25,11 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import usePageTitle from '../../hooks/usePageTitle'
 import useMobileDetection from '../../hooks/useMobileDetection'
+import { useProjectSocket, useSocketEvent } from '../../hooks/useSocket'
+import useWebSocketEvents from '../../hooks/useWebSocketEvents'
+import { useOptimisticUpdates } from '../../hooks/useOptimisticUpdates'
+import { useTaskMoveAnimation } from '../../hooks/useTaskMoveAnimation'
+import TaskMoveAnimation from '../../components/TaskMoveAnimation'
 import { projectService } from '../../services/projectService'
 import { listService } from '../../services/listService'
 import { taskService } from '../../services/taskService'
@@ -44,7 +49,8 @@ import {
   X,
   Calendar,
   Users,
-  GripVertical
+  GripVertical,
+  Search
 } from 'lucide-react'
 
 const ProjectDetail = () => {
@@ -54,6 +60,12 @@ const ProjectDetail = () => {
   const { showSuccess, showError, showInfo } = useToast()
   const isMobile = useMobileDetection()
   
+
+  const optimisticUpdates = useOptimisticUpdates()
+  
+
+  const taskMoveAnimation = useTaskMoveAnimation()
+  
   const [showTaskModal, setShowTaskModal] = useState(false)
   const [selectedTask, setSelectedTask] = useState(null)
   const [showCreateColumnModal, setShowCreateColumnModal] = useState(false)
@@ -61,7 +73,7 @@ const ProjectDetail = () => {
   const [selectedListForCard, setSelectedListForCard] = useState(null)
   const [selectedLabels, setSelectedLabels] = useState([])
   const [selectedMembers, setSelectedMembers] = useState([])
-  const [labelsUpdated, setLabelsUpdated] = useState(0) // Counter to trigger label refresh
+  const [labelsUpdated, setLabelsUpdated] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [filteredTasks, setFilteredTasks] = useState({})
   const [editingColumnId, setEditingColumnId] = useState(null)
@@ -75,14 +87,288 @@ const ProjectDetail = () => {
   const [processingCards, setProcessingCards] = useState(new Set())
   const [activeId, setActiveId] = useState(null)
   
-  // Set dynamic page title based on project name
   usePageTitle(project ? project.name : 'Project')
 
-  // Configure drag and drop sensors - disable on mobile
+  const { broadcastProjectUpdate, broadcastTaskUpdate } = useProjectSocket(id)
+  
+
+
+
+
+
+  const handleProjectUpdated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+
+
+      if (data.type && ['task-moved', 'task-updated', 'task-created', 'task-deleted'].includes(data.type)) {
+        return // Skip task-related project updates
+      }
+      
+      if (data.payload?.project) {
+        setProject(data.payload.project)
+        showSuccess('Project Updated', `${data.userName} updated the project`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleProjectImageUpdated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.project) {
+        setProject(data.payload.project)
+        showSuccess('Project Image Updated', `${data.userName} updated the project image`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleListCreated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.list) {
+        setLists(prev => [...prev, data.payload.list])
+        showSuccess('New List', `${data.userName} created a new list`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleListUpdated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.list) {
+        setLists(prev => prev.map(list => 
+          list.id === data.payload.list.id ? data.payload.list : list
+        ))
+        showSuccess('List Updated', `${data.userName} updated a list`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleListsReordered = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.lists) {
+        setLists(data.payload.lists)
+        showSuccess('Lists Reordered', `${data.userName} reordered the lists`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleTaskCreated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.task) {
+        setTasks(prev => ({
+          ...prev,
+          [data.payload.task.listId]: [
+            ...(prev[data.payload.task.listId] || []),
+            data.payload.task
+          ]
+        }))
+        showSuccess('New Task', `${data.userName} created a new task`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleTaskUpdated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.task) {
+        setTasks(prev => {
+          const newTasks = { ...prev }
+          Object.keys(newTasks).forEach(listId => {
+            newTasks[listId] = newTasks[listId].map(task => 
+              task.id === data.payload.task.id ? data.payload.task : task
+            )
+          })
+          return newTasks
+        })
+        showSuccess('Task Updated', `${data.userName} updated a task`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleTaskMoved = useCallback((data) => {
+    console.log('🎯 handleTaskMoved called:', data)
+    console.log('🎯 Current project ID:', id)
+    console.log('🎯 Current user ID:', user?.id)
+    console.log('🎯 Event user ID:', data.userId)
+    
+    if (data.projectId === id && data.userId !== user?.id) {
+      console.log('🎯 Processing task move for other user')
+      if (data.payload?.task) {
+        console.log('🎯 Task data:', data.payload.task)
+        console.log('🎯 From list:', data.payload.fromListId)
+        console.log('🎯 To list:', data.payload.toListId)
+        
+
+        taskMoveAnimation.startTaskMoveAnimation(
+          data.payload.task.id,
+          data.payload.task,
+          data.payload.fromListId,
+          data.payload.toListId
+        )
+
+
+        setTimeout(() => {
+          setTasks(prev => {
+            console.log('🎯 Current tasks state:', prev)
+            console.log('🎯 Task to move:', data.payload.task)
+            console.log('🎯 Task ID:', data.payload.task.id)
+            console.log('🎯 From list ID:', data.payload.fromListId)
+            console.log('🎯 To list ID:', data.payload.toListId)
+            
+            const newTasks = { ...prev }
+
+
+            if (data.payload.fromListId) {
+              const sourceTasks = newTasks[data.payload.fromListId] || []
+              console.log('🎯 Source tasks before removal:', sourceTasks)
+              newTasks[data.payload.fromListId] = sourceTasks
+                .filter(task => task.id !== data.payload.task.id)
+              console.log('🎯 Source tasks after removal:', newTasks[data.payload.fromListId])
+            }
+
+
+            if (data.payload.toListId) {
+              const destTasks = newTasks[data.payload.toListId] || []
+              console.log('🎯 Destination tasks before addition:', destTasks)
+              newTasks[data.payload.toListId] = [
+                ...destTasks,
+                data.payload.task
+              ]
+              console.log('🎯 Destination tasks after addition:', newTasks[data.payload.toListId])
+            }
+            
+            console.log('🎯 New tasks state:', newTasks)
+            return newTasks
+          })
+        }, 50) // Small delay to let animation start
+        
+
+
+      } else {
+        console.log('🎯 No task data in payload')
+      }
+    } else {
+      console.log('🎯 Skipping task move - conditions not met')
+    }
+  }, [id, user?.id])
+
+  const handleTaskDeleted = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.taskId) {
+        setTasks(prev => {
+          const newTasks = { ...prev }
+          Object.keys(newTasks).forEach(listId => {
+            newTasks[listId] = newTasks[listId].filter(task => task.id !== data.payload.taskId)
+          })
+          return newTasks
+        })
+        showSuccess('Task Deleted', `${data.userName} deleted a task`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleMemberJoined = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.project) {
+        setProject(data.payload.project)
+        setMembers(data.payload.project.members || [])
+        showSuccess('New Member', `${data.userName} joined the project`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleMemberRemoved = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.member) {
+        setMembers(prev => prev.filter(member => member.id !== data.payload.member.id))
+        showSuccess('Member Removed', `${data.userName} removed a member`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleMemberRoleUpdated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.member) {
+        setMembers(prev => prev.map(member => 
+          member.id === data.payload.member.id ? data.payload.member : member
+        ))
+        showSuccess('Member Role Updated', `${data.userName} updated a member's role`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleLabelCreated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.label) {
+        setProject(prev => ({
+          ...prev,
+          labels: [...(prev.labels || []), data.payload.label]
+        }))
+        setLabelsUpdated(prev => prev + 1)
+        showSuccess('New Label', `${data.userName} created a new label`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleLabelUpdated = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.label) {
+        setProject(prev => ({
+          ...prev,
+          labels: (prev.labels || []).map(label => 
+            label.id === data.payload.label.id ? data.payload.label : label
+          )
+        }))
+        setLabelsUpdated(prev => prev + 1)
+        showSuccess('Label Updated', `${data.userName} updated a label`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+  const handleLabelDeleted = useCallback((data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      if (data.payload?.labelId) {
+        setProject(prev => ({
+          ...prev,
+          labels: (prev.labels || []).filter(label => label.id !== data.payload.labelId)
+        }))
+        setLabelsUpdated(prev => prev + 1)
+        showSuccess('Label Deleted', `${data.userName} deleted a label`)
+      }
+    }
+  }, [id, user?.id, showSuccess])
+
+
+  useWebSocketEvents(id, {
+    onProjectUpdated: handleProjectUpdated,
+    onProjectImageUpdated: handleProjectImageUpdated,
+    onListCreated: handleListCreated,
+    onListUpdated: handleListUpdated,
+    onListsReordered: handleListsReordered,
+    onTaskCreated: handleTaskCreated,
+    onTaskUpdated: handleTaskUpdated,
+    onTaskMoved: handleTaskMoved,
+    onTaskDeleted: handleTaskDeleted,
+    onMemberJoined: handleMemberJoined,
+    onMemberRemoved: handleMemberRemoved,
+    onMemberRoleUpdated: handleMemberRoleUpdated,
+    onLabelCreated: handleLabelCreated,
+    onLabelUpdated: handleLabelUpdated,
+    onLabelDeleted: handleLabelDeleted
+  })
+
+  useSocketEvent('user-joined', (data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      showInfo(`${data.userName} joined the project`)
+    }
+  }, [id, user?.id, showInfo])
+
+  useSocketEvent('user-left', (data) => {
+    if (data.projectId === id && data.userId !== user?.id) {
+      showInfo(`${data.userName} left the project`)
+    }
+  }, [id, user?.id, showInfo])
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: isMobile ? 999999 : 8, // Disable on mobile by setting huge distance
+        distance: isMobile ? 999999 : 8,
       },
     }),
     useSensor(KeyboardSensor, {
@@ -90,10 +376,10 @@ const ProjectDetail = () => {
     })
   )
 
-  // Helper function to check if we're dragging a column
+
   const isDraggingColumn = activeId && lists.some(list => list.id === activeId)
   
-  // Helper function to check if we're dragging a card
+
   const isDraggingCard = activeId && Object.values(tasks).flat().some(task => task.id === activeId)
 
   const fetchProjectData = useCallback(async () => {
@@ -104,7 +390,7 @@ const ProjectDetail = () => {
       if (projectResponse.success) {
         setProject(projectResponse.data)
         
-        // Get members separately to ensure we have the latest data
+
         const membersResponse = await projectService.getMembersByProject(id)
         if (membersResponse.success) {
           setMembers(membersResponse.data || [])
@@ -162,7 +448,7 @@ const ProjectDetail = () => {
       const response = await listService.updateList(editingColumnId, { name: editingColumnName })
       
       if (response.success) {
-        // Update local state
+
         setLists(prev => prev.map(list => 
           list.id === editingColumnId 
             ? { ...list, name: editingColumnName }
@@ -192,7 +478,7 @@ const ProjectDetail = () => {
   }
 
   const handleCardCreated = async (newCard) => {
-    // Add the new card to the appropriate list
+
     setTasks(prev => ({
       ...prev,
       [selectedListForCard.id]: [...(prev[selectedListForCard.id] || []), newCard]
@@ -214,7 +500,7 @@ const ProjectDetail = () => {
     } catch (error) {
       console.error('Error reordering columns:', error)
       showError('Failed to reorder columns', 'Please try again later')
-      // Refresh data to revert changes
+
       await fetchProjectData()
     }
   }, [id, showSuccess, showError, fetchProjectData])
@@ -233,7 +519,7 @@ const ProjectDetail = () => {
   }
 
   const handleLabelsUpdated = (labelId, labelData) => {
-    // Increment counter to trigger label refresh in TaskModal
+
     setLabelsUpdated(prev => prev + 1)
   }
 
@@ -241,19 +527,19 @@ const ProjectDetail = () => {
     setSearchQuery(query)
   }
 
-  // Filter tasks based on search query, selected labels, and selected members
+
   const filterTasks = (tasks, query, labelFilters, memberFilters) => {
     if (!query && labelFilters.length === 0 && memberFilters.length === 0) {
       return tasks
     }
 
     return tasks.filter(task => {
-      // Search by task name
+
       const matchesSearch = !query || 
         task.name.toLowerCase().includes(query.toLowerCase()) ||
         (task.description && task.description.toLowerCase().includes(query.toLowerCase()))
 
-      // Filter by labels
+
       const matchesLabels = labelFilters.length === 0 || 
         labelFilters.some(labelId => 
           task.labels && task.labels.some(label => 
@@ -261,17 +547,19 @@ const ProjectDetail = () => {
           )
         )
 
-      // Filter by members
+
       const matchesMembers = memberFilters.length === 0 ||
         memberFilters.some(memberId =>
-          task.members && task.members.some(member => member.userId === memberId)
+          task.members && task.members.some(member => 
+            member.userId === memberId || member.id === memberId
+          )
         )
 
       return matchesSearch && matchesLabels && matchesMembers
     })
   }
 
-  // Update filtered tasks when filters change
+
   useEffect(() => {
     const filtered = {}
     Object.keys(tasks).forEach(listId => {
@@ -280,190 +568,137 @@ const ProjectDetail = () => {
     setFilteredTasks(filtered)
   }, [tasks, searchQuery, selectedLabels, selectedMembers])
 
-  // Handle drag start for @dnd-kit
+
   const handleDragStart = useCallback((event) => {
     setActiveId(event.active.id)
   }, [])
 
-  // Handle drag end for @dnd-kit
+
   const handleDragEnd = useCallback(async (event) => {
     const { active, over } = event
     setActiveId(null)
-    
-    console.log('Drag end:', { activeId: active.id, overId: over?.id })
     
     if (!over || active.id === over.id) {
       return
     }
 
-    // Check if we're dragging a column (list) - prioritize column detection
+
     const activeList = lists.find(list => list.id === active.id)
     const overList = lists.find(list => list.id === over.id)
     
-    // If both active and over are lists, it's definitely column reordering
     if (activeList && overList) {
-      // Column reordering
       const oldIndex = lists.findIndex(list => list.id === active.id)
       const newIndex = lists.findIndex(list => list.id === over.id)
       
       if (oldIndex === -1 || newIndex === -1) {
-      return
-    }
+        return
+      }
 
       const newLists = arrayMove(lists, oldIndex, newIndex)
       
-      // Update UI immediately
-      setLists(newLists)
+
+      await optimisticUpdates.optimisticReorderColumns(
+        newLists,
+        lists,
+        setLists,
+        () => {
+          console.log('✅ Column reordered successfully')
+        },
+        (error) => {
+          console.error('❌ Failed to reorder columns:', error)
+          showError('Failed to reorder column', 'Please try again')
+        }
+      )
       
-      // Make server request in background
+
       handleReorderColumns(newLists)
     } else {
-      // Task reordering - only proceed if active is not a list
+
       const activeTask = Object.values(tasks).flat().find(task => task.id === active.id)
       
-      // Only handle task reordering if we're actually dragging a task
       if (!activeTask) {
         return
       }
       
-      // Check if dropping on a droppable area (empty column)
       const overDroppableId = over.id.toString().startsWith('droppable-') ? over.id : null
       const overTask = !overDroppableId ? Object.values(tasks).flat().find(task => task.id === over.id) : null
       
-      // Find which list contains the active task
       const activeListId = Object.keys(tasks).find(listId => 
         tasks[listId].some(task => task.id === active.id)
       )
       
       if (activeListId) {
-        const activeListTasks = tasks[activeListId] || []
-        
         if (overDroppableId) {
-          // Dropping on a droppable area (entire column)
+
           const targetListId = overDroppableId.replace('droppable-', '')
           
           if (activeListId !== targetListId) {
-            // Moving between different lists
-            const taskToMove = activeListTasks.find(task => task.id === active.id)
-            
-            if (taskToMove) {
-              // Remove from old list
-              const newActiveListTasks = activeListTasks.filter(task => task.id !== active.id)
-              
-              // Add to new list (at the end)
-              const targetListTasks = tasks[targetListId] || []
-              const newTargetListTasks = [...targetListTasks, { ...taskToMove, listId: targetListId }]
-              
-              setTasks(prev => ({
-                ...prev,
-                [activeListId]: newActiveListTasks,
-                [targetListId]: newTargetListTasks
-              }))
-              
-              // Make server request to move task between lists
-              try {
-                // First move the task to the new list
-                await taskService.moveTask(active.id, targetListId)
-                
-                // Then reorder tasks in the target list (add to end)
-                const taskIds = newTargetListTasks.map(task => task.id)
-                await taskService.reorderTasks(targetListId, taskIds)
-                
-                console.log('Task moved to column on server:', { 
-                  taskId: active.id, 
-                  fromList: activeListId, 
-                  toList: targetListId,
-                  newOrder: taskIds
-                })
-              } catch (error) {
-                console.error('Failed to move task to column:', error)
+            await optimisticUpdates.optimisticMoveTask(
+              active.id,
+              activeListId,
+              targetListId,
+              tasks,
+              setTasks,
+              () => {
+                console.log('✅ Task moved to column successfully')
+              },
+              (error) => {
+                console.error('❌ Failed to move task:', error)
                 showError('Failed to move task', 'Please try again')
-                // Revert the change
-                await fetchProjectData()
               }
-            }
+            )
           }
         } else if (overTask) {
-          // Dropping on another task
+
           const overListId = Object.keys(tasks).find(listId => 
             tasks[listId].some(task => task.id === over.id)
           )
           
-          if (overListId) {
-            const overListTasks = tasks[overListId] || []
+          if (overListId && activeListId === overListId) {
+
+            const listTasks = tasks[activeListId] || []
+            const oldIndex = listTasks.findIndex(task => task.id === active.id)
+            const newIndex = listTasks.findIndex(task => task.id === over.id)
             
-            if (activeListId === overListId) {
-              // Moving within the same list
-              const oldIndex = activeListTasks.findIndex(task => task.id === active.id)
-              const newIndex = overListTasks.findIndex(task => task.id === over.id)
+            if (oldIndex !== -1 && newIndex !== -1) {
+              const newTasks = arrayMove(listTasks, oldIndex, newIndex)
+              const taskIds = newTasks.map(task => task.id)
               
-              if (oldIndex !== -1 && newIndex !== -1) {
-                const newTasks = arrayMove(activeListTasks, oldIndex, newIndex)
-                
-                setTasks(prev => ({
-                  ...prev,
-                  [activeListId]: newTasks
-                }))
-                
-                // Make server request to update task order
-                try {
-                  const taskIds = newTasks.map(task => task.id)
-                  await taskService.reorderTasks(activeListId, taskIds)
-                  console.log('Task order updated on server:', { activeListId, taskIds })
-                } catch (error) {
-                  console.error('Failed to update task order:', error)
-                  showError('Failed to update task order', 'Please try again')
-                  // Revert the change
-                  await fetchProjectData()
+              await optimisticUpdates.optimisticReorderTasks(
+                activeListId,
+                taskIds,
+                tasks,
+                setTasks,
+                () => {
+                  console.log('✅ Tasks reordered successfully')
+                },
+                (error) => {
+                  console.error('❌ Failed to reorder tasks:', error)
+                  showError('Failed to reorder tasks', 'Please try again')
                 }
-              }
-            } else {
-              // Moving between different lists - insert above the target task
-              const taskToMove = activeListTasks.find(task => task.id === active.id)
-              const targetIndex = overListTasks.findIndex(task => task.id === over.id)
-              
-              if (taskToMove && targetIndex !== -1) {
-                // Remove from old list
-                const newActiveListTasks = activeListTasks.filter(task => task.id !== active.id)
-                
-                // Add to new list at the target position (above the target task)
-                const newOverListTasks = [...overListTasks]
-                newOverListTasks.splice(targetIndex, 0, { ...taskToMove, listId: overListId })
-                
-                setTasks(prev => ({
-                  ...prev,
-                  [activeListId]: newActiveListTasks,
-                  [overListId]: newOverListTasks
-                }))
-                
-                // Make server request to move task between lists
-                try {
-                  // First move the task to the new list
-                  await taskService.moveTask(active.id, overListId)
-                  
-                  // Then reorder tasks in the target list
-                  const taskIds = newOverListTasks.map(task => task.id)
-                  await taskService.reorderTasks(overListId, taskIds)
-                  
-                  console.log('Task moved between lists on server:', { 
-                    taskId: active.id, 
-                    fromList: activeListId, 
-                    toList: overListId,
-                    newOrder: taskIds
-                  })
-                } catch (error) {
-                  console.error('Failed to move task between lists:', error)
-                  showError('Failed to move task', 'Please try again')
-                  // Revert the change
-                  await fetchProjectData()
-                }
-              }
+              )
             }
+          } else if (overListId && activeListId !== overListId) {
+
+            await optimisticUpdates.optimisticMoveTask(
+              active.id,
+              activeListId,
+              overListId,
+              tasks,
+              setTasks,
+              () => {
+                console.log('✅ Task moved between columns successfully')
+              },
+              (error) => {
+                console.error('❌ Failed to move task between columns:', error)
+                showError('Failed to move task', 'Please try again')
+              }
+            )
           }
         }
       }
     }
-  }, [lists, tasks, handleReorderColumns])
+  }, [lists, tasks, optimisticUpdates, showError, handleReorderColumns])
 
   useEffect(() => {
     if (id) {
@@ -485,7 +720,7 @@ const ProjectDetail = () => {
 
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
       id: task.id,
-      disabled: isDraggingColumn, // Disable when dragging a column
+      disabled: isDraggingColumn,
     })
 
     const style = {
@@ -497,7 +732,7 @@ const ProjectDetail = () => {
     const totalSubtasks = task.subTasks?.length || 0
     const progressPercentage = totalSubtasks > 0 ? (completedSubtasks / totalSubtasks) * 100 : 0
     
-    // Format deadline if exists
+
     const formatDeadline = (deadline) => {
       if (!deadline) return null
       const date = new Date(deadline)
@@ -557,7 +792,7 @@ const ProjectDetail = () => {
                     style={{ 
                       backgroundColor: typeof label === 'string' ? '#ef4444' : (label.color || '#ef4444')
                     }}
-                    title={labelName} // Show full name on hover
+                    title={labelName}
                   >
                     {truncatedName}
                   </span>
@@ -682,7 +917,7 @@ const ProjectDetail = () => {
 
     const { setNodeRef: setDroppableRef, isOver } = useDroppable({
       id: `droppable-${list.id}`,
-      disabled: isDraggingCard && listTasks.length > 0, // Only disable when dragging a card AND column has tasks
+      disabled: isDraggingCard && listTasks.length > 0,
     })
 
     const style = {
@@ -940,10 +1175,10 @@ const ProjectDetail = () => {
           setSelectedTask(null)
         }}
         onUpdate={async (updatedTask) => {
-          // Update the selected task
+
           setSelectedTask(updatedTask)
           
-          // Refresh the entire tasks data for the list containing this task
+
           const listId = updatedTask.listId
           if (listId) {
             try {
@@ -978,6 +1213,18 @@ const ProjectDetail = () => {
         listName={selectedListForCard?.name}
         onCardCreated={handleCardCreated}
       />
+
+      {/* Task Move Animations */}
+      {taskMoveAnimation.getActiveAnimations().map((animation) => (
+        <TaskMoveAnimation
+          key={animation.id}
+          task={animation.task}
+          fromPosition={animation.fromPosition}
+          toPosition={animation.toPosition}
+          onComplete={() => taskMoveAnimation.completeAnimation(animation.id)}
+          isVisible={animation.isVisible}
+        />
+      ))}
     </Layout>
   )
 }

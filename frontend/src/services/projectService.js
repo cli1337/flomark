@@ -3,6 +3,24 @@ import axios from 'axios'
 
 const API_BASE_URL = '/api'
 
+
+const createFileApiInstance = () => {
+  const instance = axios.create({
+    baseURL: API_BASE_URL,
+  })
+  
+
+  instance.interceptors.request.use((config) => {
+    const token = localStorage.getItem('token')
+    if (token && token.trim() !== '') {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  })
+  
+  return instance
+}
+
 export const projectService = {
   async getAllProjects(page = 1, limit = 5) {
     const response = await api.get(`/projects?page=${page}&limit=${limit}`)
@@ -19,15 +37,19 @@ export const projectService = {
     return response.data
   },
 
+  async updateProject(id, projectName) {
+    const response = await api.put(`/projects/${id}`, { name: projectName })
+    return response.data
+  },
+
   async uploadProjectImage(id, file) {
     const formData = new FormData()
     formData.append('image', file)
     
-    const token = localStorage.getItem('token')
-    const response = await axios.post(`${API_BASE_URL}/projects/${id}/image`, formData, {
+    const fileApi = createFileApiInstance()
+    const response = await fileApi.post(`/projects/${id}/image`, formData, {
       headers: {
-        'Content-Type': 'multipart/form-data',
-        'Authorization': token ? `Bearer ${token}` : ''
+        'Content-Type': 'multipart/form-data'
       }
     })
     return response.data
@@ -41,11 +63,8 @@ export const projectService = {
         filename = filename.split('/').pop()
       }
       
-      const token = localStorage.getItem('token')
-      const response = await axios.get(`${API_BASE_URL}/storage/photos/${id}/${filename}`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
+      const fileApi = createFileApiInstance()
+      const response = await fileApi.get(`/storage/photos/${id}/${filename}`, {
         responseType: 'blob'
       })
       
@@ -80,6 +99,11 @@ export const projectService = {
 
   async getMembersByProject(projectId) {
     const response = await api.get(`/projects/${projectId}/members`)
+    return response.data
+  },
+
+  async deleteProject(projectId) {
+    const response = await api.delete(`/projects/${projectId}`)
     return response.data
   }
 }

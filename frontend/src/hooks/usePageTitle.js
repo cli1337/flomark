@@ -7,7 +7,7 @@ export const usePageTitle = (title) => {
     
     document.title = fullTitle
     
-    // Cleanup function to reset title when component unmounts
+
     return () => {
       document.title = baseTitle
     }

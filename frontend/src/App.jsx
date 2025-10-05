@@ -9,6 +9,7 @@ import JoinProject from './pages/join/JoinProject'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
+import { WebSocketProvider } from './contexts/WebSocketContext'
 import { useServerStatus } from './hooks/useServerStatus'
 import LoadingState from './components/ui/LoadingState'
 
@@ -34,7 +35,8 @@ function App() {
   return (
         <AuthProvider>
           <NotificationProvider>
-            <Router>
+            <WebSocketProvider>
+              <Router>
               <div className="App">
                 <Routes>
                   <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
@@ -48,6 +50,7 @@ function App() {
                 </Routes>
               </div>
             </Router>
+            </WebSocketProvider>
           </NotificationProvider>
         </AuthProvider>
   )

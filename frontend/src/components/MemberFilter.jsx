@@ -108,10 +108,8 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
   }
 
   const handleRemoveMember = async (memberId) => {
-    // Prevent removing project owner
     if (memberId === projectOwner?.id) return
     
-    // Prevent users from removing themselves
     if (memberId === user?.id) {
       showError('Cannot Remove Yourself', 'You cannot remove yourself from the project. Ask another admin to remove you if needed.')
       return
@@ -148,10 +146,9 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
 
   const isOwner = user?.id === projectOwner?.id
   
-  // Check if current user is admin or owner
   const currentUserMember = members.find(member => member.userId === user?.id || member.id === user?.id)
   const isAdmin = currentUserMember?.role === 'ADMIN'
-  const canManageRoles = isOwner // Only owners can manage roles (promote/demote), not admins
+  const canManageRoles = isOwner
 
   const toggleMemberSelection = (memberId) => {
     const newSelection = selectedMembers.includes(memberId)

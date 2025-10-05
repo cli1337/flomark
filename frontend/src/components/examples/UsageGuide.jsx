@@ -1,12 +1,15 @@
 import React from 'react';
+import ConnectionTest from './ConnectionTest';
 
 export function UsageGuide() {
   return (
     <div className="max-w-4xl mx-auto p-8 space-y-8">
       <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Radix UI Setup Complete! 🎉</h1>
-        <p className="text-gray-600">Your project is now ready to use Radix UI components</p>
+        <h1 className="text-4xl font-bold mb-4">Task Manager - WebSocket Test 🎉</h1>
+        <p className="text-gray-600">Test your WebSocket connection and functionality</p>
       </div>
+
+      <ConnectionTest />
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 text-blue-800">What's Installed</h2>

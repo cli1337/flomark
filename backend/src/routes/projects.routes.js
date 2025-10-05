@@ -2,6 +2,8 @@ import { Router } from "express";
 import { 
   getProjects,
   createProject,
+  updateProject,
+  deleteProject,
   getProjectById,
   uploadProjectImage,
   createList,
@@ -27,6 +29,8 @@ router.use(authenticateToken);
 
 router.get("/", getProjects);
 router.post("/", createProject);
+router.put("/:id", updateProject);
+router.delete("/:id", deleteProject);
 router.get("/:id", getProjectById);
 
 router.post("/:id/image", uploadPhoto.single('image'), handleMulterError, uploadProjectImage);
