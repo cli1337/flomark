@@ -454,8 +454,18 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
                     key={member.id}
                     className="flex items-center gap-1 bg-gray-700 rounded-full px-2 py-1"
                   >
-                    <div className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                      {member.user?.name?.charAt(0) || 'U'}
+                    <div className="w-6 h-6 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium">
+                      {member.user?.profileImage ? (
+                        <img 
+                          src={`/api/storage/photos/${member.user.profileImage}`} 
+                          alt={member.user?.name || 'User'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+                          {member.user?.name?.charAt(0) || 'U'}
+                        </div>
+                      )}
                     </div>
                     <span className="text-white text-xs">{member.user?.name}</span>
                     {canManageMembers && member.userId !== user?.id && (
@@ -653,8 +663,18 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
               
               <div className="space-y-3">
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                    {user?.name?.charAt(0) || 'U'}
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium">
+                    {user?.profileImage ? (
+                      <img 
+                        src={`/api/storage/photos/${user.profileImage}`} 
+                        alt={user?.name || 'User'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+                        {user?.name?.charAt(0) || 'U'}
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <textarea
@@ -990,8 +1010,18 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
                   className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer"
                   onClick={() => handleAssignMember(member.userId)}
                 >
-                  <div className="w-8 h-8 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                    {member.user?.name?.charAt(0) || 'U'}
+                  <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium">
+                    {member.user?.profileImage ? (
+                      <img 
+                        src={`/api/storage/photos/${member.user.profileImage}`} 
+                        alt={member.user?.name || 'User'}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+                        {member.user?.name?.charAt(0) || 'U'}
+                      </div>
+                    )}
                   </div>
                   <span className="text-white text-sm flex-1">{member.user?.name}</span>
                   <Plus className="h-4 w-4 text-gray-400" />

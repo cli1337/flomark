@@ -15,11 +15,14 @@ import {
   Check,
   ShieldCheck,
   QrCode,
+  Sparkles,
+  Eye,
+  EyeOff,
 } from 'lucide-react'
 import { authService } from '../../services/authService'
 
 const Profile = () => {
-  const { user, updateProfile, updatePassword } = useAuth()
+  const { user, updateProfile, updatePassword, uploadProfileImage } = useAuth()
   const { showSuccess, showError } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -44,6 +47,8 @@ const Profile = () => {
   const [twoFACode, setTwoFACode] = useState('')
   const [twoFAEnabling, setTwoFAEnabling] = useState(false)
   const [twoFADisabling, setTwoFADisabling] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleImageChange = (e) => {
     const file = e.target.files[0]
@@ -61,7 +66,7 @@ const Profile = () => {
     setProfileSuccess(false)
     
     try {
-      const result = await updateProfile(name, email)
+      const result = await updateProfile(name)
       if (result.success) {
         setProfileSuccess(true)
         showSuccess('Profile Updated', 'Your profile has been updated successfully')
@@ -117,16 +122,60 @@ const Profile = () => {
     setUploadingImage(true)
     setImageSuccess(false)
     try {
-      setImageSuccess(true)
-      showSuccess('Image Updated', 'Your profile image has been updated')
-      setProfileImage(null)
-      setProfileImagePreview(null)
-      setTimeout(() => setImageSuccess(false), 2000)
+      const result = await uploadProfileImage(profileImage)
+      if (result.success) {
+        setImageSuccess(true)
+        showSuccess('Image Updated', 'Your profile image has been updated')
+        setProfileImage(null)
+        setProfileImagePreview(null)
+        setTimeout(() => setImageSuccess(false), 2000)
+      } else {
+        showError('Upload Failed', result.message)
+      }
     } catch (error) {
       showError('Upload Failed', 'An error occurred while uploading your image')
     } finally {
       setUploadingImage(false)
     }
+  }
+
+  const generateRandomPassword = () => {
+    const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+    const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    const numbers = '0123456789'
+    const specialChars = '!@#$%^&*'
+    
+    let password = ''
+    
+    // Ensure at least 1 uppercase
+    password += uppercase[Math.floor(Math.random() * uppercase.length)]
+    
+    // Ensure at least 1 special character
+    password += specialChars[Math.floor(Math.random() * specialChars.length)]
+    
+    // Ensure at least 1 number
+    password += numbers[Math.floor(Math.random() * numbers.length)]
+    
+    // Fill the rest (make it 12 characters total for good security)
+    const allChars = lowercase + uppercase + numbers + specialChars
+    for (let i = password.length; i < 12; i++) {
+      password += allChars[Math.floor(Math.random() * allChars.length)]
+    }
+    
+    // Shuffle the password to randomize the position of required characters
+    password = password.split('').sort(() => Math.random() - 0.5).join('')
+    
+    setNewPassword(password)
+    setConfirmPassword(password)
+    setShowNewPassword(true)
+    setShowConfirmPassword(true)
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(password).then(() => {
+      showSuccess('Password Generated & Copied', 'A secure random password has been generated and copied to clipboard!')
+    }).catch(() => {
+      showSuccess('Password Generated', 'A secure random password has been generated. Make sure to save it!')
+    })
   }
 
   const startTwoFA = async () => {
@@ -222,6 +271,7 @@ const Profile = () => {
                     <input
                       type="email"
                       value={email}
+                      disabled
                       onChange={(e) => setEmail(e.target.value)}
                       className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20"
                       placeholder="Enter your email"
@@ -268,10 +318,16 @@ const Profile = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <div className={`w-24 h-24 rounded-xl flex items-center justify-center text-white text-2xl font-bold border border-white/20 ${profileImagePreview ? 'bg-transparent' : 'bg-gray-600'}`}>
+                    <div className={`w-24 h-24 rounded-xl flex items-center justify-center text-white text-2xl font-bold border border-white/20 ${(profileImagePreview || user?.profileImage) ? 'bg-transparent' : 'bg-gray-600'}`}>
                       {profileImagePreview ? (
                         <img
                           src={profileImagePreview}
+                          alt="Profile"
+                          className="w-full h-full rounded-xl object-cover"
+                        />
+                      ) : user?.profileImage ? (
+                        <img
+                          src={`/api/storage/photos/${user.profileImage}`}
                           alt="Profile"
                           className="w-full h-full rounded-xl object-cover"
                         />
@@ -360,31 +416,67 @@ const Profile = () => {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20"
-                    placeholder="Enter new password"
-                    required
-                  />
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-300">
+                      New Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={generateRandomPassword}
+                      className="flex items-center gap-1 px-3 py-1 text-xs font-medium text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-md transition-all"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      Generate Random
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      className="w-full px-3 py-2 pr-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20"
+                      placeholder="Enter new password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      {showNewPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Confirm New Password
                   </label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20"
-                    placeholder="Confirm new password"
-                    required
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="w-full px-3 py-2 pr-10 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20"
+                      placeholder="Confirm new password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
                 
                 <Button

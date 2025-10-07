@@ -454,12 +454,20 @@ const Projects = () => {
                 return (
                   <div
                     key={member.id || index}
-                    className={`w-7 h-7 rounded-lg flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 hover:z-10 relative cursor-pointer transition-all duration-200 member-tooltip-trigger ${
+                    className={`w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 hover:z-10 relative cursor-pointer transition-all duration-200 member-tooltip-trigger ${
                       isOwner ? 'bg-yellow-500' : isAdmin ? 'bg-blue-500' : 'bg-gray-600'
                     }`}
                     title={`${userName} - ${userRole}`}
                   >
-                    <span>{userInitial}</span>
+                    {member.user?.profileImage ? (
+                      <img 
+                        src={`/api/storage/photos/${member.user.profileImage}`} 
+                        alt={userName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{userInitial}</span>
+                    )}
                     
                     {/* Enhanced tooltip */}
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs whitespace-nowrap opacity-0 member-tooltip transition-opacity duration-200 pointer-events-none z-[9999] backdrop-blur-xl">
@@ -605,12 +613,20 @@ const Projects = () => {
               return (
                 <div
                   key={member.id || index}
-                  className={`w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 hover:z-10 relative cursor-pointer transition-all duration-200 ${
+                  className={`w-6 h-6 rounded-lg overflow-hidden flex items-center justify-center text-white text-xs font-medium border-2 border-white/30 hover:border-white/50 hover:z-10 relative cursor-pointer transition-all duration-200 ${
                     isOwner ? 'bg-yellow-500' : isAdmin ? 'bg-blue-500' : 'bg-gray-600'
                   }`}
                   title={`${userName} - ${member.role || (isOwner ? 'OWNER' : 'MEMBER')}`}
                 >
-                  <span>{userInitial}</span>
+                  {member.user?.profileImage ? (
+                    <img 
+                      src={`/api/storage/photos/${member.user.profileImage}`} 
+                      alt={userName}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{userInitial}</span>
+                  )}
                 </div>
               )
             })}

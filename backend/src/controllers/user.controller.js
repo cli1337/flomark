@@ -88,6 +88,7 @@ export const authenticateUser = async (req, res, next) => {
           id: user.id,
           name: user.name,
           email: user.email,
+          profileImage: user.profileImage || null,
           twoFactorEnabled: user.twoFactorEnabled || false,
         }
       }, 
@@ -113,7 +114,7 @@ export const refreshToken = async (req, res, next) => {
     const decoded = verifyToken(refreshToken);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, name: true },
+      select: { id: true, email: true, name: true, profileImage: true, twoFactorEnabled: true },
     });
 
     if (!user) {
@@ -135,6 +136,8 @@ export const refreshToken = async (req, res, next) => {
           id: user.id,
           name: user.name,
           email: user.email,
+          profileImage: user.profileImage || null,
+          twoFactorEnabled: user.twoFactorEnabled || false,
         },
       },
       success: true,
@@ -153,8 +156,19 @@ export const refreshToken = async (req, res, next) => {
 
 export const getProfile = async (req, res, next) => {
   try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        twoFactorEnabled: true,
+      },
+    });
+
     res.json({
-      data: req.user,
+      data: user,
       success: true,
     });
   } catch (err) {
@@ -293,6 +307,7 @@ export const verifyTwoFactorLogin = async (req, res, next) => {
           id: user.id,
           name: user.name,
           email: user.email,
+          profileImage: user.profileImage || null,
           twoFactorEnabled: user.twoFactorEnabled,
         },
       },
@@ -302,6 +317,129 @@ export const verifyTwoFactorLogin = async (req, res, next) => {
     if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
       return res.status(401).json({ message: "Invalid or expired pending token", key: "invalid_pending_token", success: false });
     }
+    next(err);
+  }
+};
+
+export const updateUserProfile = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { name } = req.body;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ 
+        message: "Name is required", 
+        key: "name_required", 
+        success: false 
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { name: name.trim() },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        twoFactorEnabled: true,
+      },
+    });
+
+    res.json({
+      data: updatedUser,
+      success: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateUserPassword = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ 
+        message: "Current password and new password are required", 
+        key: "passwords_required", 
+        success: false 
+      });
+    }
+
+    if (newPassword.length < 8 || !/[A-Z]/.test(newPassword) || !/[!@#$%^&*]/.test(newPassword)) {
+      return res.status(400).json({ 
+        message: "Password must be at least 8 characters long and contain at least 1 uppercase letter and 1 special character", 
+        key: "invalid_password", 
+        success: false 
+      });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+      return res.status(404).json({ 
+        message: "User not found", 
+        key: "user_not_found", 
+        success: false 
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      return res.status(400).json({ 
+        message: "Current password is incorrect", 
+        key: "invalid_current_password", 
+        success: false 
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedPassword },
+    });
+
+    res.json({
+      message: "Password updated successfully",
+      success: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const uploadProfileImage = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    if (!req.file) {
+      return res.status(400).json({ 
+        message: "No file uploaded", 
+        key: "no_file", 
+        success: false 
+      });
+    }
+
+    const profileImage = req.file.filename;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        twoFactorEnabled: true,
+      },
+    });
+
+    res.json({
+      data: updatedUser,
+      success: true,
+    });
+  } catch (err) {
     next(err);
   }
 };

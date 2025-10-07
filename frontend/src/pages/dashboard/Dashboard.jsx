@@ -208,9 +208,17 @@ const Dashboard = () => {
             {task.members.slice(0, 3).map(member => (
               <div
                 key={member.id}
-                className="w-6 h-6 bg-gray-500 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                className="w-6 h-6 bg-gray-500 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium"
               >
-                {member.user?.name?.charAt(0) || 'U'}
+                {member.user?.profileImage ? (
+                  <img 
+                    src={`/api/storage/photos/${member.user.profileImage}`} 
+                    alt={member.user?.name || 'User'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  member.user?.name?.charAt(0) || 'U'
+                )}
               </div>
             ))}
             {task.members.length > 3 && (

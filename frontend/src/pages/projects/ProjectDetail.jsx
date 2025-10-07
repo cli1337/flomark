@@ -827,7 +827,15 @@ const ProjectDetail = () => {
                       }}
                       title={member.user?.name || 'Unknown'}
                     >
-                      {!member.user?.avatar && (member.user?.name?.charAt(0) || 'U')}
+                      {member.user?.profileImage ? (
+                        <img 
+                          src={`/api/storage/photos/${member.user.profileImage}`} 
+                          alt={member.user?.name || 'User'}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        member.user?.name?.charAt(0) || 'U'
+                      )}
                     </div>
                   ))}
                   {task.members.length > 3 && (

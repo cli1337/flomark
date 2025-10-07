@@ -61,6 +61,53 @@ const checkProjectAccess = async (req, res, next) => {
   }
 };
 
+router.get("/photos/:filename", (req, res) => {
+  try {
+    const { filename } = req.params;
+    
+    if (filename.includes("..") || filename.includes("/") || filename.includes("\\")) {
+      return res.status(400).json({ 
+        message: "Invalid filename", 
+        key: "invalid_filename", 
+        success: false 
+      });
+    }
+
+    const filePath = path.join(__dirname, "../../storage/photos", filename);
+
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ 
+        message: "Image not found", 
+        key: "image_not_found", 
+        success: false 
+      });
+    }
+
+    const stats = fs.statSync(filePath);
+    
+    const ext = path.extname(filename).toLowerCase();
+    let contentType = 'image/jpeg';
+    if (ext === '.png') contentType = 'image/png';
+    else if (ext === '.gif') contentType = 'image/gif';
+    else if (ext === '.webp') contentType = 'image/webp';
+
+    res.setHeader("Content-Type", contentType);
+    res.setHeader("Content-Length", stats.size);
+    res.setHeader("Cache-Control", "public, max-age=31536000"); 
+
+    const fileStream = fs.createReadStream(filePath);
+    fileStream.pipe(res);
+    
+  } catch (error) {
+    console.error("Error serving image:", error);
+    res.status(500).json({ 
+      message: "Error serving image", 
+      key: "image_serve_error", 
+      success: false 
+    });
+  }
+});
+
 router.get("/photos/:projectId/:filename", (req, res) => {
   try {
     const { filename } = req.params;

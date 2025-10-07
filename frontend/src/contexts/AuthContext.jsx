@@ -104,12 +104,68 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const updateProfile = async (name) => {
+    try {
+      const response = await authService.updateProfile(name)
+      
+      if (response.success) {
+        setUser(response.data)
+        return { success: true }
+      } else {
+        return { success: false, message: response.message }
+      }
+    } catch (error) {
+      if (error.error && error.data) {
+        return { success: false, message: error.data.message }
+      }
+      return { success: false, message: error.message || 'An error occurred while updating profile' }
+    }
+  }
+
+  const updatePassword = async (currentPassword, newPassword) => {
+    try {
+      const response = await authService.updatePassword(currentPassword, newPassword)
+      
+      if (response.success) {
+        return { success: true }
+      } else {
+        return { success: false, message: response.message }
+      }
+    } catch (error) {
+      if (error.error && error.data) {
+        return { success: false, message: error.data.message }
+      }
+      return { success: false, message: error.message || 'An error occurred while updating password' }
+    }
+  }
+
+  const uploadProfileImage = async (file) => {
+    try {
+      const response = await authService.uploadProfileImage(file)
+      
+      if (response.success) {
+        setUser(response.data)
+        return { success: true }
+      } else {
+        return { success: false, message: response.message }
+      }
+    } catch (error) {
+      if (error.error && error.data) {
+        return { success: false, message: error.data.message }
+      }
+      return { success: false, message: error.message || 'An error occurred while uploading image' }
+    }
+  }
+
   const value = {
     user,
     login,
     completeTwoFactorLogin,
     register,
     logout,
+    updateProfile,
+    updatePassword,
+    uploadProfileImage,
     loading
   }
 

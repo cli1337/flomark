@@ -74,12 +74,20 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
                 return (
                   <div
                     key={member.id || index}
-                    className={`w-8 h-8 rounded-lg flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 hover:z-10 relative cursor-pointer transition-all duration-200 group ${
+                    className={`w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center text-white text-xs font-medium border border-white/20 hover:border-white/40 hover:z-10 relative cursor-pointer transition-all duration-200 group ${
                       isOwner ? 'bg-gray-500' : 'bg-gray-600'
                     }`}
                     title={`${userName} - ${userRole}`}
                   >
-                    <span>{userInitial}</span>
+                    {member.user?.profileImage ? (
+                      <img 
+                        src={`/api/storage/photos/${member.user.profileImage}`} 
+                        alt={userName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span>{userInitial}</span>
+                    )}
                     
                     {/* Enhanced tooltip */}
                     <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none z-50 backdrop-blur-xl">

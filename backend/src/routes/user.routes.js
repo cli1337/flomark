@@ -8,9 +8,13 @@ import {
   verifyTwoFactorSetup,
   disableTwoFactor,
   verifyTwoFactorLogin,
+  updateUserProfile,
+  updateUserPassword,
+  uploadProfileImage,
 } from "../controllers/user.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { getClientIP } from "../middlewares/ip.middleware.js";
+import { uploadPhoto, handleMulterError } from "../config/multer.config.js";
 
 const router = Router();
 
@@ -19,6 +23,9 @@ router.post("/auth", getClientIP, authenticateUser);
 router.post("/refresh", refreshToken);
 
 router.get("/profile", authenticateToken, getProfile);
+router.put("/profile", authenticateToken, updateUserProfile);
+router.put("/password", authenticateToken, updateUserPassword);
+router.post("/profile/image", authenticateToken, uploadPhoto.single('profileImage'), handleMulterError, uploadProfileImage);
 
 router.post("/2fa/init", authenticateToken, initTwoFactor);
 router.post("/2fa/verify-setup", authenticateToken, verifyTwoFactorSetup);

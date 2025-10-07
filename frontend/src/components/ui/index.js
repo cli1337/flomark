@@ -45,3 +45,4 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as LoadingState } from './LoadingState';
 export { Badge } from './Badge';
 export { Avatar, AvatarImage, AvatarFallback } from './Avatar';
+export { default as UserAvatar } from './UserAvatar';

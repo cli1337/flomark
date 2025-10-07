@@ -22,7 +22,7 @@ export const useSocket = () => {
         console.log('🔌 Connection lost, attempting to reconnect...');
         socketService.ensureConnection();
       }
-    }, 30000); // Check every 30 seconds
+    }, 30000);
 
     return () => clearInterval(interval);
   }, [user, loading]);

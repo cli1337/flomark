@@ -42,14 +42,22 @@ const ActivityIndicator = ({ projectId }) => {
             return (
               <div
                 key={activeUser.id}
-                className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium border-2 ${
+                className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium border-2 ${
                   isCurrentUser 
                     ? 'bg-green-500 border-green-300' 
                     : 'bg-blue-500 border-white/30'
                 }`}
                 title={`${activeUser.name} is online${isCurrentUser ? ' (You)' : ''}`}
               >
-                {activeUser.name.charAt(0).toUpperCase()}
+                {activeUser.profileImage ? (
+                  <img 
+                    src={`/api/storage/photos/${activeUser.profileImage}`} 
+                    alt={activeUser.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  activeUser.name.charAt(0).toUpperCase()
+                )}
               </div>
             )
           })}

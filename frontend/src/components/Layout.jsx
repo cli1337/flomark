@@ -63,8 +63,18 @@ const Layout = ({ children }) => {
             <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center gap-3 p-2 hover:bg-white/10 rounded-lg transition-colors group">
-                <div className="h-8 w-8 rounded-lg bg-gray-600 flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200">
-                  {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                <div className="h-8 w-8 rounded-lg overflow-hidden flex items-center justify-center text-sm font-semibold border border-white/20 hover:border-white/40 transition-all duration-200">
+                  {user?.profileImage ? (
+                    <img 
+                      src={`/api/storage/photos/${user.profileImage}`} 
+                      alt={user?.name || 'User'}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full bg-gray-600 flex items-center justify-center text-white">
+                      {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </div>
+                  )}
                 </div>
                 <div className="text-left">
                   <p className="text-white text-sm font-medium">{user?.name}</p>

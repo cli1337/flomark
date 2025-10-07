@@ -204,6 +204,7 @@ export class SocketService {
     this.projectUsers.get(projectId).set(userId, {
       id: userId,
       name: userName,
+      profileImage: socket.user.profileImage || null,
       socketId: socket.id,
       joinedAt: new Date().toISOString()
     });

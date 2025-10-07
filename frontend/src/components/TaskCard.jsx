@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Card, CardContent } from './ui/Card'
 import { Checkbox } from './ui/Checkbox'
 import { Badge } from './ui/Badge'
-import { Avatar, AvatarFallback } from './ui/Avatar'
+import { Avatar, AvatarImage, AvatarFallback } from './ui/Avatar'
 import { Calendar, Users, CheckCircle2, GripVertical } from 'lucide-react'
 import { cn } from '../utils/cn'
 
@@ -171,6 +171,12 @@ const TaskCard = ({
                       whileHover={{ scale: 1.2, zIndex: 10 }}
                     >
                       <Avatar className="w-6 h-6 border-2 border-white">
+                        {member.profileImage && (
+                          <AvatarImage 
+                            src={`/api/storage/photos/${member.profileImage}`} 
+                            alt={member.name} 
+                          />
+                        )}
                         <AvatarFallback className="text-xs bg-gray-100">
                           {member.name.charAt(0).toUpperCase()}
                         </AvatarFallback>

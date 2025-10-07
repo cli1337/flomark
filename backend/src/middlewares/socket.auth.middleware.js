@@ -27,6 +27,7 @@ export const authenticateSocket = async (socket, next) => {
         id: true,
         name: true,
         email: true,
+        profileImage: true,
         createdAt: true,
         role: true,
       },

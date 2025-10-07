@@ -216,10 +216,18 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                       onClick={() => toggleMemberSelection(member.id)}
                       className="flex items-center gap-3 flex-1 text-left hover:bg-white/5 rounded-lg p-2 transition-colors"
                     >
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200 ${
+                      <div className={`w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200 ${
                         isMemberOwner ? 'bg-yellow-500' : isMemberAdmin ? 'bg-blue-500' : 'bg-gray-600'
                       }`}>
-                        {userInitial}
+                        {member.user?.profileImage ? (
+                          <img 
+                            src={`/api/storage/photos/${member.user.profileImage}`} 
+                            alt={userName}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          userInitial
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="text-white text-sm font-medium">
@@ -316,8 +324,18 @@ const MemberFilter = ({ projectId, projectOwner, selectedMembers = [], onMembers
                     return (
                       <div key={user.id} className="flex items-center gap-3 group">
                         <div className="flex items-center gap-3 flex-1">
-                          <div className="w-8 h-8 rounded-lg bg-gray-600 flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200">
-                            {userInitial}
+                          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center text-sm font-semibold text-white border border-white/20 hover:border-white/40 transition-all duration-200">
+                            {user?.profileImage ? (
+                              <img 
+                                src={`/api/storage/photos/${user.profileImage}`} 
+                                alt={userName}
+                                className="w-full h-full object-cover bg-gray-600"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gray-600 flex items-center justify-center">
+                                {userInitial}
+                              </div>
+                            )}
                           </div>
                           <div className="flex-1">
                             <div className="text-white text-sm font-medium">{userName}</div>

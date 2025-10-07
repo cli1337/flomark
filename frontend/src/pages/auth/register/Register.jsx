@@ -5,7 +5,7 @@ import { useToast } from '../../../contexts/ToastContext'
 import usePageTitle from '../../../hooks/usePageTitle'
 import { Button } from '../../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/Card'
-import { User, Mail, LockKeyhole, Eye, EyeOff } from 'lucide-react'
+import { User, Mail, LockKeyhole, Eye, EyeOff, Check, X } from 'lucide-react'
 import * as Form from '@radix-ui/react-form'
 
 function Register() {
@@ -27,8 +27,25 @@ function Register() {
   const validatePassword = (password) => {
     const minLength = password.length >= 8
     const hasUpperCase = /[A-Z]/.test(password)
-    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+    const hasSpecialChar = /[!@#$%^&*]/.test(password)
     return minLength && hasUpperCase && hasSpecialChar
+  }
+
+  const getPasswordRequirements = () => {
+    return [
+      {
+        label: 'At least 8 characters',
+        met: password.length >= 8,
+      },
+      {
+        label: 'At least 1 uppercase letter',
+        met: /[A-Z]/.test(password),
+      },
+      {
+        label: 'At least 1 special character (!@#$%^&*)',
+        met: /[!@#$%^&*]/.test(password),
+      },
+    ]
   }
 
   const handleSubmit = async (e) => {
@@ -189,26 +206,49 @@ function Register() {
                   </button>
                 </div>
                 
-                {/* Password Strength Indicator */}
+                {/* Password Requirements Checklist */}
                 {password && (
-                  <div className="mt-2">
-                    <div className="flex items-center space-x-2">
-                      <div className="flex-1 bg-gray-700 rounded-full h-2">
+                  <div className="mt-3 space-y-2">
+                    <div className="text-xs font-medium text-gray-300 mb-2">Password Requirements:</div>
+                    {getPasswordRequirements().map((requirement, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <div className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-all ${
+                          requirement.met 
+                            ? 'bg-green-500/20 text-green-400' 
+                            : 'bg-red-500/20 text-red-400'
+                        }`}>
+                          {requirement.met ? (
+                            <Check className="w-3 h-3" />
+                          ) : (
+                            <X className="w-3 h-3" />
+                          )}
+                        </div>
+                        <span className={`text-xs transition-colors ${
+                          requirement.met ? 'text-green-400' : 'text-gray-400'
+                        }`}>
+                          {requirement.label}
+                        </span>
+                      </div>
+                    ))}
+                    
+                    {/* Overall Password Strength */}
+                    <div className="mt-3 pt-2 border-t border-white/10">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-xs text-gray-400">Password Strength:</span>
+                        <span className={`text-xs font-medium ${passwordInfo.color}`}>
+                          {passwordInfo.text}
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-1.5">
                         <div 
-                          className={`h-2 rounded-full transition-all duration-300 ${
+                          className={`h-1.5 rounded-full transition-all duration-300 ${
                             passwordInfo.strength <= 2 ? 'bg-red-500' :
-                            passwordInfo.strength <= 3 ? 'bg-gray-500' :
+                            passwordInfo.strength <= 3 ? 'bg-yellow-500' :
                             passwordInfo.strength <= 4 ? 'bg-blue-500' : 'bg-green-500'
                           }`}
                           style={{ width: `${(passwordInfo.strength / 5) * 100}%` }}
                         ></div>
                       </div>
-                      <span className={`text-sm font-medium ${passwordInfo.color}`}>
-                        {passwordInfo.text}
-                      </span>
-                    </div>
-                    <div className="mt-1 text-xs text-gray-400">
-                      Must be at least 8 characters with 1 uppercase letter and 1 special character
                     </div>
                   </div>
                 )}

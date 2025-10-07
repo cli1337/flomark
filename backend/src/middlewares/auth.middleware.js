@@ -22,6 +22,7 @@ export const authenticateToken = async (req, res, next) => {
         id: true,
         name: true,
         email: true,
+        profileImage: true,
         createdAt: true,
         role: true,
         twoFactorEnabled: true,
