@@ -18,7 +18,8 @@ import {
   getLabelsByProject,
   createLabel,
   updateLabel,
-  deleteLabel
+  deleteLabel,
+  getProjectDataOptimized
 } from "../controllers/projects.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { uploadPhoto, handleMulterError } from "../config/multer.config.js";
@@ -31,6 +32,7 @@ router.get("/", getProjects);
 router.post("/", createProject);
 router.put("/:id", updateProject);
 router.delete("/:id", deleteProject);
+router.get("/:id/data", getProjectDataOptimized);
 router.get("/:id", getProjectById);
 
 router.post("/:id/image", uploadPhoto.single('image'), handleMulterError, uploadProjectImage);

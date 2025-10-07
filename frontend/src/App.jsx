@@ -6,6 +6,7 @@ import Projects from './pages/projects/Projects'
 import ProjectDetail from './pages/projects/ProjectDetail'
 import Profile from './pages/profile/Profile'
 import JoinProject from './pages/join/JoinProject'
+import AnimationShowcase from './components/AnimationShowcase'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -46,6 +47,7 @@ function App() {
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                   <Route path="/join/:inviteLink" element={<JoinProject />} />
                   <Route path="/logout" element={<LogoutRoute />} />
+                  <Route path="/animations" element={<AnimationShowcase />} />
                   <Route path="/" element={<Navigate to="/projects" />} />
                 </Routes>
               </div>

@@ -1107,3 +1107,78 @@ export const deleteProject = async (req, res, next) => {
         next(err);
     }
 };
+
+export const getProjectDataOptimized = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        
+        if (!id) {
+            return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
+        }
+        
+        if (!ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
+        }
+
+        const project = await prisma.project.findUnique({
+            where: { id },
+            include: {
+                members: {
+                    include: {
+                        user: true
+                    }
+                }
+            }
+        });
+        
+        if (!project) {
+            return res.status(404).json({ message: "Project not found", key: "project_not_found", success: false });
+        }
+        
+        const isMember = project.members.some(member => member.userId === req.user.id);
+        if (!isMember) {
+            return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
+        }
+
+        const lists = await prisma.list.findMany({
+            where: { projectId: id },
+            orderBy: { order: 'asc' }
+        });
+
+        const allTasks = await prisma.task.findMany({
+            where: {
+                listId: {
+                    in: lists.map(list => list.id)
+                }
+            },
+            include: {
+                members: {
+                    include: {
+                        user: true
+                    }
+                },
+                subTasks: true,
+                attachments: true
+            },
+            orderBy: { createdAt: 'asc' }
+        });
+
+        const tasksByList = {};
+        lists.forEach(list => {
+            tasksByList[list.id] = allTasks.filter(task => task.listId === list.id);
+        });
+        
+        res.json({ 
+            data: {
+                project,
+                lists,
+                tasks: tasksByList,
+                members: project.members
+            },
+            success: true 
+        });
+    } catch (err) {
+        console.error('getProjectDataOptimized error:', err);
+        next(err);
+    }
+};

@@ -12,8 +12,8 @@ export class SocketService {
     });
 
 
-    this.projectUsers = new Map(); // projectId -> Set of userIds
-    this.userProjects = new Map(); // userId -> Set of projectIds
+    this.projectUsers = new Map();
+    this.userProjects = new Map();
 
     this.setupMiddleware();
     this.setupEventHandlers();

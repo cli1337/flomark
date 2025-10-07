@@ -194,59 +194,52 @@ const ProjectDetail = () => {
         console.log('🎯 From list:', data.payload.fromListId)
         console.log('🎯 To list:', data.payload.toListId)
         
+        // Wait for next frame to ensure DOM is ready
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            console.log('🎯 Starting animation for remote user')
+            taskMoveAnimation.startTaskMoveAnimation(
+              data.payload.task.id,
+              data.payload.task,
+              data.payload.fromListId,
+              data.payload.toListId
+            )
+          }, 50)
+        })
 
-        taskMoveAnimation.startTaskMoveAnimation(
-          data.payload.task.id,
-          data.payload.task,
-          data.payload.fromListId,
-          data.payload.toListId
-        )
-
-
+        // Update state after animation completes (800ms animation + buffer)
         setTimeout(() => {
           setTasks(prev => {
-            console.log('🎯 Current tasks state:', prev)
-            console.log('🎯 Task to move:', data.payload.task)
-            console.log('🎯 Task ID:', data.payload.task.id)
-            console.log('🎯 From list ID:', data.payload.fromListId)
-            console.log('🎯 To list ID:', data.payload.toListId)
-            
+            console.log('🎯 Updating tasks state after animation')
             const newTasks = { ...prev }
 
-
+            // Remove from source list
             if (data.payload.fromListId) {
               const sourceTasks = newTasks[data.payload.fromListId] || []
-              console.log('🎯 Source tasks before removal:', sourceTasks)
               newTasks[data.payload.fromListId] = sourceTasks
                 .filter(task => task.id !== data.payload.task.id)
-              console.log('🎯 Source tasks after removal:', newTasks[data.payload.fromListId])
             }
 
-
+            // Add to destination list
             if (data.payload.toListId) {
               const destTasks = newTasks[data.payload.toListId] || []
-              console.log('🎯 Destination tasks before addition:', destTasks)
               newTasks[data.payload.toListId] = [
                 ...destTasks,
                 data.payload.task
               ]
-              console.log('🎯 Destination tasks after addition:', newTasks[data.payload.toListId])
             }
             
-            console.log('🎯 New tasks state:', newTasks)
             return newTasks
           })
-        }, 50) // Small delay to let animation start
+        }, 1200) // Animation duration (800ms) + exit (300ms) + buffer (100ms)
         
-
-
       } else {
         console.log('🎯 No task data in payload')
       }
     } else {
       console.log('🎯 Skipping task move - conditions not met')
     }
-  }, [id, user?.id])
+  }, [id, user?.id, taskMoveAnimation])
 
   const handleTaskDeleted = useCallback((data) => {
     if (data.projectId === id && data.userId !== user?.id) {
@@ -386,35 +379,16 @@ const ProjectDetail = () => {
     try {
       setLoading(true)
       
-      const projectResponse = await projectService.getProjectById(id)
-      if (projectResponse.success) {
-        setProject(projectResponse.data)
+      // Use the optimized endpoint that fetches everything in one request
+      const response = await projectService.getProjectDataOptimized(id)
+      
+      if (response.success) {
+        const { project, lists, tasks, members } = response.data
         
-
-        const membersResponse = await projectService.getMembersByProject(id)
-        if (membersResponse.success) {
-          setMembers(membersResponse.data || [])
-        } else {
-          setMembers(projectResponse.data.members || [])
-        }
-        
-        const listsResponse = await listService.getListsByProject(id)
-        if (listsResponse.success) {
-          const projectLists = listsResponse.data || []
-          setLists(projectLists)
-          const tasksData = {}
-          for (const list of projectLists) {
-            const tasksResponse = await taskService.getTasksByList(list.id)
-            if (tasksResponse.success) {
-              tasksData[list.id] = tasksResponse.data || []
-            }
-          }
-          setTasks(tasksData)
-        } else {
-          showError('Failed to load project data', listsResponse.message)
-          setLists([])
-          setTasks({})
-        }
+        setProject(project)
+        setMembers(members || [])
+        setLists(lists || [])
+        setTasks(tasks || {})
       } else {
         showError('Project not found', 'The project you are looking for does not exist')
         navigate('/projects')
@@ -494,6 +468,12 @@ const ProjectDetail = () => {
       
       if (response.success) {
         showSuccess('Columns reordered', 'Column order has been updated')
+        
+        // Broadcast to other users
+        broadcastProjectUpdate({
+          type: 'lists-reordered',
+          payload: { lists: newLists }
+        })
       } else {
         throw new Error(response.message)
       }
@@ -503,7 +483,7 @@ const ProjectDetail = () => {
 
       await fetchProjectData()
     }
-  }, [id, showSuccess, showError, fetchProjectData])
+  }, [id, showSuccess, showError, fetchProjectData, broadcastProjectUpdate])
 
   const handleTaskClick = async (task) => {
     try {
@@ -762,7 +742,8 @@ const ProjectDetail = () => {
           setDroppableRef(node)
         }}
         style={style}
-        className={`bg-white/5 border border-white/10 transition-all group shadow-sm rounded-lg relative mb-3 ${
+        data-task-id={task.id}
+        className={`bg-white/5 border border-white/10 transition-all group shadow-sm rounded-lg relative mb-3 task-card ${
           isProcessing 
             ? 'opacity-50 cursor-not-allowed' 
             : isDragging
@@ -929,6 +910,7 @@ const ProjectDetail = () => {
           <div
         ref={setNodeRef}
         style={style}
+        data-list-id={list.id}
             className={`w-80 min-w-80 max-w-80 flex-shrink-0 group overflow-visible bg-white/5 border border-white/10 rounded-lg p-3 transition-all relative ${
           isDragging ? 'opacity-50 rotate-2 scale-105 ring-2 ring-gray-400 ring-opacity-50' : ''
             }`}

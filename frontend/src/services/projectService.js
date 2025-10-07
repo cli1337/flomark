@@ -77,6 +77,32 @@ export const projectService = {
     return null
   },
 
+  async getProjectImageDirect(id, imageHash) {
+    if (!imageHash) return null
+    
+    try {
+      let filename = imageHash
+      if (filename.includes('/')) {
+        filename = filename.split('/').pop()
+      }
+      
+      const fileApi = createFileApiInstance()
+      const response = await fileApi.get(`/storage/photos/${id}/${filename}`, {
+        responseType: 'blob'
+      })
+      
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onloadend = () => resolve(reader.result)
+        reader.onerror = reject
+        reader.readAsDataURL(response.data)
+      })
+    } catch (error) {
+      console.error('Error loading project image:', error)
+      return null
+    }
+  },
+
   async getLabelsByProject(projectId) {
     const response = await api.get(`/projects/${projectId}/labels`)
     return response.data
@@ -104,6 +130,11 @@ export const projectService = {
 
   async deleteProject(projectId) {
     const response = await api.delete(`/projects/${projectId}`)
+    return response.data
+  },
+
+  async getProjectDataOptimized(projectId) {
+    const response = await api.get(`/projects/${projectId}/data`)
     return response.data
   }
 }

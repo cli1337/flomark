@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { useDroppable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from './ui/Card'
 import { Button } from './ui/Button'
 import { Badge } from './ui/Badge'
@@ -45,20 +46,23 @@ const Column = ({
   const taskIds = tasks.map(task => task.id)
 
   return (
-    <div
+    <motion.div
       ref={setNodeRef}
       style={style}
       className={cn(
         "flex-shrink-0 w-96 sm:w-[28rem] dnd-item",
-        isDragging && "dragging",
+        isDragging && "dragging column-dragging",
         isSortableDragging && "opacity-50",
         hasPendingUpdate && "optimistic-pending"
       )}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
     >
       <Card 
-        className="h-fit min-h-24 bg-white border border-gray-200 shadow-sm"
+        className="h-fit min-h-24 bg-white border border-gray-200 shadow-sm overflow-hidden"
         data-list-id={list.id}
       >
         <CardContent className="p-4">
@@ -66,37 +70,49 @@ const Column = ({
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {/* Drag Handle */}
-              <div 
+              <motion.div 
                 className={cn(
                   "cursor-grab active:cursor-grabbing p-1 rounded hover:bg-gray-100 transition-colors",
                   isHovered ? "opacity-100" : "opacity-0"
                 )}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
                 {...attributes}
                 {...listeners}
               >
                 <GripVertical className="w-4 h-4 text-gray-400" />
-              </div>
+              </motion.div>
               
               {/* Column Title */}
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div 
+                <motion.div 
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: list.color || '#3B82F6' }}
+                  whileHover={{ scale: 1.2 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
                 />
                 <h3 className="font-semibold text-gray-900 text-sm truncate">
                   {list.name}
                 </h3>
-                <Badge variant="secondary" className="text-xs">
-                  {tasks.length}
-                </Badge>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 25 }}
+                >
+                  <Badge variant="secondary" className="text-xs">
+                    {tasks.length}
+                  </Badge>
+                </motion.div>
               </div>
             </div>
 
             {/* Column Actions */}
-            <div className={cn(
-              "flex items-center gap-1 transition-opacity",
-              isHovered ? "opacity-100" : "opacity-0"
-            )}>
+            <motion.div 
+              className="flex items-center gap-1"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: isHovered ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
               <Button
                 variant="ghost"
                 size="sm"
@@ -108,42 +124,64 @@ const Column = ({
               >
                 <MoreHorizontal className="w-3 h-3" />
               </Button>
-            </div>
+            </motion.div>
           </div>
 
           {/* Tasks Container */}
-          <div
+          <motion.div
             ref={setDroppableRef}
             className={cn(
-              "min-h-20 space-y-2 transition-all duration-200",
-              isOver && "drag-over bg-blue-50 border-2 border-blue-200 border-dashed rounded-lg p-2 -m-2"
+              "min-h-20 space-y-2 transition-all duration-200 rounded-lg",
+              isOver && "drop-zone-active"
             )}
+            animate={{
+              backgroundColor: isOver ? 'rgba(59, 130, 246, 0.05)' : 'transparent',
+            }}
+            transition={{ duration: 0.2 }}
           >
             <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  onClick={() => onTaskClick(task)}
-                  hasPendingUpdate={useOptimisticUpdates?.hasPendingUpdate(task.id)}
-                  onRegisterElement={onRegisterTaskElement}
-                />
-              ))}
+              <AnimatePresence mode="popLayout">
+                {tasks.map((task, index) => (
+                  <motion.div
+                    key={task.id}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ 
+                      duration: 0.2,
+                      delay: index * 0.03
+                    }}
+                    layout
+                  >
+                    <TaskCard
+                      task={task}
+                      onClick={() => onTaskClick(task)}
+                      hasPendingUpdate={useOptimisticUpdates?.hasPendingUpdate(task.id)}
+                      onRegisterElement={onRegisterTaskElement}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </SortableContext>
 
             {/* Add Task Button */}
-            <Button
-              variant="ghost"
-              className="w-full h-10 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 group"
-              onClick={() => onAddTask(list)}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <Plus className="w-4 h-4 text-gray-400 group-hover:text-gray-600 mr-2" />
-              <span className="text-gray-500 group-hover:text-gray-700">Add a card</span>
-            </Button>
-          </div>
+              <Button
+                variant="ghost"
+                className="w-full h-10 border-2 border-dashed border-gray-300 hover:border-gray-400 hover:bg-gray-50 transition-all duration-200 group"
+                onClick={() => onAddTask(list)}
+              >
+                <Plus className="w-4 h-4 text-gray-400 group-hover:text-gray-600 mr-2" />
+                <span className="text-gray-500 group-hover:text-gray-700">Add a card</span>
+              </Button>
+            </motion.div>
+          </motion.div>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }
 

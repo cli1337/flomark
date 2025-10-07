@@ -241,7 +241,8 @@ const Projects = () => {
         setImageLoading(true)
         setImageLoadError(false)
         
-        projectService.getProjectImage(project.id)
+        // Use direct image loading to avoid extra project fetch
+        projectService.getProjectImageDirect(project.id, project.imageHash)
           .then(imageData => {
             if (imageData) {
               imageCache.current.set(cacheKey, imageData)
@@ -515,7 +516,8 @@ const Projects = () => {
 
         setImageLoading(true)
         
-        projectService.getProjectImage(project.id)
+        // Use direct image loading to avoid extra project fetch
+        projectService.getProjectImageDirect(project.id, project.imageHash)
           .then(imageData => {
             if (imageData) {
               imageCache.current.set(cacheKey, imageData)
