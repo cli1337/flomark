@@ -35,7 +35,6 @@ router.post("/2fa/verify-setup", authenticateToken, verifyTwoFactorSetup);
 router.post("/2fa/disable", authenticateToken, disableTwoFactor);
 router.post("/2fa/verify-login", verifyTwoFactorLogin);
 
-// Admin routes
 router.get("/admin/users", authenticateToken, getAllUsers);
 router.put("/admin/users/:userId", authenticateToken, updateUserByAdmin);
 router.post("/admin/users/:userId/promote", authenticateToken, promoteUserToAdmin);

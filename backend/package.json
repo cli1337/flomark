@@ -1,9 +1,10 @@
 {
-  "name": "taskmanager-backend",
+  "name": "flomark-backend",
   "version": "1.0.0",
   "description": "",
   "type": "module",
   "main": "/src/server.js",
+  "license": "MIT",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
@@ -11,14 +12,13 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cli1337/taskmanager.git"
+    "url": "git+https://github.com/cli1337/flomark.git"
   },
   "author": "nick",
-  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/cli1337/taskmanager/issues"
+    "url": "https://github.com/cli1337/flomark/issues"
   },
-  "homepage": "https://github.com/cli1337/taskmanager#readme",
+  "homepage": "https://github.com/cli1337/flomark#readme",
   "packageManager": "pnpm@10.15.1",
   "dependencies": {
     "@prisma/client": "^6.16.2",

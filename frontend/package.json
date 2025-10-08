@@ -1,7 +1,17 @@
 {
-  "name": "taskmanager-frontend",
+  "name": "flomark-frontend",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
+  "author": "cli1337",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cli1337/flomark.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cli1337/flomark/issues"
+  },
+  "homepage": "https://github.com/cli1337/flomark#readme",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -7,6 +7,7 @@ import ProjectDetail from './pages/projects/ProjectDetail'
 import Profile from './pages/profile/Profile'
 import JoinProject from './pages/join/JoinProject'
 import AnimationShowcase from './components/AnimationShowcase'
+import AdminPanel from './pages/admin/AdminPanel'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -45,6 +46,7 @@ function App() {
                   <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                   <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                   <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                  <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
                   <Route path="/join/:inviteLink" element={<JoinProject />} />
                   <Route path="/logout" element={<LogoutRoute />} />
                   <Route path="/animations" element={<AnimationShowcase />} />
@@ -84,6 +86,28 @@ function PublicRoute({ children }) {
   }
   
   return user ? <Navigate to="/projects" replace /> : children
+}
+
+function AdminRoute({ children }) {
+  const { user, loading } = useAuth()
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#18191b] flex items-center justify-center">
+        <LoadingState message="Loading..." />
+      </div>
+    )
+  }
+  
+  if (!user) {
+    return <Navigate to="/login" />
+  }
+  
+  if (user.role !== 'ADMIN' && user.role !== 'OWNER') {
+    return <Navigate to="/projects" />
+  }
+  
+  return children
 }
 
 export default App

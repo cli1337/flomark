@@ -17,6 +17,7 @@ export const WebSocketProvider = ({ children }) => {
   const { user } = useAuth()
   const { showSuccess, showError } = useToast()
   const [isConnected, setIsConnected] = useState(false)
+  const [isReconnecting, setIsReconnecting] = useState(false)
   const [activeUsers, setActiveUsers] = useState(new Map())
 
   useEffect(() => {
@@ -34,17 +35,20 @@ export const WebSocketProvider = ({ children }) => {
 
       const handleConnect = () => {
         setIsConnected(true)
+        setIsReconnecting(false)
         console.log('🔌 WebSocket connected')
       }
 
       const handleDisconnect = () => {
         setIsConnected(false)
+        setIsReconnecting(true)
         console.log('🔌 WebSocket disconnected')
       }
 
       const handleConnectError = (error) => {
         console.error('❌ WebSocket connection error:', error)
         setIsConnected(false)
+        setIsReconnecting(true)
       }
 
 
@@ -60,6 +64,7 @@ export const WebSocketProvider = ({ children }) => {
     } else {
       socketService.disconnect()
       setIsConnected(false)
+      setIsReconnecting(false)
     }
   }, [user])
 
@@ -133,6 +138,7 @@ export const WebSocketProvider = ({ children }) => {
 
   const value = {
     isConnected,
+    isReconnecting,
     activeUsers: Array.from(activeUsers.values()),
     joinProject: socketService.joinProject,
     leaveProject: socketService.leaveProject,

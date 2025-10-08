@@ -23,6 +23,7 @@ import {
 import { CSS } from '@dnd-kit/utilities'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
+import { useWebSocket } from '../../contexts/WebSocketContext'
 import usePageTitle from '../../hooks/usePageTitle'
 import useMobileDetection from '../../hooks/useMobileDetection'
 import { useProjectSocket, useSocketEvent } from '../../hooks/useSocket'
@@ -30,6 +31,7 @@ import useWebSocketEvents from '../../hooks/useWebSocketEvents'
 import { useOptimisticUpdates } from '../../hooks/useOptimisticUpdates'
 import { useTaskMoveAnimation } from '../../hooks/useTaskMoveAnimation'
 import TaskMoveAnimation from '../../components/TaskMoveAnimation'
+import DisconnectionOverlay from '../../components/DisconnectionOverlay'
 import { projectService } from '../../services/projectService'
 import { listService } from '../../services/listService'
 import { taskService } from '../../services/taskService'
@@ -58,6 +60,7 @@ const ProjectDetail = () => {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const { showSuccess, showError, showInfo } = useToast()
+  const { isConnected, isReconnecting } = useWebSocket()
   const isMobile = useMobileDetection()
   
 
@@ -1215,6 +1218,9 @@ const ProjectDetail = () => {
           isVisible={animation.isVisible}
         />
       ))}
+
+      {/* Disconnection Overlay */}
+      <DisconnectionOverlay isConnected={isConnected} isReconnecting={isReconnecting} />
     </Layout>
   )
 }

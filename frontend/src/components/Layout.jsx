@@ -13,7 +13,8 @@ import {
   Settings,
   LogOut,
   MoreVertical,
-  ArrowLeft
+  ArrowLeft,
+  Shield
 } from 'lucide-react'
 import NotificationDropdown from './NotificationDropdown'
 
@@ -91,6 +92,15 @@ const Layout = ({ children }) => {
                 <User className="h-4 w-4 mr-2" />
                 Edit Profile
               </DropdownMenuItem>
+              {(user?.role === 'ADMIN' || user?.role === 'OWNER') && (
+                <DropdownMenuItem 
+                  className="cursor-pointer text-purple-400 hover:bg-purple-500/10 hover:text-purple-300"
+                  onClick={() => navigate('/admin')}
+                >
+                  <Shield className="h-4 w-4 mr-2" />
+                  Admin Panel
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem className="cursor-pointer">
                 <Settings className="h-4 w-4 mr-2" />
                 Settings

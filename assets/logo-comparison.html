@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flomark Logo Variations</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f172a;
+            color: white;
+            padding: 40px;
+        }
+        
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 40px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .logo-card {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid #334155;
+        }
+        
+        .logo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            border-color: #475569;
+        }
+        
+        .logo-card h3 {
+            margin-bottom: 20px;
+            color: #e2e8f0;
+            font-size: 1.2rem;
+        }
+        
+        .logo-preview {
+            background: #0f172a;
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 15px;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-preview img {
+            max-width: 100%;
+            height: auto;
+        }
+        
+        .logo-description {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-top: 15px;
+        }
+        
+        .color-info {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .color-dot {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid #475569;
+        }
+        
+        .toggle-bg {
+            margin-top: 40px;
+            text-align: center;
+        }
+        
+        .toggle-bg button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.2s;
+        }
+        
+        .toggle-bg button:hover {
+            background: #2563eb;
+        }
+        
+        .light-bg .logo-preview {
+            background: #f8fafc;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎨 Flomark Logo Variations</h1>
+    <p class="subtitle">Choose your favorite design</p>
+    
+    <div class="grid">
+        <!-- Version 1: Original -->
+        <div class="logo-card">
+            <h3>Version 1 - Flow & Check</h3>
+            <div class="logo-preview">
+                <img src="../public/logo.svg" alt="Logo V1">
+            </div>
+            <div class="color-info">
+                <div class="color-dot" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6)"></div>
+            </div>
+            <p class="logo-description">
+                Flow lines + checkmark. Represents workflow automation and task completion. Blue to purple gradient.
+            </p>
+        </div>
+        
+        <!-- Version 2: F + Board -->
+        <div class="logo-card">
+            <h3>Version 2 - F Letter + Board</h3>
+            <div class="logo-preview">
+                <img src="../public/logo-v2.svg" alt="Logo V2">
+            </div>
+            <div class="color-info">
+                <div class="color-dot" style="background: linear-gradient(135deg, #06b6d4, #3b82f6)"></div>
+            </div>
+            <p class="logo-description">
+                Stylized F with kanban board dots. Clean and modern. Cyan to blue gradient.
+            </p>
+        </div>
+        
+        <!-- Version 3: Kanban Columns -->
+        <div class="logo-card">
+            <h3>Version 3 - Kanban Columns</h3>
+            <div class="logo-preview">
+                <img src="../public/logo-v3.svg" alt="Logo V3">
+            </div>
+            <div class="color-info">
+                <div class="color-dot" style="background: linear-gradient(135deg, #10b981, #06b6d4)"></div>
+            </div>
+            <p class="logo-description">
+                Minimal kanban columns with flow arrow. Represents task organization. Green to cyan gradient.
+            </p>
+        </div>
+        
+        <!-- Version 4: Abstract F -->
+        <div class="logo-card">
+            <h3>Version 4 - Abstract Flow F</h3>
+            <div class="logo-preview">
+                <img src="../public/logo-v4.svg" alt="Logo V4">
+            </div>
+            <div class="color-info">
+                <div class="color-dot" style="background: linear-gradient(135deg, #f59e0b, #ef4444)"></div>
+                <div class="color-dot" style="background: #06b6d4"></div>
+            </div>
+            <p class="logo-description">
+                Flowing F letter with accent dot. Bold and energetic. Orange to red gradient with cyan accent.
+            </p>
+        </div>
+        
+        <!-- Version 5: Stacked Cards -->
+        <div class="logo-card">
+            <h3>Version 5 - Stacked Tasks</h3>
+            <div class="logo-preview">
+                <img src="../public/logo-v5.svg" alt="Logo V5">
+            </div>
+            <div class="color-info">
+                <div class="color-dot" style="background: linear-gradient(135deg, #6366f1, #8b5cf6)"></div>
+            </div>
+            <p class="logo-description">
+                Layered task cards with checkmark. Represents multiple projects. Indigo to purple gradient.
+            </p>
+        </div>
+        
+        <!-- Version 6: Geometric Hexagon -->
+        <div class="logo-card">
+            <h3>Version 6 - Geometric Hex</h3>
+            <div class="logo-preview">
+                <img src="../public/logo-v6.svg" alt="Logo V6">
+            </div>
+            <div class="color-info">
+                <div class="color-dot" style="background: linear-gradient(135deg, #ec4899, #8b5cf6)"></div>
+            </div>
+            <p class="logo-description">
+                Hexagon with geometric F. Modern and technical. Pink to purple gradient.
+            </p>
+        </div>
+    </div>
+    
+    <div class="toggle-bg">
+        <button onclick="document.body.classList.toggle('light-bg')">
+            Toggle Background Color
+        </button>
+    </div>
+</body>
+</html>
+
