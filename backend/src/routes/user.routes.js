@@ -11,6 +11,9 @@ import {
   updateUserProfile,
   updateUserPassword,
   uploadProfileImage,
+  getAllUsers,
+  updateUserByAdmin,
+  promoteUserToAdmin,
 } from "../controllers/user.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { getClientIP } from "../middlewares/ip.middleware.js";
@@ -31,5 +34,10 @@ router.post("/2fa/init", authenticateToken, initTwoFactor);
 router.post("/2fa/verify-setup", authenticateToken, verifyTwoFactorSetup);
 router.post("/2fa/disable", authenticateToken, disableTwoFactor);
 router.post("/2fa/verify-login", verifyTwoFactorLogin);
+
+// Admin routes
+router.get("/admin/users", authenticateToken, getAllUsers);
+router.put("/admin/users/:userId", authenticateToken, updateUserByAdmin);
+router.post("/admin/users/:userId/promote", authenticateToken, promoteUserToAdmin);
 
 export default router;

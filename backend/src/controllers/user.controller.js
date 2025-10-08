@@ -90,6 +90,7 @@ export const authenticateUser = async (req, res, next) => {
           email: user.email,
           profileImage: user.profileImage || null,
           twoFactorEnabled: user.twoFactorEnabled || false,
+          role: user.role,
         }
       }, 
       success: true 
@@ -114,7 +115,7 @@ export const refreshToken = async (req, res, next) => {
     const decoded = verifyToken(refreshToken);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, name: true, profileImage: true, twoFactorEnabled: true },
+      select: { id: true, email: true, name: true, profileImage: true, twoFactorEnabled: true, role: true },
     });
 
     if (!user) {
@@ -138,6 +139,7 @@ export const refreshToken = async (req, res, next) => {
           email: user.email,
           profileImage: user.profileImage || null,
           twoFactorEnabled: user.twoFactorEnabled || false,
+          role: user.role,
         },
       },
       success: true,
@@ -164,6 +166,7 @@ export const getProfile = async (req, res, next) => {
         email: true,
         profileImage: true,
         twoFactorEnabled: true,
+        role: true,
       },
     });
 
@@ -309,6 +312,7 @@ export const verifyTwoFactorLogin = async (req, res, next) => {
           email: user.email,
           profileImage: user.profileImage || null,
           twoFactorEnabled: user.twoFactorEnabled,
+          role: user.role,
         },
       },
       success: true,
@@ -343,6 +347,7 @@ export const updateUserProfile = async (req, res, next) => {
         email: true,
         profileImage: true,
         twoFactorEnabled: true,
+        role: true,
       },
     });
 
@@ -431,6 +436,191 @@ export const uploadProfileImage = async (req, res, next) => {
         name: true,
         email: true,
         profileImage: true,
+        twoFactorEnabled: true,
+        role: true,
+      },
+    });
+
+    res.json({
+      data: updatedUser,
+      success: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getAllUsers = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OWNER') {
+      return res.status(403).json({
+        message: "Access denied. Admin or Owner only.",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        role: true,
+        createdAt: true,
+        registerIP: true,
+        lastIP: true,
+        twoFactorEnabled: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    res.json({
+      data: users,
+      success: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateUserByAdmin = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OWNER') {
+      return res.status(403).json({
+        message: "Access denied. Admin or Owner only.",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    const { userId } = req.params;
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+      return res.status(400).json({
+        message: "Name and email are required",
+        key: "fields_required",
+        success: false,
+      });
+    }
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({
+        message: "User not found",
+        key: "user_not_found",
+        success: false,
+      });
+    }
+
+    if (req.user.role === 'ADMIN' && (targetUser.role === 'OWNER' || targetUser.role === 'ADMIN')) {
+      return res.status(403).json({
+        message: "You cannot edit other admins or owners",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser && existingUser.id !== userId) {
+      return res.status(400).json({
+        message: "Email already in use",
+        key: "email_exists",
+        success: false,
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { 
+        name: name.trim(), 
+        email: email.trim() 
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        role: true,
+        createdAt: true,
+        registerIP: true,
+        lastIP: true,
+        twoFactorEnabled: true,
+      },
+    });
+
+    res.json({
+      data: updatedUser,
+      success: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const promoteUserToAdmin = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OWNER') {
+      return res.status(403).json({
+        message: "Access denied. Admin or Owner only.",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    const { userId } = req.params;
+
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!targetUser) {
+      return res.status(404).json({
+        message: "User not found",
+        key: "user_not_found",
+        success: false,
+      });
+    }
+
+    if (targetUser.role === 'OWNER') {
+      return res.status(403).json({
+        message: "Cannot modify owner role",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    if (req.user.role === 'ADMIN' && targetUser.role === 'ADMIN') {
+      return res.status(403).json({
+        message: "You cannot demote other admins",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    const newRole = targetUser.role === 'ADMIN' ? 'USER' : 'ADMIN';
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { role: newRole },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        role: true,
+        createdAt: true,
+        registerIP: true,
+        lastIP: true,
         twoFactorEnabled: true,
       },
     });

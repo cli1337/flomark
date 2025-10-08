@@ -135,6 +135,7 @@ model TaskMember {
 enum Role {
   USER
   ADMIN
+  OWNER
 }
 
 enum ProjectRole {
