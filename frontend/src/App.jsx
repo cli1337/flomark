@@ -8,6 +8,9 @@ import Profile from './pages/profile/Profile'
 import JoinProject from './pages/join/JoinProject'
 import AnimationShowcase from './components/AnimationShowcase'
 import AdminPanel from './pages/admin/AdminPanel'
+import ErrorPage from './pages/ErrorPage'
+import ErrorBoundary from './components/ErrorBoundary'
+import { Forbidden } from './pages/errors'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -35,28 +38,33 @@ function App() {
   useServerStatus()
 
   return (
-        <AuthProvider>
-          <NotificationProvider>
-            <WebSocketProvider>
-              <Router>
-              <div className="App">
-                <Routes>
-                  <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                  <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
-                  <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-                  <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
-                  <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-                  <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
-                  <Route path="/join/:inviteLink" element={<JoinProject />} />
-                  <Route path="/logout" element={<LogoutRoute />} />
-                  <Route path="/animations" element={<AnimationShowcase />} />
+        <ErrorBoundary>
+          <AuthProvider>
+            <NotificationProvider>
+              <WebSocketProvider>
+                <Router>
+                <div className="App">
+                  <Routes>
+                    <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                    <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+                    <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                    <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                    <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+                    <Route path="/join/:inviteLink" element={<JoinProject />} />
+                    <Route path="/logout" element={<LogoutRoute />} />
                   <Route path="/" element={<Navigate to="/projects" />} />
-                </Routes>
-              </div>
-            </Router>
-            </WebSocketProvider>
-          </NotificationProvider>
-        </AuthProvider>
+                  {/* 404 - Catch all undefined routes */}
+                  <Route path="*" element={<ErrorPage />} />
+                  {/* Uncomment to test error pages during development */}
+                  {/* <Route path="/error-showcase" element={<ErrorShowcase />} /> */}
+                  </Routes>
+                </div>
+              </Router>
+              </WebSocketProvider>
+            </NotificationProvider>
+          </AuthProvider>
+        </ErrorBoundary>
   )
 }
 
@@ -104,7 +112,7 @@ function AdminRoute({ children }) {
   }
   
   if (user.role !== 'ADMIN' && user.role !== 'OWNER') {
-    return <Navigate to="/projects" />
+    return <Forbidden />
   }
   
   return children
