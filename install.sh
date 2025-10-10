@@ -223,9 +223,14 @@ mkdir -p "$INSTALL_PATH"
 print_info "Getting current script directory..."
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
 
-# Copy backend
-print_info "Copying backend files..."
-cp -r "$SCRIPT_DIR/backend" "$INSTALL_PATH/"
+# Check if we're already in the installation directory
+if [ "$SCRIPT_DIR" != "$INSTALL_PATH" ]; then
+    # Copy backend
+    print_info "Copying backend files..."
+    cp -r "$SCRIPT_DIR/backend" "$INSTALL_PATH/"
+else
+    print_info "Already in installation directory, skipping file copy..."
+fi
 
 # Build frontend
 print_info "Building frontend for production..."
