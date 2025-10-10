@@ -78,21 +78,29 @@ https://demo.flomark.app
 
 ### Installation
 
-#### Option 1: One-Command Installation (Easiest) ⚡
+#### Option 1: Automated Installation (Recommended) ⚡
 
-**Install everything with one command:**
+**Two-step installation:**
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash
+# Step 1: Download the installer
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh -o /tmp/flomark-install.sh
+
+# Step 2: Run with sudo
+sudo bash /tmp/flomark-install.sh
 ```
 
-Or with wget:
+**Or clone and install:**
+
 ```bash
-wget -qO- https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash
+git clone https://github.com/cli1337/flomark.git
+cd flomark
+chmod +x install.sh
+sudo ./install.sh
 ```
 
-**That's it!** The script will:
-- ✅ Download Flomark automatically
+**The script will:**
+- ✅ Download Flomark automatically (if using remote installer)
 - ✅ Ask for installation path (default: `/var/www/flomark`)
 - ✅ Check if already installed (prevents duplicates)
 - ✅ Guide you through all configuration interactively
@@ -100,8 +108,8 @@ wget -qO- https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.
   - Frontend: `/var/www/flomark/frontend/`
   - Backend: `/var/www/flomark/backend/`
 - ✅ Configure web server (Nginx/Apache)
-- ✅ Set up PM2 for auto-start
-- ✅ Create admin account
+- ✅ Set up systemd service for auto-start
+- ✅ Create admin account or enable demo mode
 
 **Perfect for production servers!**
 
@@ -228,7 +236,7 @@ All installation scripts automatically:
 
 2. **⚙️ Backend Configuration**
    - Installs Node.js 18+
-   - Sets up PM2 process manager
+   - Sets up systemd service
    - Installs dependencies
    - Runs database migrations
    - Creates owner account
@@ -287,13 +295,36 @@ node scripts/make-admin.js admin@example.com OWNER
 # Follow interactive prompts for name and password
 ```
 
-#### Step 4: Start Backend with PM2
+#### Step 4: Create Systemd Service
 
 ```bash
-npm install -g pm2
-pm2 start src/server.js --name flomark-backend
-pm2 save
-pm2 startup  # Follow the command output
+sudo nano /etc/systemd/system/flomark-backend.service
+```
+
+Add this content:
+```ini
+[Unit]
+Description=Flomark Backend Server
+After=network.target mongod.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/path/to/flomark/backend
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable flomark-backend
+sudo systemctl start flomark-backend
+sudo systemctl status flomark-backend
 ```
 
 #### Step 5: Configure Web Server
@@ -678,13 +709,14 @@ node scripts/make-admin.js email@example.com OWNER
 pnpm run setup-demo
 ```
 
-### PM2 Commands
+### Systemd Service Commands
 ```bash
-pm2 status                    # View processes
-pm2 logs flomark-backend      # View logs
-pm2 restart flomark-backend   # Restart
-pm2 stop flomark-backend      # Stop
-pm2 monit                     # Monitor resources
+sudo systemctl status flomark-backend    # Check status
+sudo journalctl -u flomark-backend -f    # View logs (live)
+sudo journalctl -u flomark-backend -n 50 # View last 50 log lines
+sudo systemctl restart flomark-backend   # Restart service
+sudo systemctl stop flomark-backend      # Stop service
+sudo systemctl start flomark-backend     # Start service
 ```
 
 ### Web Server Commands
@@ -741,9 +773,9 @@ npx prisma generate            # Regenerate client
 
 **Backend not starting:**
 ```bash
-pm2 logs flomark-backend
+sudo journalctl -u flomark-backend -n 50
 cd backend && pnpm install
-pm2 restart flomark-backend
+sudo systemctl restart flomark-backend
 ```
 
 **Frontend not loading:**
@@ -753,7 +785,7 @@ sudo systemctl restart nginx  # or apache2
 ```
 
 **502 Bad Gateway:**
-- Backend not running: `pm2 restart flomark-backend`
+- Backend not running: `sudo systemctl restart flomark-backend`
 - Port conflict: Check if port 3000 is free
 
 **WebSocket issues:**

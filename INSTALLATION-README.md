@@ -12,27 +12,33 @@ Complete guide for installing and updating Flomark on your server.
 
 ## 🎯 Quick Installation
 
-### Step 1: Download Flomark
+### Method 1: Clone and Install (Recommended)
 
 ```bash
-# Clone the repository
+# Step 1: Clone the repository
 git clone https://github.com/cli1337/flomark.git
 cd flomark
-```
 
-### Step 2: Make Scripts Executable
+# Step 2: Make script executable
+chmod +x install.sh
 
-```bash
-chmod +x install.sh update.sh
-```
-
-### Step 3: Run Installation
-
-```bash
+# Step 3: Run installation
 sudo ./install.sh
 ```
 
-### Step 4: Follow Interactive Prompts
+### Method 2: Remote Installation
+
+```bash
+# Step 1: Download the installer
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh -o /tmp/flomark-install.sh
+
+# Step 2: Run with sudo
+sudo bash /tmp/flomark-install.sh
+```
+
+**Note:** Do NOT pipe curl directly to bash (e.g., `curl | sudo bash`). Always download first, then execute.
+
+## 📝 Interactive Setup
 
 The installer will ask you:
 
