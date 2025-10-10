@@ -46,7 +46,7 @@ echo -e "${YELLOW}Do you want to configure a custom domain?${NC}"
 echo "  - Choose 'Yes' if you have a domain (e.g., myapp.example.com)"
 echo "  - Choose 'No' for local development (will use localhost)"
 echo ""
-read -p "Configure domain? [y/N]: " configure_domain
+read -p "Configure domain? [y/N]: " configure_domain </dev/tty || configure_domain=""
 
 if [[ $configure_domain =~ ^[Yy]$ ]]; then
     echo ""
@@ -56,12 +56,12 @@ if [[ $configure_domain =~ ^[Yy]$ ]]; then
     echo "    - tasks.company.com"
     echo "    - app.mydomain.org"
     echo ""
-    read -p "Domain name: " DOMAIN
+    read -p "Domain name: " DOMAIN </dev/tty || DOMAIN=""
     
     # Validate domain is not empty
     while [ -z "$DOMAIN" ]; do
         echo -e "${RED}Domain name cannot be empty!${NC}"
-        read -p "Domain name: " DOMAIN
+        read -p "Domain name: " DOMAIN </dev/tty || DOMAIN=""
     done
     
     echo -e "${GREEN}✓ Using domain: $DOMAIN${NC}"
@@ -80,16 +80,16 @@ echo ""
 echo -e "${YELLOW}Default backend port is 3000.${NC}"
 echo "Do you want to use a different port?"
 echo ""
-read -p "Use custom port? [y/N]: " custom_port_choice
+read -p "Use custom port? [y/N]: " custom_port_choice </dev/tty || custom_port_choice=""
 
 if [[ $custom_port_choice =~ ^[Yy]$ ]]; then
     echo ""
-    read -p "Enter backend port (1024-65535): " BACKEND_PORT
+    read -p "Enter backend port (1024-65535): " BACKEND_PORT </dev/tty || BACKEND_PORT="3000"
     
     # Validate port number
     while ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [ "$BACKEND_PORT" -lt 1024 ] || [ "$BACKEND_PORT" -gt 65535 ]; do
         echo -e "${RED}Invalid port! Must be a number between 1024-65535${NC}"
-        read -p "Enter backend port (1024-65535): " BACKEND_PORT
+        read -p "Enter backend port (1024-65535): " BACKEND_PORT </dev/tty || BACKEND_PORT="3000"
     done
 fi
 
@@ -150,13 +150,13 @@ if check_port $BACKEND_PORT; then
     echo "  2) Use a different port (recommended)"
     echo "  3) Exit installation"
     echo ""
-    read -p "Enter choice [1-3]: " port_choice
+    read -p "Enter choice [1-3]: " port_choice </dev/tty || port_choice="3"
     
     case $port_choice in
         1)
             echo -e "${YELLOW}Please stop the service using port $BACKEND_PORT and press Enter${NC}"
-            read -p ""
-            if check_port $BACKEND_PORT; then
+        read -p "" </dev/tty
+        if check_port $BACKEND_PORT; then
                 echo -e "${RED}Port $BACKEND_PORT is still in use. Exiting.${NC}"
                 exit 1
             fi
@@ -166,11 +166,11 @@ if check_port $BACKEND_PORT; then
             SUGGESTED_PORT=$(find_available_port $((BACKEND_PORT + 1)))
             if [ -n "$SUGGESTED_PORT" ]; then
                 echo ""
-                read -p "Enter port to use (suggested: $SUGGESTED_PORT): " custom_port
-                custom_port=${custom_port:-$SUGGESTED_PORT}
-            else
-                echo ""
-                read -p "Enter port to use: " custom_port
+            read -p "Enter port to use (suggested: $SUGGESTED_PORT): " custom_port </dev/tty || custom_port="$SUGGESTED_PORT"
+            custom_port=${custom_port:-$SUGGESTED_PORT}
+        else
+            echo ""
+            read -p "Enter port to use: " custom_port </dev/tty || custom_port="3001"
             fi
             
             # Validate port
@@ -207,7 +207,7 @@ if check_port 80; then
         lsof -i :80 | grep LISTEN
     fi
     echo -e "${YELLOW}This may conflict with the web server.${NC}"
-    read -p "Continue anyway? [y/N]: " continue_choice
+    read -p "Continue anyway? [y/N]: " continue_choice </dev/tty || continue_choice="n"
     if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
         exit 1
     fi
@@ -245,7 +245,7 @@ echo "     ✓ More familiar to some users"
 echo "     ✓ Extensive documentation"
 echo "     ✓ .htaccess support"
     echo ""
-read -p "Enter choice [1-2] (default: 1): " choice
+read -p "Enter choice [1-2] (default: 1): " choice </dev/tty || choice="1"
 choice=${choice:-1}
     
     case $choice in
@@ -348,7 +348,7 @@ echo "  ✓ Great for showcasing features"
 echo "  ✓ Public access to demo project"
 echo "  ✓ No login required for demo"
 echo ""
-read -p "Enable Demo Mode? [y/N]: " demo_choice
+read -p "Enable Demo Mode? [y/N]: " demo_choice </dev/tty || demo_choice="n"
 DEMO_MODE="false"
 if [[ $demo_choice =~ ^[Yy]$ ]]; then
     DEMO_MODE="true"
@@ -434,7 +434,7 @@ echo "  - JWT_SECRET: (generate random string)"
 echo "  - JWT_REFRESH_SECRET: (generate random string)"
 echo ""
 echo -e "${YELLOW}Optional: Edit now or configure later${NC}"
-read -p "Edit .env now? [y/N]: " edit_env
+read -p "Edit .env now? [y/N]: " edit_env </dev/tty || edit_env="n"
 
 if [[ $edit_env =~ ^[Yy]$ ]]; then
     if command -v nano &> /dev/null; then
@@ -469,10 +469,10 @@ echo -e "${YELLOW}📝 Create Owner Account${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-read -p "First Name: " OWNER_FIRST
-read -p "Last Name: " OWNER_LAST
-read -p "Email: " OWNER_EMAIL
-read -s -p "Password (min 6 chars): " OWNER_PASSWORD
+read -p "First Name: " OWNER_FIRST </dev/tty
+read -p "Last Name: " OWNER_LAST </dev/tty
+read -p "Email: " OWNER_EMAIL </dev/tty
+read -s -p "Password (min 6 chars): " OWNER_PASSWORD </dev/tty
 echo ""
 
 # Create owner account

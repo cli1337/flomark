@@ -60,7 +60,7 @@ echo ""
 echo -e "${YELLOW}Where do you want to install Flomark?${NC}"
 echo "  Default: $DEFAULT_INSTALL_DIR"
 echo ""
-read -p "Installation path [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR
+read -p "Installation path [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR </dev/tty
 INSTALL_DIR=${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}
 
 echo -e "${GREEN}✓ Installing to: $INSTALL_DIR${NC}"
@@ -79,7 +79,7 @@ if [ -d "$INSTALL_DIR" ]; then
         echo "  2) Update existing installation"
         echo "  3) Cancel installation"
         echo ""
-        read -p "Choose option [1-3]: " reinstall_choice
+        read -p "Choose option [1-3]: " reinstall_choice </dev/tty
         
         case $reinstall_choice in
             1)
@@ -112,7 +112,7 @@ if [ -d "$INSTALL_DIR" ]; then
         # Directory exists but not Flomark
         if [ "$(ls -A $INSTALL_DIR)" ]; then
             echo -e "${YELLOW}⚠️  Directory $INSTALL_DIR exists and contains files${NC}"
-            read -p "Remove contents and continue? [y/N]: " remove_choice
+            read -p "Remove contents and continue? [y/N]: " remove_choice </dev/tty
             
             if [[ $remove_choice =~ ^[Yy]$ ]]; then
                 rm -rf "$INSTALL_DIR"/*
@@ -156,7 +156,7 @@ echo "  - Demo mode (optional)"
 echo "  - Environment configuration"
 echo "  - Admin account details"
 echo ""
-read -p "Press Enter to continue..."
+read -p "Press Enter to continue..." </dev/tty
 echo ""
 
 # Run the main installer
