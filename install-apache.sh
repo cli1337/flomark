@@ -300,16 +300,16 @@ else
 fi
 echo ""
 echo -e "${YELLOW}Useful commands:${NC}"
+echo "  View all logs:      ./logs.sh"
 echo "  View backend logs:  pm2 logs flomark-backend"
 echo "  Restart backend:    pm2 restart flomark-backend"
 echo "  Stop backend:       pm2 stop flomark-backend"
 echo "  Apache status:      systemctl status $APACHE_SERVICE"
 echo "  Reload Apache:      systemctl reload $APACHE_SERVICE"
-if [ "$OS_TYPE" = "debian" ]; then
-    echo "  View Apache logs:   tail -f /var/log/apache2/flomark-error.log"
-else
-    echo "  View Apache logs:   tail -f /var/log/httpd/flomark-error.log"
-fi
+echo ""
+echo -e "${YELLOW}📋 Log Management (NEW):${NC}"
+echo "  Interactive viewer: ./logs.sh"
+echo "  See LOGS-README.md for details"
 echo ""
 echo -e "${YELLOW}For SSL/HTTPS setup:${NC}"
 if [ "$OS_TYPE" = "debian" ]; then

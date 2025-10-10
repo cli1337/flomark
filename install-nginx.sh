@@ -16,7 +16,8 @@ NC='\033[0m' # No Color
 DOMAIN=${1:-localhost}
 APP_DIR=$(pwd)
 FRONTEND_BUILD_DIR="$APP_DIR/frontend/dist"
-BACKEND_PORT=3000
+BACKEND_PORT=${2:-3000}
+DEFAULT_BACKEND_PORT=3000
 NGINX_CONF="/etc/nginx/sites-available/flomark"
 NGINX_ENABLED="/etc/nginx/sites-enabled/flomark"
 
@@ -31,10 +32,78 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+# Function to check if port is in use
+check_port() {
+    local port=$1
+    if command -v lsof &> /dev/null; then
+        lsof -i :$port &> /dev/null
+        return $?
+    elif command -v netstat &> /dev/null; then
+        netstat -tuln | grep ":$port " &> /dev/null
+        return $?
+    elif command -v ss &> /dev/null; then
+        ss -tuln | grep ":$port " &> /dev/null
+        return $?
+    else
+        return 1
+    fi
+}
+
+# Function to find available port
+find_available_port() {
+    local start_port=$1
+    local port=$start_port
+    
+    while [ $port -lt 65535 ]; do
+        if ! check_port $port; then
+            echo $port
+            return 0
+        fi
+        port=$((port + 1))
+    done
+    
+    return 1
+}
+
+# Check backend port availability
+echo -e "${YELLOW}Checking port availability...${NC}"
+if check_port $BACKEND_PORT; then
+    echo -e "${RED}⚠️  Port $BACKEND_PORT is already in use!${NC}"
+    SUGGESTED_PORT=$(find_available_port $((BACKEND_PORT + 1)))
+    if [ -n "$SUGGESTED_PORT" ]; then
+        echo ""
+        read -p "Use port $SUGGESTED_PORT instead? [Y/n]: " use_suggested
+        if [[ $use_suggested =~ ^[Nn]$ ]]; then
+            read -p "Enter custom port: " BACKEND_PORT
+        else
+            BACKEND_PORT=$SUGGESTED_PORT
+        fi
+    else
+        read -p "Enter custom port: " BACKEND_PORT
+    fi
+    echo -e "${GREEN}✓ Using port $BACKEND_PORT${NC}"
+else
+    echo -e "${GREEN}✓ Port $BACKEND_PORT is available${NC}"
+fi
+
+# Check web server port
+if check_port 80; then
+    echo -e "${YELLOW}⚠️  Port 80 (HTTP) is already in use${NC}"
+    read -p "Continue anyway? [y/N]: " continue_choice
+    if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+echo ""
+
 echo -e "${YELLOW}Configuration:${NC}"
 echo "  Domain: $DOMAIN"
 echo "  App Directory: $APP_DIR"
 echo "  Backend Port: $BACKEND_PORT"
+if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+    echo -e "  ${CYAN}(Custom port)${NC}"
+fi
 echo ""
 
 # Step 1: Install Nginx
@@ -88,6 +157,27 @@ echo -e "${GREEN}[5/9] Installing backend dependencies...${NC}"
 cd "$APP_DIR/backend"
 if [ ! -d "node_modules" ]; then
     pnpm install
+fi
+
+# Update .env with port if needed
+if [ ! -f ".env" ]; then
+    if [ -f "env.example" ]; then
+        cp env.example .env
+        if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+            sed -i "s/PORT=3000/PORT=$BACKEND_PORT/" .env 2>/dev/null || \
+            sed "s/PORT=3000/PORT=$BACKEND_PORT/" .env > .env.tmp && mv .env.tmp .env
+        fi
+    fi
+else
+    if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+        if grep -q "^PORT=" .env; then
+            sed -i "s/^PORT=.*/PORT=$BACKEND_PORT/" .env 2>/dev/null || \
+            sed "s/^PORT=.*/PORT=$BACKEND_PORT/" .env > .env.tmp && mv .env.tmp .env
+        else
+            echo "PORT=$BACKEND_PORT" >> .env
+        fi
+        echo -e "${GREEN}✓ Updated PORT in .env to $BACKEND_PORT${NC}"
+    fi
 fi
 
 # Step 6: Setup Database & Create Owner
@@ -286,13 +376,24 @@ else
     echo "  http://$DOMAIN"
 fi
 echo ""
+echo -e "${YELLOW}Configuration:${NC}"
+echo "  Domain: $DOMAIN"
+echo "  Backend Port: $BACKEND_PORT"
+if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+    echo -e "  ${CYAN}(Custom port configured)${NC}"
+fi
+echo ""
 echo -e "${YELLOW}Useful commands:${NC}"
+echo "  View all logs:      ./logs.sh"
 echo "  View backend logs:  pm2 logs flomark-backend"
 echo "  Restart backend:    pm2 restart flomark-backend"
 echo "  Stop backend:       pm2 stop flomark-backend"
 echo "  Nginx status:       systemctl status nginx"
 echo "  Reload Nginx:       systemctl reload nginx"
-echo "  View Nginx logs:    tail -f /var/log/nginx/error.log"
+echo ""
+echo -e "${YELLOW}📋 Log Management (NEW):${NC}"
+echo "  Interactive viewer: ./logs.sh"
+echo "  See LOGS-README.md for details"
 echo ""
 echo -e "${YELLOW}For SSL/HTTPS setup:${NC}"
 echo "  1. Install certbot: apt-get install certbot python3-certbot-nginx"

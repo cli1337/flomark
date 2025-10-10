@@ -15,11 +15,10 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-DOMAIN=${1:-localhost}
-WEBSERVER=${2}
 APP_DIR=$(pwd)
 FRONTEND_BUILD_DIR="$APP_DIR/frontend/dist"
 BACKEND_PORT=3000
+DEFAULT_BACKEND_PORT=3000
 
 echo -e "${CYAN}"
 echo "╔════════════════════════════════════════╗"
@@ -36,36 +35,230 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-# Display configuration
-echo -e "${YELLOW}Configuration:${NC}"
+# Ask for domain configuration
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}🌐 Domain Configuration${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${YELLOW}Do you want to configure a custom domain?${NC}"
+echo "  - Choose 'Yes' if you have a domain (e.g., myapp.example.com)"
+echo "  - Choose 'No' for local development (will use localhost)"
+echo ""
+read -p "Configure domain? [y/N]: " configure_domain
+
+if [[ $configure_domain =~ ^[Yy]$ ]]; then
+    echo ""
+    echo -e "${YELLOW}Enter your domain name:${NC}"
+    echo "  Examples:"
+    echo "    - myapp.example.com"
+    echo "    - tasks.company.com"
+    echo "    - app.mydomain.org"
+    echo ""
+    read -p "Domain name: " DOMAIN
+    
+    # Validate domain is not empty
+    while [ -z "$DOMAIN" ]; do
+        echo -e "${RED}Domain name cannot be empty!${NC}"
+        read -p "Domain name: " DOMAIN
+    done
+    
+    echo -e "${GREEN}✓ Using domain: $DOMAIN${NC}"
+else
+    DOMAIN="localhost"
+    echo -e "${GREEN}✓ Using localhost (local development)${NC}"
+fi
+
+echo ""
+
+# Ask for custom backend port
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}🔌 Backend Port Configuration${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${YELLOW}Default backend port is 3000.${NC}"
+echo "Do you want to use a different port?"
+echo ""
+read -p "Use custom port? [y/N]: " custom_port_choice
+
+if [[ $custom_port_choice =~ ^[Yy]$ ]]; then
+    echo ""
+    read -p "Enter backend port (1024-65535): " BACKEND_PORT
+    
+    # Validate port number
+    while ! [[ "$BACKEND_PORT" =~ ^[0-9]+$ ]] || [ "$BACKEND_PORT" -lt 1024 ] || [ "$BACKEND_PORT" -gt 65535 ]; do
+        echo -e "${RED}Invalid port! Must be a number between 1024-65535${NC}"
+        read -p "Enter backend port (1024-65535): " BACKEND_PORT
+    done
+fi
+
+echo ""
+
+# Function to check if port is in use
+check_port() {
+    local port=$1
+    if command -v lsof &> /dev/null; then
+        lsof -i :$port &> /dev/null
+        return $?
+    elif command -v netstat &> /dev/null; then
+        netstat -tuln | grep ":$port " &> /dev/null
+        return $?
+    elif command -v ss &> /dev/null; then
+        ss -tuln | grep ":$port " &> /dev/null
+        return $?
+    else
+        # Can't check, assume available
+        return 1
+    fi
+}
+
+# Function to find available port
+find_available_port() {
+    local start_port=$1
+    local port=$start_port
+    
+    while [ $port -lt 65535 ]; do
+        if ! check_port $port; then
+            echo $port
+            return 0
+        fi
+        port=$((port + 1))
+    done
+    
+    return 1
+}
+
+# Check backend port availability
+echo -e "${YELLOW}Checking port availability...${NC}"
+if check_port $BACKEND_PORT; then
+    echo -e "${RED}⚠️  Port $BACKEND_PORT is already in use!${NC}"
+    echo ""
+    
+    # Try to find what's using it
+    if command -v lsof &> /dev/null; then
+        echo -e "${YELLOW}Process using port $BACKEND_PORT:${NC}"
+        lsof -i :$BACKEND_PORT | grep LISTEN || echo "  (Unable to determine)"
+    elif command -v netstat &> /dev/null; then
+        echo -e "${YELLOW}Port $BACKEND_PORT is in use by:${NC}"
+        netstat -tulnp | grep ":$BACKEND_PORT " || echo "  (Unable to determine)"
+    fi
+    
+    echo ""
+    echo -e "${CYAN}Options:${NC}"
+    echo "  1) Stop the service using port $BACKEND_PORT and continue"
+    echo "  2) Use a different port (recommended)"
+    echo "  3) Exit installation"
+    echo ""
+    read -p "Enter choice [1-3]: " port_choice
+    
+    case $port_choice in
+        1)
+            echo -e "${YELLOW}Please stop the service using port $BACKEND_PORT and press Enter${NC}"
+            read -p ""
+            if check_port $BACKEND_PORT; then
+                echo -e "${RED}Port $BACKEND_PORT is still in use. Exiting.${NC}"
+                exit 1
+            fi
+            ;;
+        2)
+            # Suggest next available port
+            SUGGESTED_PORT=$(find_available_port $((BACKEND_PORT + 1)))
+            if [ -n "$SUGGESTED_PORT" ]; then
+                echo ""
+                read -p "Enter port to use (suggested: $SUGGESTED_PORT): " custom_port
+                custom_port=${custom_port:-$SUGGESTED_PORT}
+            else
+                echo ""
+                read -p "Enter port to use: " custom_port
+            fi
+            
+            # Validate port
+            if ! [[ "$custom_port" =~ ^[0-9]+$ ]] || [ "$custom_port" -lt 1024 ] || [ "$custom_port" -gt 65535 ]; then
+                echo -e "${RED}Invalid port number. Must be between 1024-65535.${NC}"
+                exit 1
+            fi
+            
+            if check_port $custom_port; then
+                echo -e "${RED}Port $custom_port is also in use!${NC}"
+                exit 1
+            fi
+            
+            BACKEND_PORT=$custom_port
+            echo -e "${GREEN}✓ Using port $BACKEND_PORT${NC}"
+            ;;
+        3)
+            echo -e "${YELLOW}Installation cancelled.${NC}"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Invalid choice. Exiting.${NC}"
+            exit 1
+            ;;
+    esac
+else
+    echo -e "${GREEN}✓ Port $BACKEND_PORT is available${NC}"
+fi
+
+# Check web server ports (80, 443)
+if check_port 80; then
+    echo -e "${YELLOW}⚠️  Port 80 (HTTP) is already in use${NC}"
+    if command -v lsof &> /dev/null; then
+        lsof -i :80 | grep LISTEN
+    fi
+    echo -e "${YELLOW}This may conflict with the web server.${NC}"
+    read -p "Continue anyway? [y/N]: " continue_choice
+    if [[ ! $continue_choice =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+echo ""
+
+# Display current configuration
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}📋 Current Configuration${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo "  Domain: $DOMAIN"
 echo "  App Directory: $APP_DIR"
 echo "  Backend Port: $BACKEND_PORT"
+if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+    echo -e "  ${CYAN}(Custom port selected)${NC}"
+fi
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
-# Select web server if not provided
-if [ -z "$WEBSERVER" ]; then
-    echo -e "${CYAN}Select your web server:${NC}"
-    echo "  1) Nginx (Recommended - Better performance)"
-    echo "  2) Apache (More familiar to some users)"
-    echo ""
-    read -p "Enter choice [1-2]: " choice
-    
-    case $choice in
-        1)
-            WEBSERVER="nginx"
-            ;;
-        2)
-            WEBSERVER="apache"
-            ;;
-        *)
-            echo -e "${RED}Invalid choice. Defaulting to Nginx.${NC}"
-            WEBSERVER="nginx"
-            ;;
-    esac
-fi
+# Select web server
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}🌐 Web Server Selection${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${YELLOW}Select your web server:${NC}"
+echo "  1) Nginx (Recommended)"
+echo "     ✓ Better performance"
+echo "     ✓ Lower memory usage"
+echo "     ✓ Better for high-traffic sites"
+echo ""
+echo "  2) Apache"
+echo "     ✓ More familiar to some users"
+echo "     ✓ Extensive documentation"
+echo "     ✓ .htaccess support"
+echo ""
+read -p "Enter choice [1-2] (default: 1): " choice
+choice=${choice:-1}
 
-echo -e "${GREEN}Selected web server: ${WEBSERVER}${NC}"
+case $choice in
+    1)
+        WEBSERVER="nginx"
+        ;;
+    2)
+        WEBSERVER="apache"
+        ;;
+    *)
+        echo -e "${YELLOW}Invalid choice. Using Nginx (default).${NC}"
+        WEBSERVER="nginx"
+        ;;
+esac
+
+echo -e "${GREEN}✓ Selected web server: ${WEBSERVER}${NC}"
 echo ""
 
 # Detect OS
@@ -142,14 +335,25 @@ fi
 
 # Step 4: Configure Demo Mode
 echo -e "${GREEN}[4/9] Configure Demo Mode...${NC}"
-read -p "Enable Demo Mode? (allows anyone to access without login) [y/N]: " demo_choice
+echo ""
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}🎭 Demo Mode Configuration${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${YELLOW}Demo Mode allows visitors to try your app without registration.${NC}"
+echo "  ✓ Great for showcasing features"
+echo "  ✓ Public access to demo project"
+echo "  ✓ No login required for demo"
+echo ""
+read -p "Enable Demo Mode? [y/N]: " demo_choice
 DEMO_MODE="false"
 if [[ $demo_choice =~ ^[Yy]$ ]]; then
     DEMO_MODE="true"
-    echo -e "${YELLOW}Demo mode will be enabled${NC}"
+    echo -e "${GREEN}✓ Demo mode will be enabled${NC}"
 else
-    echo -e "${YELLOW}Demo mode will be disabled${NC}"
+    echo -e "${GREEN}✓ Demo mode will be disabled${NC}"
 fi
+echo ""
 
 # Step 5: Build Frontend
 echo -e "${GREEN}[5/9] Building frontend...${NC}"
@@ -171,8 +375,25 @@ if [ ! -f ".env" ]; then
     echo -e "${YELLOW}No .env file found. Creating from template...${NC}"
     if [ -f "env.example" ]; then
         cp env.example .env
+        # Update port in .env if custom port is used
+        if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+            sed -i "s/PORT=3000/PORT=$BACKEND_PORT/" .env 2>/dev/null || \
+            sed "s/PORT=3000/PORT=$BACKEND_PORT/" .env > .env.tmp && mv .env.tmp .env
+        fi
         echo -e "${RED}Please edit backend/.env with your configuration before proceeding!${NC}"
         read -p "Press Enter after you've configured .env..."
+    fi
+else
+    # Update existing .env with custom port
+    if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+        if grep -q "^PORT=" .env; then
+            sed -i "s/^PORT=.*/PORT=$BACKEND_PORT/" .env 2>/dev/null || \
+            sed "s/^PORT=.*/PORT=$BACKEND_PORT/" .env > .env.tmp && mv .env.tmp .env
+            echo -e "${GREEN}✓ Updated PORT in .env to $BACKEND_PORT${NC}"
+        else
+            echo "PORT=$BACKEND_PORT" >> .env
+            echo -e "${GREEN}✓ Added PORT=$BACKEND_PORT to .env${NC}"
+        fi
     fi
 fi
 
@@ -440,10 +661,24 @@ if [ "$DEMO_MODE" = "true" ]; then
     echo ""
 fi
 
+echo -e "${YELLOW}Configuration Details:${NC}"
+echo "  Domain: $DOMAIN"
+echo "  Backend Port: $BACKEND_PORT"
+if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
+    echo -e "  ${CYAN}(Custom backend port configured)${NC}"
+fi
+echo ""
 echo -e "${YELLOW}Useful commands:${NC}"
+echo "  View all logs:      ./logs.sh"
 echo "  View backend logs:  pm2 logs flomark-backend"
 echo "  Restart backend:    pm2 restart flomark-backend"
 echo "  Restart webserver:  systemctl restart ${WEBSERVER:-nginx/apache2}"
+echo ""
+echo -e "${BLUE}📋 Log Management:${NC}"
+echo "  Interactive log viewer: ./logs.sh"
+echo "  Quick backend logs:     ./logs.sh backend"
+echo "  Quick access logs:      ./logs.sh access"
+echo "  See LOGS-README.md for details"
 echo ""
 echo -e "${BLUE}For SSL/HTTPS setup, see: DEPLOYMENT.md${NC}"
 echo ""

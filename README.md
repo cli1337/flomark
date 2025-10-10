@@ -78,6 +78,35 @@ https://demo.flomark.app
 
 ### Installation
 
+#### Option 1: Interactive Installation (Recommended) 🎯
+
+**One command to install everything:**
+
+```bash
+git clone https://github.com/cli1337/flomark.git
+cd flomark
+
+# Configure backend
+cd backend
+cp env.example .env
+nano .env  # Edit your settings
+cd ..
+
+# Run interactive installer
+sudo ./install.sh
+```
+
+The installer will guide you through:
+- ✅ Domain configuration (or use localhost)
+- ✅ Port selection with conflict detection
+- ✅ Web server choice (Nginx/Apache)
+- ✅ Demo mode setup
+- ✅ Owner account creation
+
+**See [INSTALLATION-INTERACTIVE-GUIDE.md](INSTALLATION-INTERACTIVE-GUIDE.md) for detailed guide.**
+
+#### Option 2: Manual Installation
+
 1. **Clone the repository**
    ```bash
    git clone https://github.com/cli1337/flomark.git
