@@ -2,7 +2,10 @@
 
 # Flomark Remote Installer
 # Downloads and installs Flomark automatically
-# Usage: bash <(curl -s https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh)
+# Usage: 
+#   wget -qO- https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | bash
+#   OR
+#   curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | bash
 
 set -e
 
@@ -27,7 +30,9 @@ echo ""
 if [ "$EUID" -ne 0 ]; then 
     echo -e "${RED}Please run as root${NC}"
     echo ""
-    echo "Try: sudo bash <(curl -s https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh)"
+    echo "Try one of these:"
+    echo "  curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash"
+    echo "  wget -qO- https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash"
     exit 1
 fi
 
@@ -61,7 +66,8 @@ echo ""
 echo -e "${YELLOW}Where do you want to install Flomark?${NC}"
 echo "  Default: $DEFAULT_INSTALL_DIR"
 echo ""
-read -p "Installation path [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR
+echo -n "Installation path [$DEFAULT_INSTALL_DIR]: "
+read INSTALL_DIR < /dev/tty || INSTALL_DIR=""
 INSTALL_DIR=${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}
 
 echo -e "${GREEN}✓ Installing to: $INSTALL_DIR${NC}"
@@ -80,7 +86,8 @@ if [ -d "$INSTALL_DIR" ]; then
         echo "  2) Update existing installation"
         echo "  3) Cancel installation"
         echo ""
-        read -p "Choose option [1-3]: " reinstall_choice
+        echo -n "Choose option [1-3]: "
+        read reinstall_choice < /dev/tty
         
         case $reinstall_choice in
             1)
@@ -113,7 +120,8 @@ if [ -d "$INSTALL_DIR" ]; then
         # Directory exists but not Flomark
         if [ "$(ls -A $INSTALL_DIR)" ]; then
             echo -e "${YELLOW}⚠️  Directory $INSTALL_DIR exists and contains files${NC}"
-            read -p "Remove contents and continue? [y/N]: " remove_choice
+            echo -n "Remove contents and continue? [y/N]: "
+            read remove_choice < /dev/tty
             
             if [[ $remove_choice =~ ^[Yy]$ ]]; then
                 rm -rf "$INSTALL_DIR"/*
@@ -157,7 +165,8 @@ echo "  - Demo mode (optional)"
 echo "  - Environment configuration"
 echo "  - Admin account details"
 echo ""
-read -p "Press Enter to continue..."
+echo -n "Press Enter to continue..."
+read < /dev/tty
 echo ""
 
 # Run the main installer
