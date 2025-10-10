@@ -153,7 +153,11 @@ cp "$TEMP_DIR/backend/prisma" "$INSTALL_PATH/backend/" -r 2>/dev/null || true
 
 print_info "Installing backend dependencies..."
 cd "$INSTALL_PATH/backend"
-pnpm install --prod --frozen-lockfile
+if [ -f "pnpm-lock.yaml" ]; then
+    pnpm install --prod --frozen-lockfile
+else
+    pnpm install --prod
+fi
 print_success "Backend dependencies installed"
 
 print_info "Restoring .env file..."
@@ -211,7 +215,11 @@ export default defineConfig({
 })
 EOF
 
-pnpm install --frozen-lockfile
+if [ -f "pnpm-lock.yaml" ]; then
+    pnpm install --frozen-lockfile
+else
+    pnpm install
+fi
 pnpm run build
 print_success "Frontend built"
 

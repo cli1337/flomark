@@ -235,7 +235,14 @@ fi
 # Build frontend
 print_info "Building frontend for production..."
 cd "$SCRIPT_DIR/frontend"
-pnpm install --frozen-lockfile
+
+# Check if lockfile exists, otherwise install without frozen flag
+if [ -f "pnpm-lock.yaml" ]; then
+    pnpm install --frozen-lockfile
+else
+    print_info "No pnpm lockfile found, installing dependencies..."
+    pnpm install
+fi
 
 # Update vite config with custom backend port
 print_info "Configuring frontend with backend port $BACKEND_PORT..."
@@ -284,7 +291,11 @@ cd "$INSTALL_PATH/backend"
 # Configure backend
 # ==================================
 print_info "Installing backend dependencies..."
-pnpm install --prod --frozen-lockfile
+if [ -f "pnpm-lock.yaml" ]; then
+    pnpm install --prod --frozen-lockfile
+else
+    pnpm install --prod
+fi
 
 print_info "Generating JWT secret..."
 JWT_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
@@ -592,14 +603,22 @@ cp -r "$TEMP_DIR/backend/scripts" "$INSTALL_PATH/backend/"
 cp "$TEMP_DIR/backend/package.json" "$INSTALL_PATH/backend/"
 
 cd "$INSTALL_PATH/backend"
-pnpm install --prod --frozen-lockfile
+if [ -f "pnpm-lock.yaml" ]; then
+    pnpm install --prod --frozen-lockfile
+else
+    pnpm install --prod
+fi
 
 print_info "Restoring .env file..."
 mv "$TEMP_DIR/backend/.env.backup" "$INSTALL_PATH/backend/.env"
 
 print_info "Building new frontend..."
 cd "$TEMP_DIR/frontend"
-pnpm install --frozen-lockfile
+if [ -f "pnpm-lock.yaml" ]; then
+    pnpm install --frozen-lockfile
+else
+    pnpm install
+fi
 pnpm run build
 
 print_info "Updating frontend..."
