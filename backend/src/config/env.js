@@ -18,6 +18,15 @@ export const ENV = {
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
   BACKEND_URL: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
+  
+  // Email Configuration (SMTP)
+  SMTP_HOST: process.env.SMTP_HOST,
+  SMTP_PORT: process.env.SMTP_PORT || 587,
+  SMTP_SECURE: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+  SMTP_USER: process.env.SMTP_USER,
+  SMTP_PASS: process.env.SMTP_PASS,
+  SMTP_FROM_NAME: process.env.SMTP_FROM_NAME || "Flomark",
+  SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL,
 };
 
 if (!ENV.DATABASE_URL) {
