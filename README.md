@@ -119,6 +119,261 @@ Flomark is a powerful, feature-rich task and project management application desi
 
 ---
 
+## 🌐 Production Deployment
+
+Deploy Flomark to production with automated installation scripts or manual setup.
+
+### 🚀 Automated Installation (Recommended)
+
+#### One-Command Installation
+
+The unified installation script automatically sets everything up:
+
+```bash
+# 1. Clone and configure
+git clone https://github.com/cli1337/flomark.git
+cd flomark
+cd backend && cp env.example .env && nano .env && cd ..
+
+# 2. Run unified installer
+chmod +x install.sh
+sudo ./install.sh yourdomain.com
+```
+
+**Interactive Prompts:**
+- Choose web server (Nginx or Apache)
+- Enable demo mode (optional)
+- Enter owner account details:
+  - First Name
+  - Last Name
+  - Email
+  - Password
+
+#### Web Server-Specific Scripts
+
+**Nginx (Recommended for production):**
+```bash
+chmod +x install-nginx.sh
+sudo ./install-nginx.sh yourdomain.com
+```
+
+**Apache (For Apache/httpd users):**
+```bash
+chmod +x install-apache.sh
+sudo ./install-apache.sh yourdomain.com
+```
+
+### 📦 What Gets Installed
+
+All installation scripts automatically:
+
+1. **🌐 Web Server Setup**
+   - Installs Nginx or Apache
+   - Configures reverse proxy
+   - Enables WebSocket support
+   - Sets up security headers
+   - Configures gzip compression
+
+2. **⚙️ Backend Configuration**
+   - Installs Node.js 18+
+   - Sets up PM2 process manager
+   - Installs dependencies
+   - Runs database migrations
+   - Creates owner account
+
+3. **🎨 Frontend Build**
+   - Builds production bundle
+   - Optimizes assets
+   - Enables code splitting
+
+4. **🔒 Security & Performance**
+   - SSL-ready configuration
+   - Auto-restart on crashes
+   - Load balancing ready
+   - Caching optimization
+
+### 🛠️ Manual Installation
+
+<details>
+<summary><b>Click to expand manual installation steps</b></summary>
+
+#### Prerequisites
+- Node.js 18+
+- MongoDB 6+
+- pnpm or npm
+- Nginx or Apache
+- Root/sudo access
+
+#### Step 1: Clone and Configure
+
+```bash
+git clone https://github.com/cli1337/flomark.git
+cd flomark/backend
+cp env.example .env
+nano .env  # Configure DATABASE_URL, JWT_SECRET, BACKEND_URL
+```
+
+#### Step 2: Install Dependencies
+
+```bash
+# Backend
+cd backend
+pnpm install
+npx prisma db push
+
+# Frontend
+cd ../frontend
+pnpm install
+pnpm build
+```
+
+#### Step 3: Create Owner Account
+
+```bash
+cd backend
+node scripts/make-admin.js admin@example.com OWNER
+# Follow interactive prompts for name and password
+```
+
+#### Step 4: Start Backend with PM2
+
+```bash
+npm install -g pm2
+pm2 start src/server.js --name flomark-backend
+pm2 save
+pm2 startup  # Follow the command output
+```
+
+#### Step 5: Configure Web Server
+
+**For Nginx:**
+
+Create `/etc/nginx/sites-available/flomark`:
+```nginx
+server {
+    listen 80;
+    server_name yourdomain.com;
+    root /path/to/flomark/frontend/dist;
+    
+    location /api {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+    }
+    
+    location /socket.io/ {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+Enable and restart:
+```bash
+sudo ln -s /etc/nginx/sites-available/flomark /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx
+```
+
+**For Apache:**
+
+Create `/etc/apache2/sites-available/flomark.conf`:
+```apache
+<VirtualHost *:80>
+    ServerName yourdomain.com
+    DocumentRoot /path/to/flomark/frontend/dist
+    
+    ProxyPass /api http://localhost:3000/api
+    ProxyPassReverse /api http://localhost:3000/api
+    
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/socket.io/(.*)$ ws://localhost:3000/socket.io/$1 [P,L]
+</VirtualHost>
+```
+
+Enable and restart:
+```bash
+sudo a2enmod proxy proxy_http proxy_wstunnel rewrite
+sudo a2ensite flomark.conf
+sudo systemctl restart apache2
+```
+
+#### Step 6: Enable SSL (Optional but Recommended)
+
+```bash
+# For Nginx
+sudo apt-get install certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com
+
+# For Apache
+sudo apt-get install certbot python3-certbot-apache
+sudo certbot --apache -d yourdomain.com
+```
+
+</details>
+
+### 🔄 Updating Your Installation
+
+Flomark provides separate update scripts to preserve your customizations:
+
+#### Update Backend Only
+
+```bash
+chmod +x update-backend.sh
+./update-backend.sh
+```
+
+**Preserves:**
+- `.env` configuration
+- `uploads/` directory
+- `storage/` directory
+- Custom middleware
+
+**Updates:**
+- Server code
+- Dependencies
+- Database schema
+
+#### Update Frontend Only
+
+```bash
+chmod +x update-frontend.sh
+./update-frontend.sh
+```
+
+**Preserves:**
+- `frontend/src/custom/` directory
+- Custom configurations
+
+**Updates:**
+- UI components
+- Dependencies
+- Build configuration
+
+💡 **Tip:** Keep your customizations in `frontend/src/custom/` to ensure they're preserved during updates!
+
+### 📚 Documentation
+
+- **🚀 Deployment:**
+  - [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide
+  - [DEPLOYMENT-QUICKSTART.md](DEPLOYMENT-QUICKSTART.md) - Quick reference
+  - [INSTALLATION-SCRIPTS-README.md](INSTALLATION-SCRIPTS-README.md) - Scripts overview
+  - [COMPLETE-SETUP-GUIDE.md](COMPLETE-SETUP-GUIDE.md) - Everything in one place
+- **🔄 Updates:**
+  - [UPDATE-GUIDE.md](UPDATE-GUIDE.md) - How to update your installation
+  - `update-backend.sh` - Backend update script
+  - `update-frontend.sh` - Frontend update script
+- **🎭 Demo Mode:** 
+  - [DEMO-MODE-README.md](DEMO-MODE-README.md) - Demo mode setup and configuration
+- **🏗️ Architecture:** 
+  - [ARCHITECTURE-DIAGRAM.md](ARCHITECTURE-DIAGRAM.md) - System architecture overview
+
+---
+
 ## 📋 Environment Variables
 
 ### Backend (.env)
@@ -131,7 +386,7 @@ Create a `.env` file in the `backend` directory. Use `env.example` as a template
 DATABASE_URL=mongodb://localhost:27017/flomark
 
 # JWT Authentication (REQUIRED)
-# Generate secure secrets: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Generate secure secret: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
 JWT_EXPIRES_IN=24h
 
@@ -139,6 +394,18 @@ JWT_EXPIRES_IN=24h
 PORT=3000
 BACKEND_URL=http://localhost:3000
 ```
+
+#### Optional: Demo Mode
+```env
+# Demo Mode (allows public access to demo project)
+DEMO_MODE=false
+DEMO_PROJECT_ID=demo-project
+```
+
+**To enable demo mode:**
+1. Set `DEMO_MODE=true` in `.env`
+2. Run `pnpm run setup-demo` in backend directory
+3. Access demo at `/projects/demo-project`
 
 #### Optional: Email/SMTP Configuration
 Email functionality is optional but required for:
@@ -237,7 +504,7 @@ Configure API endpoint in `vite.config.js` if needed (defaults to `/api`)
 ## 👥 User Roles
 
 ### System Roles
-- **OWNER** 👑 - Full system access, cannot be demoted
+- **OWNER** 👑 - Full system access, cannot be demoted, receives update notifications
 - **ADMIN** 🛡️ - Manage users and projects, can promote users to admin
 - **USER** 👤 - Standard user access
 
@@ -246,6 +513,19 @@ Configure API endpoint in `vite.config.js` if needed (defaults to `/api`)
 - **ADMIN** - Manage project and members
 - **MEMBER** - Edit tasks and content
 - **VIEWER** - Read-only access
+
+### Creating Admin Users
+
+After installation, create additional admins:
+
+```bash
+cd backend
+# Interactive mode (prompts for details)
+node scripts/make-admin.js admin@example.com ADMIN
+
+# Non-interactive mode (for scripts)
+node scripts/make-admin.js admin@example.com ADMIN "Jane" "Smith" "password123"
+```
 
 ---
 
@@ -258,6 +538,14 @@ Access the admin panel at `/admin` (OWNER/ADMIN only):
 - **User Editing** - Update user information
 - **Activity Monitoring** - Track user actions
 - **Advanced Filters** - Sort by role, name, email, join date
+
+### Update Notifications (OWNER only)
+
+Owners see update notifications with:
+- Available updates banner
+- Direct links to GitHub releases
+- Update command examples
+- Link to update documentation
 
 ---
 
@@ -296,17 +584,134 @@ See the [LICENSE](LICENSE) file for details.
 
 ---
 
+## 🛠️ Useful Commands
+
+### Installation Scripts
+```bash
+# Unified installation (interactive)
+sudo ./install.sh yourdomain.com
+
+# Nginx-specific
+sudo ./install-nginx.sh yourdomain.com
+
+# Apache-specific
+sudo ./install-apache.sh yourdomain.com
+```
+
+### Update Scripts
+```bash
+# Update backend only
+./update-backend.sh
+
+# Update frontend only
+./update-frontend.sh
+```
+
+### Admin Management
+```bash
+# Create owner/admin (interactive)
+cd backend
+node scripts/make-admin.js email@example.com OWNER
+
+# Setup demo mode
+pnpm run setup-demo
+```
+
+### PM2 Commands
+```bash
+pm2 status                    # View processes
+pm2 logs flomark-backend      # View logs
+pm2 restart flomark-backend   # Restart
+pm2 stop flomark-backend      # Stop
+pm2 monit                     # Monitor resources
+```
+
+### Web Server Commands
+```bash
+# Nginx
+sudo systemctl status nginx
+sudo systemctl reload nginx
+sudo nginx -t
+
+# Apache
+sudo systemctl status apache2
+sudo systemctl reload apache2
+sudo apache2ctl configtest
+```
+
+### Database Commands
+```bash
+cd backend
+npx prisma studio              # GUI database browser
+npx prisma db push             # Update schema
+npx prisma generate            # Regenerate client
+```
+
+---
+
 ## 📖 Additional Documentation
 
-- **Backend Setup:** [backend/README.md](backend/README.md) - Complete backend documentation
-- **Environment Variables:** [backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md) - Env var reference
-- **SMTP Setup:** [backend/SMTP_SETUP.md](backend/SMTP_SETUP.md) - Email configuration guide
-- **Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+### Deployment & Installation
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide with troubleshooting
+- **[DEPLOYMENT-QUICKSTART.md](DEPLOYMENT-QUICKSTART.md)** - Quick reference card
+- **[INSTALLATION-SCRIPTS-README.md](INSTALLATION-SCRIPTS-README.md)** - Detailed scripts documentation
+- **[COMPLETE-SETUP-GUIDE.md](COMPLETE-SETUP-GUIDE.md)** - Everything in one place
+- **[FEATURES-SUMMARY.md](FEATURES-SUMMARY.md)** - All features breakdown
+
+### Updates & Maintenance
+- **[UPDATE-GUIDE.md](UPDATE-GUIDE.md)** - Complete update guide with rollback procedures
+- **[INSTALLATION-SUMMARY.md](INSTALLATION-SUMMARY.md)** - Implementation summary
+
+### Features & Configuration
+- **[DEMO-MODE-README.md](DEMO-MODE-README.md)** - Demo mode setup and configuration
+- **[ARCHITECTURE-DIAGRAM.md](ARCHITECTURE-DIAGRAM.md)** - System architecture diagrams
+
+### Backend Documentation
+- **[backend/README.md](backend/README.md)** - Complete backend documentation
+- **[backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md)** - Environment variables reference
+- **[backend/SMTP_SETUP.md](backend/SMTP_SETUP.md)** - Email configuration guide
+
+### Contributing
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Backend not starting:**
+```bash
+pm2 logs flomark-backend
+cd backend && pnpm install
+pm2 restart flomark-backend
+```
+
+**Frontend not loading:**
+```bash
+cd frontend && pnpm build
+sudo systemctl restart nginx  # or apache2
+```
+
+**502 Bad Gateway:**
+- Backend not running: `pm2 restart flomark-backend`
+- Port conflict: Check if port 3000 is free
+
+**WebSocket issues:**
+- Check proxy configuration in web server
+- Verify Socket.io endpoint: `curl -i http://localhost:3000/socket.io/`
+
+**File uploads fail:**
+- Check file size limits in web server config
+- Verify uploads directory permissions: `chmod 755 backend/uploads`
+
+For more troubleshooting, see [DEPLOYMENT.md](DEPLOYMENT.md#troubleshooting)
+
+---
 
 ## 📧 Support
 
 - **Issues:** [Report a bug or request a feature](https://github.com/cli1337/flomark/issues)
 - **Discussions:** Have questions? Start a discussion!
+- **Documentation:** Check the guides in the [Additional Documentation](#-additional-documentation) section
 
 ---
 

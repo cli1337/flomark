@@ -10,6 +10,8 @@ import AdminPanel from './pages/admin/AdminPanel'
 import ErrorPage from './pages/ErrorPage'
 import ErrorBoundary from './components/ErrorBoundary'
 import { Forbidden } from './pages/errors'
+import DemoModeBanner from './components/DemoModeBanner'
+import UpdateNotification from './components/UpdateNotification'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { NotificationProvider } from './contexts/NotificationContext'
@@ -43,6 +45,8 @@ function App() {
               <WebSocketProvider>
                 <Router>
                 <div className="App">
+                  <DemoModeBanner />
+                  <UpdateNotification />
                   <Routes>
                     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
                     <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />

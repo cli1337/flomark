@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Flomark - A modern, real-time project management platform. Manage projects, track tasks, and collaborate seamlessly with your team.">
+    <meta name="keywords" content="project management, kanban board, task management, team collaboration, real-time">
+    <title>Flomark - Modern Project Management Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-wrapper">
+                <div class="logo">
+                    <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="32" height="32" rx="8" fill="white"/>
+                        <path d="M10 12h12M10 16h12M10 20h8" stroke="#18191b" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span class="logo-text">Flomark</span>
+                </div>
+                <div class="nav-links">
+                    <a href="#features">Features</a>
+                    <a href="#installation">Installation</a>
+                    <a href="#why-us">Why Self-Host</a>
+                    <a href="#tech">Technology</a>
+                    <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener">GitHub</a>
+                </div>
+                <div class="nav-actions">
+                    <a href="https://github.com/cli1337/flomark#readme" target="_blank" rel="noopener" class="btn-secondary">Documentation</a>
+                    <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener" class="btn-primary">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
+                            <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                        </svg>
+                        Clone
+                    </a>
+                </div>
+                <button class="mobile-menu-toggle" aria-label="Toggle menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    
+    <section class="hero">
+        <div class="hero-background">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+            <div class="gradient-orb orb-3"></div>
+        </div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 0L10.5 5.5L16 8L10.5 10.5L8 16L5.5 10.5L0 8L5.5 5.5L8 0Z" fill="currentColor"/>
+                    </svg>
+                    <span>Free & Open Source</span>
+                </div>
+                <h1 class="hero-title">
+                    Self-Hosted Project<br/>
+                    <span class="gradient-text">Management</span> Platform
+                </h1>
+                <p class="hero-description">
+                    A modern, open-source project management platform you can host yourself. 
+                    Built for teams of all sizes with Kanban boards, real-time collaboration, and complete data ownership.
+                </p>
+                <div class="hero-actions">
+                    <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener" class="btn-primary btn-large">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0110 4.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.138 18.163 20 14.418 20 10c0-5.523-4.477-10-10-10z"/>
+                        </svg>
+                        View on GitHub
+                    </a>
+                    <a href="#features" class="btn-secondary btn-large">
+                        Learn More
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M7 3l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">Self-Hosted</div>
+                        <div class="stat-label">Your Data</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">100%</div>
+                        <div class="stat-label">Open Source</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">MIT</div>
+                        <div class="stat-label">License</div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="browser-mockup">
+                    <div class="browser-header">
+                        <div class="browser-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                        <div class="browser-address">flomark.app</div>
+                    </div>
+                    <div class="browser-content">
+                        <div class="kanban-preview">
+                            <div class="kanban-column">
+                                <div class="kanban-header">TO DO (3)</div>
+                                <div class="kanban-card">
+                                    <div class="card-labels">
+                                        <span class="card-label" style="background-color: #ef4444;">Backend</span>
+                                        <span class="card-label" style="background-color: #f59e0b;">High Priority</span>
+                                    </div>
+                                    <div class="card-title">Setup authentication</div>
+                                    <div class="card-meta">
+                                        <div class="card-avatars">
+                                            <div class="avatar">N</div>
+                                            <div class="avatar">J</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-labels">
+                                        <span class="card-label" style="background-color: #8b5cf6;">Design</span>
+                                    </div>
+                                    <div class="card-title">Design landing page</div>
+                                    <div class="card-description">Create modern UI with glassmorphic design</div>
+                                    <div class="card-progress">
+                                        <div class="card-progress-bar">
+                                            <div class="card-progress-fill" style="width: 40%"></div>
+                                        </div>
+                                        <span class="card-progress-text">2/5</span>
+                                    </div>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-labels">
+                                        <span class="card-label" style="background-color: #10b981;">Feature</span>
+                                    </div>
+                                    <div class="card-title">Add 2FA support</div>
+                                </div>
+                            </div>
+                            <div class="kanban-column">
+                                <div class="kanban-header">IN PROGRESS (2)</div>
+                                <div class="kanban-card">
+                                    <div class="card-labels">
+                                        <span class="card-label" style="background-color: #3b82f6;">Frontend</span>
+                                    </div>
+                                    <div class="card-title">Real-time notifications</div>
+                                    <div class="card-description">Implement WebSocket events</div>
+                                    <div class="card-meta">
+                                        <div class="card-avatars">
+                                            <div class="avatar">A</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-labels">
+                                        <span class="card-label" style="background-color: #ef4444;">Backend</span>
+                                        <span class="card-label" style="background-color: #ec4899;">Performance</span>
+                                    </div>
+                                    <div class="card-title">Database optimization</div>
+                                    <div class="card-progress">
+                                        <div class="card-progress-bar">
+                                            <div class="card-progress-fill" style="width: 33%"></div>
+                                        </div>
+                                        <span class="card-progress-text">1/3</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="kanban-column">
+                                <div class="kanban-header">DONE (3)</div>
+                                <div class="kanban-card">
+                                    <div class="card-title">User authentication</div>
+                                    <div class="card-meta">
+                                        <div class="card-avatars">
+                                            <div class="avatar">N</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-title">Kanban board UI</div>
+                                    <div class="card-description">Drag and drop functionality</div>
+                                </div>
+                                <div class="kanban-card">
+                                    <div class="card-title">Project roles</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Everything you need, self-hosted</h2>
+                <p class="section-description">Powerful features with complete control over your data and infrastructure</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                            <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                            <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                            <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Kanban Boards</h3>
+                    <p class="feature-description">Drag-and-drop task management with real-time updates across all devices</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                            <path d="M2 21v-4a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v4M19 8v6M22 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Team Collaboration</h3>
+                    <p class="feature-description">Invite members, assign tasks, and manage permissions with role-based access</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Real-time Updates</h3>
+                    <p class="feature-description">WebSocket-powered synchronization keeps everyone on the same page instantly</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            <path d="M3 3h18v18H3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Labels & Tags</h3>
+                    <p class="feature-description">Organize and categorize tasks with customizable labels and color coding</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M18 8A6 6 0 1 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 0 1-3.46 0" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Notifications</h3>
+                    <p class="feature-description">Stay updated with real-time notifications for task updates and mentions</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="2"/>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">2FA Security</h3>
+                    <p class="feature-description">Enhanced security with two-factor authentication and encrypted data</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section id="why-us" class="why-us">
+        <div class="container">
+            <div class="why-us-content">
+                <div class="why-us-text">
+                    <h2 class="section-title">Why choose Flomark?</h2>
+                    <div class="benefits-list">
+                        <div class="benefit-item">
+                            <div class="benefit-icon">✓</div>
+                            <div>
+                                <h4>Self-Hosted Control</h4>
+                                <p>Your data stays yours. Host on your own infrastructure with complete control and privacy.</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">✓</div>
+                            <div>
+                                <h4>100% Free & Open Source</h4>
+                                <p>No hidden costs, no subscriptions. Use, modify, and distribute freely under MIT license.</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">✓</div>
+                            <div>
+                                <h4>Modern Tech Stack</h4>
+                                <p>Built with React, Node.js, and MongoDB. Fast, reliable, and easy to extend.</p>
+                            </div>
+                        </div>
+                        <div class="benefit-item">
+                            <div class="benefit-icon">✓</div>
+                            <div>
+                                <h4>Active Development</h4>
+                                <p>Regular updates, bug fixes, and new features. Join our growing community.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="why-us-visual">
+                    <div class="stats-card">
+                        <div class="stats-header">
+                            <h3>Project Overview</h3>
+                            <span class="stats-badge">Live</span>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stats-item">
+                                <div class="stats-label">Active Tasks</div>
+                                <div class="stats-value">24</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-label">Completed</div>
+                                <div class="stats-value">156</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-label">Team Members</div>
+                                <div class="stats-value">8</div>
+                            </div>
+                            <div class="stats-item">
+                                <div class="stats-label">Projects</div>
+                                <div class="stats-value">12</div>
+                            </div>
+                        </div>
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <span>Completion Rate</span>
+                                <span>87%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 87%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section id="tech" class="tech-stack">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Built with modern technology</h2>
+                <p class="section-description">Powered by industry-leading tools and frameworks</p>
+            </div>
+            <div class="tech-grid">
+                <div class="tech-category">
+                    <h3 class="tech-category-title">Frontend</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">React 18</div>
+                        <div class="tech-item">Tailwind CSS</div>
+                        <div class="tech-item">Radix UI</div>
+                        <div class="tech-item">Vite</div>
+                        <div class="tech-item">Socket.io</div>
+                    </div>
+                </div>
+                <div class="tech-category">
+                    <h3 class="tech-category-title">Backend</h3>
+                    <div class="tech-items">
+                        <div class="tech-item">Node.js</div>
+                        <div class="tech-item">Express</div>
+                        <div class="tech-item">MongoDB</div>
+                        <div class="tech-item">Prisma</div>
+                        <div class="tech-item">JWT</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Installation Tutorial Section -->
+    <section id="installation" class="installation">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Easy Installation</h2>
+                <p class="section-description">Get Flomark up and running in minutes with automated scripts or manual setup</p>
+            </div>
+
+            <!-- Installation Method Tabs -->
+            <div class="install-tabs">
+                <button class="install-tab active" data-tab="auto">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 3v14M7 7l3-3 3 3M7 13l3 3 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Automated Scripts
+                </button>
+                <button class="install-tab" data-tab="manual">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M3 3h14v14H3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M7 7h6M7 11h6M7 15h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Manual Setup
+                </button>
+            </div>
+
+            <!-- Automated Installation -->
+            <div class="install-content active" id="auto-install">
+                <div class="install-grid">
+                    <div class="install-card">
+                        <div class="install-header">
+                            <div class="install-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                            </div>
+                            <h3>One-Command Installation</h3>
+                            <span class="install-badge">Recommended</span>
+                        </div>
+                        <p class="install-description">
+                            The unified installation script automatically sets up everything you need. 
+                            Choose between Nginx or Apache, optionally enable demo mode, and create your owner account.
+                        </p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Terminal</span>
+                                <button class="copy-btn" data-copy="git clone https://github.com/cli1337/flomark.git&#10;cd flomark&#10;cd backend && cp env.example .env && nano .env && cd ..&#10;chmod +x install.sh&#10;sudo ./install.sh yourdomain.com">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code><span class="code-comment"># 1. Clone the repository</span>
+git clone https://github.com/cli1337/flomark.git
+cd flomark
+
+<span class="code-comment"># 2. Configure environment</span>
+cd backend && cp env.example .env && nano .env && cd ..
+
+<span class="code-comment"># 3. Run unified installation script</span>
+chmod +x install.sh
+sudo ./install.sh yourdomain.com</code></pre>
+                        </div>
+                        <div class="install-features">
+                            <div class="feature-tag">✓ Auto-detects OS</div>
+                            <div class="feature-tag">✓ Chooses web server</div>
+                            <div class="feature-tag">✓ Creates owner account</div>
+                            <div class="feature-tag">✓ Configures SSL-ready</div>
+                        </div>
+                    </div>
+
+                    <div class="install-card">
+                        <div class="install-header">
+                            <div class="install-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                    <path d="M19 5v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" stroke-width="2"/>
+                                </svg>
+                            </div>
+                            <h3>Nginx Installation</h3>
+                        </div>
+                        <p class="install-description">
+                            Optimized for Nginx web server. Best performance for production deployments.
+                        </p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Terminal</span>
+                                <button class="copy-btn" data-copy="chmod +x install-nginx.sh&#10;sudo ./install-nginx.sh yourdomain.com">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>chmod +x install-nginx.sh
+sudo ./install-nginx.sh yourdomain.com</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="install-card">
+                        <div class="install-header">
+                            <div class="install-icon">
+                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+                                    <path d="M3 3h18v18H3z" stroke="currentColor" stroke-width="2"/>
+                                    <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            <h3>Apache Installation</h3>
+                        </div>
+                        <p class="install-description">
+                            For Apache/httpd users. Compatible with RHEL, CentOS, and Debian systems.
+                        </p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Terminal</span>
+                                <button class="copy-btn" data-copy="chmod +x install-apache.sh&#10;sudo ./install-apache.sh yourdomain.com">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>chmod +x install-apache.sh
+sudo ./install-apache.sh yourdomain.com</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- What Gets Installed -->
+                <div class="install-details">
+                    <h3>What Gets Installed?</h3>
+                    <div class="install-steps">
+                        <div class="install-step">
+                            <div class="step-number">1</div>
+                            <div class="step-content">
+                                <h4>Web Server Setup</h4>
+                                <p>Installs and configures Nginx or Apache with reverse proxy, WebSocket support, and security headers</p>
+                            </div>
+                        </div>
+                        <div class="install-step">
+                            <div class="step-number">2</div>
+                            <div class="step-content">
+                                <h4>Backend Configuration</h4>
+                                <p>Sets up Node.js, PM2 process manager, installs dependencies, and runs database migrations</p>
+                            </div>
+                        </div>
+                        <div class="install-step">
+                            <div class="step-number">3</div>
+                            <div class="step-content">
+                                <h4>Frontend Build</h4>
+                                <p>Builds optimized production bundle with Vite, minified assets, and code splitting</p>
+                            </div>
+                        </div>
+                        <div class="install-step">
+                            <div class="step-number">4</div>
+                            <div class="step-content">
+                                <h4>Owner Account</h4>
+                                <p>Interactive prompts to create your owner account with first/last name, email, and password</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Manual Installation -->
+            <div class="install-content" id="manual-install">
+                <div class="manual-steps">
+                    <div class="manual-section">
+                        <h3>Prerequisites</h3>
+                        <ul class="checklist">
+                            <li>Node.js 18+ installed</li>
+                            <li>MongoDB 6+ running</li>
+                            <li>pnpm or npm package manager</li>
+                            <li>Nginx or Apache web server</li>
+                            <li>Root/sudo access to your server</li>
+                        </ul>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3>Step 1: Clone and Configure</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Terminal</span>
+                                <button class="copy-btn" data-copy="git clone https://github.com/cli1337/flomark.git&#10;cd flomark/backend&#10;cp env.example .env&#10;nano .env">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>git clone https://github.com/cli1337/flomark.git
+cd flomark/backend
+cp env.example .env
+nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, BACKEND_URL</span></code></pre>
+                        </div>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3>Step 2: Install Dependencies</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Backend</span>
+                                <button class="copy-btn" data-copy="cd backend&#10;pnpm install&#10;npx prisma db push">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>cd backend
+pnpm install
+npx prisma db push</code></pre>
+                        </div>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Frontend</span>
+                                <button class="copy-btn" data-copy="cd ../frontend&#10;pnpm install&#10;pnpm build">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>cd ../frontend
+pnpm install
+pnpm build</code></pre>
+                        </div>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3>Step 3: Create Owner Account</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Terminal</span>
+                                <button class="copy-btn" data-copy="cd backend&#10;node scripts/make-admin.js admin@example.com OWNER">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>cd backend
+node scripts/make-admin.js admin@example.com OWNER
+<span class="code-comment"># Follow interactive prompts for name and password</span></code></pre>
+                        </div>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3>Step 4: Start Backend with PM2</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Terminal</span>
+                                <button class="copy-btn" data-copy="npm install -g pm2&#10;pm2 start src/server.js --name flomark-backend&#10;pm2 save&#10;pm2 startup">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>npm install -g pm2
+pm2 start src/server.js --name flomark-backend
+pm2 save
+pm2 startup  <span class="code-comment"># Follow the command output</span></code></pre>
+                        </div>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3>Step 5: Configure Web Server</h3>
+                        <p>Choose your web server:</p>
+                        
+                        <div class="web-server-tabs">
+                            <button class="server-tab active" data-server="nginx-manual">Nginx</button>
+                            <button class="server-tab" data-server="apache-manual">Apache</button>
+                        </div>
+
+                        <div class="server-config active" id="nginx-manual">
+                            <p>Create <code>/etc/nginx/sites-available/flomark</code>:</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>nginx.conf</span>
+                                    <button class="copy-btn" data-copy="server {&#10;    listen 80;&#10;    server_name yourdomain.com;&#10;    root /path/to/flomark/frontend/dist;&#10;    &#10;    location /api {&#10;        proxy_pass http://localhost:3000;&#10;        proxy_http_version 1.1;&#10;        proxy_set_header Upgrade $http_upgrade;&#10;        proxy_set_header Connection 'upgrade';&#10;    }&#10;    &#10;    location /socket.io/ {&#10;        proxy_pass http://localhost:3000;&#10;        proxy_http_version 1.1;&#10;        proxy_set_header Upgrade $http_upgrade;&#10;        proxy_set_header Connection &quot;upgrade&quot;;&#10;    }&#10;}">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>server {
+    listen 80;
+    server_name yourdomain.com;
+    root /path/to/flomark/frontend/dist;
+    
+    location /api {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+    }
+    
+    location /socket.io/ {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}</code></pre>
+                            </div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>Enable & Restart</span>
+                                    <button class="copy-btn" data-copy="sudo ln -s /etc/nginx/sites-available/flomark /etc/nginx/sites-enabled/&#10;sudo nginx -t&#10;sudo systemctl restart nginx">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>sudo ln -s /etc/nginx/sites-available/flomark /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl restart nginx</code></pre>
+                            </div>
+                        </div>
+
+                        <div class="server-config" id="apache-manual">
+                            <p>Create <code>/etc/apache2/sites-available/flomark.conf</code>:</p>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>apache.conf</span>
+                                    <button class="copy-btn" data-copy="<VirtualHost *:80>&#10;    ServerName yourdomain.com&#10;    DocumentRoot /path/to/flomark/frontend/dist&#10;    &#10;    ProxyPass /api http://localhost:3000/api&#10;    ProxyPassReverse /api http://localhost:3000/api&#10;    &#10;    RewriteEngine On&#10;    RewriteCond %{HTTP:Upgrade} =websocket [NC]&#10;    RewriteRule ^/socket.io/(.*)$ ws://localhost:3000/socket.io/$1 [P,L]&#10;</VirtualHost>">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>&lt;VirtualHost *:80&gt;
+    ServerName yourdomain.com
+    DocumentRoot /path/to/flomark/frontend/dist
+    
+    ProxyPass /api http://localhost:3000/api
+    ProxyPassReverse /api http://localhost:3000/api
+    
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule ^/socket.io/(.*)$ ws://localhost:3000/socket.io/$1 [P,L]
+&lt;/VirtualHost&gt;</code></pre>
+                            </div>
+                            <div class="code-block">
+                                <div class="code-header">
+                                    <span>Enable Modules & Site</span>
+                                    <button class="copy-btn" data-copy="sudo a2enmod proxy proxy_http proxy_wstunnel rewrite&#10;sudo a2ensite flomark.conf&#10;sudo systemctl restart apache2">
+                                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                            <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                            <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                        </svg>
+                                        Copy
+                                    </button>
+                                </div>
+                                <pre><code>sudo a2enmod proxy proxy_http proxy_wstunnel rewrite
+sudo a2ensite flomark.conf
+sudo systemctl restart apache2</code></pre>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3>Step 6: Enable SSL (Optional but Recommended)</h3>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>Terminal</span>
+                                <button class="copy-btn" data-copy="sudo apt-get install certbot python3-certbot-nginx&#10;sudo certbot --nginx -d yourdomain.com">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code><span class="code-comment"># For Nginx</span>
+sudo apt-get install certbot python3-certbot-nginx
+sudo certbot --nginx -d yourdomain.com
+
+<span class="code-comment"># For Apache</span>
+sudo apt-get install certbot python3-certbot-apache
+sudo certbot --apache -d yourdomain.com</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="install-footer">
+                <div class="install-help">
+                    <h4>Need Help?</h4>
+                    <div class="help-links">
+                        <a href="https://github.com/cli1337/flomark/blob/main/DEPLOYMENT.md" target="_blank" rel="noopener">
+                            📚 Full Deployment Guide
+                        </a>
+                        <a href="https://github.com/cli1337/flomark/blob/main/DEPLOYMENT-QUICKSTART.md" target="_blank" rel="noopener">
+                            ⚡ Quick Reference
+                        </a>
+                        <a href="https://github.com/cli1337/flomark/blob/main/UPDATE-GUIDE.md" target="_blank" rel="noopener">
+                            🔄 Update Guide
+                        </a>
+                        <a href="https://github.com/cli1337/flomark/issues" target="_blank" rel="noopener">
+                            💬 Get Support
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Simple, transparent pricing</h2>
+                <p class="section-description">Free forever. Self-host on your own infrastructure.</p>
+            </div>
+            <div class="pricing-card">
+                <div class="pricing-header">
+                    <h3 class="pricing-title">Self-Hosted & Open Source</h3>
+                    <div class="pricing-price">
+                        <span class="price-currency">$</span>
+                        <span class="price-amount">0</span>
+                        <span class="price-period">/forever</span>
+                    </div>
+                    <p class="pricing-description">Host it yourself, own your data</p>
+                </div>
+                <div class="pricing-features">
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Unlimited projects & tasks</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Unlimited team members</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Real-time collaboration</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>File attachments</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>2FA security</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Self-hosted option</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Full control & privacy</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>Community support</span>
+                    </div>
+                    <div class="pricing-feature">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M4 10l4 4L16 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                        <span>MIT License</span>
+                    </div>
+                </div>
+                <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener" class="btn-primary btn-large">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0110 4.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.138 18.163 20 14.418 20 10c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                    Clone on GitHub
+                </a>
+            </div>
+        </div>
+    </section>
+
+    
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content">
+                <h2 class="cta-title">Ready to own your data?</h2>
+                <p class="cta-description">Deploy Flomark on your own infrastructure and take full control of your project management</p>
+                <div class="cta-actions">
+                    <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener" class="btn-primary btn-large">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0110 4.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.138 18.163 20 14.418 20 10c0-5.523-4.477-10-10-10z"/>
+                        </svg>
+                        Get Started on GitHub
+                    </a>
+                    <a href="https://github.com/cli1337/flomark#-quick-start" target="_blank" rel="noopener" class="btn-secondary btn-large">
+                        View Documentation
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="logo">
+                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="32" height="32" rx="8" fill="white"/>
+                            <path d="M10 12h12M10 16h12M10 20h8" stroke="#18191b" stroke-width="2" stroke-linecap="round"/>
+                        </svg>
+                        <span class="logo-text">Flomark</span>
+                    </div>
+                    <p class="footer-description">
+                        Self-hosted project management platform.<br/>
+                        Free & Open Source.
+                    </p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="#features">Features</a>
+                        <a href="#pricing">Pricing</a>
+                        <a href="#tech">Technology</a>
+                        <a href="https://github.com/cli1337/flomark#-quick-start" target="_blank" rel="noopener">Quick Start</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Resources</h4>
+                        <a href="https://github.com/cli1337/flomark#readme" target="_blank" rel="noopener">Documentation</a>
+                        <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener">GitHub</a>
+                        <a href="https://github.com/cli1337/flomark/issues" target="_blank" rel="noopener">Issues</a>
+                        <a href="https://github.com/cli1337/flomark#-api-documentation" target="_blank" rel="noopener">API</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Community</h4>
+                        <a href="https://github.com/cli1337/flomark/discussions" target="_blank" rel="noopener">Discussions</a>
+                        <a href="https://github.com/cli1337/flomark/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing</a>
+                        <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener">Star on GitHub</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <div>
+                    <p>&copy; 2024 Flomark. Released under the MIT License.</p>
+                    <p style="margin-top: 8px; font-size: 14px; color: var(--text-secondary);">
+                        Made by Nick with <span style="color: #ef4444;">❤️</span>
+                    </p>
+                </div>
+                <div class="footer-social">
+                    <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener" aria-label="GitHub">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0110 4.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.138 18.163 20 14.418 20 10c0-5.523-4.477-10-10-10z"/>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -7,6 +7,7 @@ import tasksRoutes from "./routes/tasks.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { handleMulterError } from "./config/multer.config.js";
+import { isDemoMode, getDemoProjectId } from "./middlewares/demo.middleware.js";
 const mainRoutePath = "/api";
 import { createRequire } from 'module';
 
@@ -32,6 +33,13 @@ app.get(`${mainRoutePath}/health`, (req, res) => {
     message: 'API is running',
     key: 'api_running',
     version: packageJson.version
+  });
+});
+
+app.get(`${mainRoutePath}/demo-info`, (req, res) => {
+  res.status(200).json({
+    demoMode: isDemoMode(),
+    demoProjectId: isDemoMode() ? getDemoProjectId() : null
   });
 });
 

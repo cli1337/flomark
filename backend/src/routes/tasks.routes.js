@@ -16,10 +16,13 @@ import {
   removeLabel
 } from "../controllers/tasks.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { demoModeMiddleware, preventDemoDestruction } from "../middlewares/demo.middleware.js";
 
 const router = Router();
 
+router.use(demoModeMiddleware);
 router.use(authenticateToken);
+router.use(preventDemoDestruction);
 
 router.get("/lists/:listId/tasks", getTasksByList);
 

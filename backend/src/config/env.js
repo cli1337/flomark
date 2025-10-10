@@ -19,6 +19,10 @@ export const ENV = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
   BACKEND_URL: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
   
+  // Demo Mode Configuration
+  DEMO_MODE: process.env.DEMO_MODE === "true",
+  DEMO_PROJECT_ID: process.env.DEMO_PROJECT_ID || "demo-project",
+  
   // Email Configuration (SMTP)
   SMTP_HOST: process.env.SMTP_HOST,
   SMTP_PORT: process.env.SMTP_PORT || 587,
@@ -36,3 +40,7 @@ if (!ENV.DATABASE_URL) {
 if (!ENV.JWT_SECRET) {
   throw new Error("❌ JWT_SECRET is missing in .env file.");
 }
+
+// Export as both named and default
+export const config = ENV;
+export default ENV;
