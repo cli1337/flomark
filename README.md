@@ -78,50 +78,43 @@ https://demo.flomark.app
 
 ### Installation
 
-#### Option 1: Quick Install (Easiest) ⚡
+#### Option 1: One-Command Installation (Easiest) ⚡
 
-**Install with one command:**
+**Install everything with one command:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh | sudo bash
+curl -fsSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash
 ```
 
 **That's it!** The script will:
 - ✅ Download Flomark automatically
-- ✅ Guide you through configuration
-- ✅ Set up everything (web server, database, auto-start)
-- ✅ Create your admin account
+- ✅ Ask for installation path (default: `/var/www/flomark`)
+- ✅ Check if already installed (prevents duplicates)
+- ✅ Guide you through all configuration interactively
+- ✅ Build and deploy to production
+  - Frontend: `/var/www/flomark/frontend/`
+  - Backend: `/var/www/flomark/backend/`
+- ✅ Configure web server (Nginx/Apache)
+- ✅ Set up PM2 for auto-start
+- ✅ Create admin account
 
-Perfect for production servers!
+**Perfect for production servers!**
 
 ---
 
-#### Option 2: Interactive Installation (Manual Clone) 🎯
+#### Option 2: Manual Clone & Install
 
-**If you prefer to clone manually:**
+**If you prefer to clone first:**
 
 ```bash
 git clone https://github.com/cli1337/flomark.git
 cd flomark
-
-# Configure backend
-cd backend
-cp env.example .env
-nano .env  # Edit your settings
-cd ..
-
-# Run interactive installer
 sudo ./install.sh
 ```
 
-The installer will guide you through:
-- ✅ Domain configuration (or use localhost)
-- ✅ Port selection with conflict detection
-- ✅ Web server choice (Nginx/Apache)
-- ✅ Demo mode setup
-- ✅ Owner account creation
-
 **See [INSTALLATION-INTERACTIVE-GUIDE.md](INSTALLATION-INTERACTIVE-GUIDE.md) for detailed guide.**
+
+---
 
 #### Option 2: Manual Installation
 

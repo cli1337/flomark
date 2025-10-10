@@ -15,8 +15,10 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
-APP_DIR=$(pwd)
-FRONTEND_BUILD_DIR="$APP_DIR/frontend/dist"
+SOURCE_DIR=$(pwd)
+DEPLOY_DIR="/var/www/flomark"
+FRONTEND_BUILD_DIR="$DEPLOY_DIR/frontend"
+BACKEND_DIR="$DEPLOY_DIR/backend"
 BACKEND_PORT=3000
 DEFAULT_BACKEND_PORT=3000
 
@@ -218,7 +220,8 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${YELLOW}📋 Current Configuration${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo "  Domain: $DOMAIN"
-echo "  App Directory: $APP_DIR"
+echo "  Source Directory: $SOURCE_DIR"
+echo "  Deploy Directory: $DEPLOY_DIR"
 echo "  Backend Port: $BACKEND_PORT"
 if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
     echo -e "  ${CYAN}(Custom port selected)${NC}"
@@ -241,22 +244,22 @@ echo "  2) Apache"
 echo "     ✓ More familiar to some users"
 echo "     ✓ Extensive documentation"
 echo "     ✓ .htaccess support"
-echo ""
+    echo ""
 read -p "Enter choice [1-2] (default: 1): " choice
 choice=${choice:-1}
-
-case $choice in
-    1)
-        WEBSERVER="nginx"
-        ;;
-    2)
-        WEBSERVER="apache"
-        ;;
-    *)
+    
+    case $choice in
+        1)
+            WEBSERVER="nginx"
+            ;;
+        2)
+            WEBSERVER="apache"
+            ;;
+        *)
         echo -e "${YELLOW}Invalid choice. Using Nginx (default).${NC}"
-        WEBSERVER="nginx"
-        ;;
-esac
+            WEBSERVER="nginx"
+            ;;
+    esac
 
 echo -e "${GREEN}✓ Selected web server: ${WEBSERVER}${NC}"
 echo ""
@@ -355,33 +358,53 @@ else
 fi
 echo ""
 
-# Step 5: Build Frontend
-echo -e "${GREEN}[5/9] Building frontend...${NC}"
-cd "$APP_DIR/frontend"
+# Step 5: Build Frontend for Production
+echo -e "${GREEN}[5/9] Building frontend for production...${NC}"
+cd "$SOURCE_DIR/frontend"
 if [ ! -d "node_modules" ]; then
     pnpm install
 fi
+echo -e "${YELLOW}Building React app for production...${NC}"
 pnpm build
 
-# Step 6: Install Backend Dependencies
-echo -e "${GREEN}[6/9] Installing backend dependencies...${NC}"
-cd "$APP_DIR/backend"
-if [ ! -d "node_modules" ]; then
-    pnpm install
-fi
+# Create production directory structure
+echo -e "${YELLOW}Creating production directory structure...${NC}"
+mkdir -p "$DEPLOY_DIR"
+mkdir -p "$FRONTEND_BUILD_DIR"
 
-# Check if .env exists
+# Copy built frontend to production directory
+echo -e "${YELLOW}Deploying frontend to $FRONTEND_BUILD_DIR...${NC}"
+rm -rf "$FRONTEND_BUILD_DIR"/*
+cp -r dist/* "$FRONTEND_BUILD_DIR/"
+echo -e "${GREEN}✓ Frontend deployed to production${NC}"
+
+# Step 6: Deploy Backend to Production
+echo -e "${GREEN}[6/9] Deploying backend to production...${NC}"
+
+# Copy backend to production directory
+echo -e "${YELLOW}Copying backend to $BACKEND_DIR...${NC}"
+mkdir -p "$BACKEND_DIR"
+cd "$SOURCE_DIR/backend"
+
+# Copy all backend files except node_modules
+rsync -av --exclude 'node_modules' --exclude '.env' . "$BACKEND_DIR/"
+
+# Install production dependencies in production directory
+cd "$BACKEND_DIR"
+echo -e "${YELLOW}Installing backend dependencies...${NC}"
+pnpm install --prod
+echo -e "${GREEN}✓ Backend deployed to production${NC}"
+
+# Handle .env configuration
 if [ ! -f ".env" ]; then
-    echo -e "${YELLOW}No .env file found. Creating from template...${NC}"
     if [ -f "env.example" ]; then
+        echo -e "${YELLOW}Creating .env from template...${NC}"
         cp env.example .env
         # Update port in .env if custom port is used
         if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
             sed -i "s/PORT=3000/PORT=$BACKEND_PORT/" .env 2>/dev/null || \
             sed "s/PORT=3000/PORT=$BACKEND_PORT/" .env > .env.tmp && mv .env.tmp .env
         fi
-        echo -e "${RED}Please edit backend/.env with your configuration before proceeding!${NC}"
-        read -p "Press Enter after you've configured .env..."
     fi
 else
     # Update existing .env with custom port
@@ -394,6 +417,34 @@ else
             echo "PORT=$BACKEND_PORT" >> .env
             echo -e "${GREEN}✓ Added PORT=$BACKEND_PORT to .env${NC}"
         fi
+    fi
+fi
+
+# Show .env configuration instructions
+echo ""
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo -e "${YELLOW}⚙️  Environment Configuration${NC}"
+echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+echo ""
+echo -e "${YELLOW}.env file location: $BACKEND_DIR/.env${NC}"
+echo ""
+echo -e "${YELLOW}Required settings:${NC}"
+echo "  - DATABASE_URL: mongodb://localhost:27017/flomark"
+echo "  - JWT_SECRET: (generate random string)"
+echo "  - JWT_REFRESH_SECRET: (generate random string)"
+echo ""
+echo -e "${YELLOW}Optional: Edit now or configure later${NC}"
+read -p "Edit .env now? [y/N]: " edit_env
+
+if [[ $edit_env =~ ^[Yy]$ ]]; then
+    if command -v nano &> /dev/null; then
+        nano .env
+    elif command -v vim &> /dev/null; then
+        vim .env
+    elif command -v vi &> /dev/null; then
+        vi .env
+    else
+        echo -e "${YELLOW}No editor found. Edit manually: nano $BACKEND_DIR/.env${NC}"
     fi
 fi
 
@@ -430,10 +481,12 @@ node scripts/make-admin.js "$OWNER_EMAIL" OWNER "$OWNER_FIRST" "$OWNER_LAST" "$O
 # Step 8: Setup PM2
 echo ""
 echo -e "${GREEN}[8/9] Setting up PM2 for backend...${NC}"
+cd "$BACKEND_DIR"
 pm2 delete flomark-backend 2>/dev/null || true
-pm2 start src/server.js --name flomark-backend --node-args="--max-old-space-size=2048"
+pm2 start src/server.js --name flomark-backend --node-args="--max-old-space-size=2048" --cwd "$BACKEND_DIR"
 pm2 save
 pm2 startup | tail -n 1 | bash || true
+echo -e "${GREEN}✓ Backend running from $BACKEND_DIR${NC}"
 
 # Step 9: Configure Web Server
 echo -e "${GREEN}[9/9] Configuring ${WEBSERVER}...${NC}"
@@ -509,7 +562,7 @@ server {
     }
 
     location /uploads {
-        alias $APP_DIR/backend/uploads;
+        alias $BACKEND_DIR/uploads;
         expires 1y;
         add_header Cache-Control "public, max-age=31536000";
     }
@@ -580,8 +633,8 @@ else
         Header set Cache-Control "public, max-age=31536000, immutable"
     </Directory>
 
-    Alias /uploads $APP_DIR/backend/uploads
-    <Directory $APP_DIR/backend/uploads>
+    Alias /uploads $BACKEND_DIR/uploads
+    <Directory $BACKEND_DIR/uploads>
         Options -Indexes
         AllowOverride None
         Require all granted
@@ -663,10 +716,17 @@ fi
 
 echo -e "${YELLOW}Configuration Details:${NC}"
 echo "  Domain: $DOMAIN"
+echo "  Deploy Directory: $DEPLOY_DIR"
+echo "  Frontend: $FRONTEND_BUILD_DIR"
+echo "  Backend: $BACKEND_DIR"
 echo "  Backend Port: $BACKEND_PORT"
 if [ "$BACKEND_PORT" != "$DEFAULT_BACKEND_PORT" ]; then
     echo -e "  ${CYAN}(Custom backend port configured)${NC}"
 fi
+echo ""
+echo -e "${YELLOW}Important: Configure .env file${NC}"
+echo "  Edit: nano $BACKEND_DIR/.env"
+echo "  Then: pm2 restart flomark-backend"
 echo ""
 echo -e "${YELLOW}Useful commands:${NC}"
 echo "  View all logs:      ./logs.sh"
