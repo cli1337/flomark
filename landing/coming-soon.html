@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Flomark - Coming Soon. A modern, self-hosted project management platform.">
+    <title>Coming Soon - Flomark</title>
+    <link rel="stylesheet" href="coming-soon.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Animated background -->
+    <div class="background">
+        <div class="gradient-orb orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-orb orb-3"></div>
+        <div class="grid-pattern"></div>
+    </div>
+
+    <!-- Main content -->
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo-section">
+            <div class="logo">
+                <svg width="48" height="48" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="32" height="32" rx="8" fill="white"/>
+                    <path d="M10 12h12M10 16h12M10 20h8" stroke="#18191b" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span class="logo-text">Flomark</span>
+            </div>
+        </div>
+
+        <!-- Coming Soon Content -->
+        <div class="content">
+            <div class="status-badge">
+                <div class="pulse-dot"></div>
+                <span>Under Development</span>
+            </div>
+            
+            <h1 class="title">
+                <span class="title-line">Something</span>
+                <span class="title-line">Amazing</span>
+                <span class="title-line gradient-text">Coming Soon</span>
+            </h1>
+            
+            <p class="description">
+                We're building the ultimate self-hosted project management platform.
+                Stay tuned for something extraordinary.
+            </p>
+
+            <!-- Animated Progress Circle -->
+            <div class="progress-circle">
+                <svg class="progress-ring" width="200" height="200">
+                    <circle class="progress-ring-circle-bg" cx="100" cy="100" r="90"></circle>
+                    <circle class="progress-ring-circle" cx="100" cy="100" r="90"></circle>
+                </svg>
+                <div class="progress-text">
+                    <div class="progress-percentage">75%</div>
+                    <div class="progress-label">Complete</div>
+                </div>
+            </div>
+
+            <!-- Feature Preview Cards -->
+            <div class="features-preview">
+                <div class="feature-pill">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <rect x="3" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="14" y="3" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="3" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                        <rect x="14" y="14" width="7" height="7" rx="1" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>Kanban Boards</span>
+                </div>
+                <div class="feature-pill">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <circle cx="9" cy="7" r="4" stroke="currentColor" stroke-width="2"/>
+                        <path d="M2 21v-4a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v4M19 8v6M22 11h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <span>Real-time Collaboration</span>
+                </div>
+                <div class="feature-pill">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z" stroke="currentColor" stroke-width="2"/>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
+                    </svg>
+                    <span>Self-Hosted & Secure</span>
+                </div>
+            </div>
+
+            <!-- Email Notification -->
+            <div class="notify-section">
+                <div class="notify-card">
+                    <h3>Get Notified</h3>
+                    <p>Enter your email to be the first to know when we launch</p>
+                    <form class="notify-form" id="notifyForm">
+                        <input 
+                            type="email" 
+                            placeholder="your@email.com" 
+                            required 
+                            class="email-input"
+                        />
+                        <button type="submit" class="notify-btn">
+                            <span>Notify Me</span>
+                            <svg width="16" height="16" viewBox="0 0 20 20" fill="none">
+                                <path d="M7 3l7 7-7 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- GitHub Link -->
+            <div class="github-section">
+                <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener" class="github-link">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.477 0 10c0 4.42 2.865 8.17 6.839 9.49.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0110 4.836c.85.004 1.705.114 2.504.336 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.578.688.48C17.138 18.163 20 14.418 20 10c0-5.523-4.477-10-10-10z"/>
+                    </svg>
+                    <span>Follow Development on GitHub</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>Made by Nick with <span style="color: #ef4444;">❤️</span></p>
+        </div>
+    </div>
+
+    <!-- Floating particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <script src="coming-soon.js"></script>
+</body>
+</html>
+

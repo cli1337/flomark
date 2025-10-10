@@ -78,9 +78,27 @@ https://demo.flomark.app
 
 ### Installation
 
-#### Option 1: Interactive Installation (Recommended) 🎯
+#### Option 1: Quick Install (Easiest) ⚡
 
-**One command to install everything:**
+**Install with one command:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh | sudo bash
+```
+
+**That's it!** The script will:
+- ✅ Download Flomark automatically
+- ✅ Guide you through configuration
+- ✅ Set up everything (web server, database, auto-start)
+- ✅ Create your admin account
+
+Perfect for production servers!
+
+---
+
+#### Option 2: Interactive Installation (Manual Clone) 🎯
+
+**If you prefer to clone manually:**
 
 ```bash
 git clone https://github.com/cli1337/flomark.git
