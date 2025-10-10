@@ -423,22 +423,22 @@
                                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
-                            <h3>One-Command Installation</h3>
+                            <h3>Interactive Installation</h3>
                             <span class="install-badge">Recommended</span>
                         </div>
                         <p class="install-description">
                             The interactive installation script automatically sets up everything you need. 
-                            Builds frontend, configures web server (Nginx/Apache), sets up PM2 for backend, and enables auto-start on reboot.
+                            Builds frontend, configures web server (Nginx/Apache), sets up systemd service, and enables auto-start on reboot.
                         </p>
                         <div class="platform-badge">
-                            <span class="badge-live">✓ Linux</span>
-                            <span class="badge-soon">🔜 Windows</span>
-                            <span class="badge-soon">🐳 Docker</span>
+                            <span class="badge-live">✓ Ubuntu/Debian</span>
+                            <span class="badge-live">✓ Demo Mode</span>
+                            <span class="badge-live">✓ Production Mode</span>
                         </div>
                         <div class="code-block">
                             <div class="code-header">
-                                <span>One-Command Installation</span>
-                                <button class="copy-btn" data-copy="curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash">
+                                <span>Interactive Installation</span>
+                                <button class="copy-btn" data-copy="git clone https://github.com/cli1337/flomark.git&#10;cd flomark&#10;chmod +x install.sh&#10;sudo ./install.sh">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -446,16 +446,19 @@
                                     Copy
                                 </button>
                             </div>
-                            <pre><code><span class="code-comment"># Install everything with one command:</span>
-curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash
+                            <pre><code><span class="code-comment"># Clone and install:</span>
+git clone https://github.com/cli1337/flomark.git
+cd flomark
+chmod +x install.sh
+sudo ./install.sh
 
-<span class="code-comment"># The script will:</span>
-<span class="code-comment"># ✓ Download Flomark automatically (no git clone needed)</span>
-<span class="code-comment"># ✓ Ask for installation path (default: /var/www/flomark)</span>
-<span class="code-comment"># ✓ Check if already installed (prevents duplicates)</span>
-<span class="code-comment"># ✓ Build and deploy to production</span>
-<span class="code-comment"># ✓ Configure web server + auto-start</span>
-<span class="code-comment"># ✓ Create admin account - DONE!</span></code></pre>
+<span class="code-comment"># The script will interactively ask for:</span>
+<span class="code-comment"># ✓ Web server choice (Apache or Nginx)</span>
+<span class="code-comment"># ✓ Installation path (default: /var/www/flomark)</span>
+<span class="code-comment"># ✓ Domain or IP address</span>
+<span class="code-comment"># ✓ Custom frontend/backend ports</span>
+<span class="code-comment"># ✓ Demo mode or production mode</span>
+<span class="code-comment"># ✓ Admin credentials (if production)</span></code></pre>
                         </div>
                         
                         <div class="install-note">
@@ -464,9 +467,10 @@ curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.
                         <div class="install-features">
                             <div class="feature-tag">✓ Builds frontend (React → HTML/JS/CSS)</div>
                             <div class="feature-tag">✓ Configures web server (Nginx/Apache)</div>
-                            <div class="feature-tag">✓ Sets up PM2 for backend</div>
+                            <div class="feature-tag">✓ Sets up systemd service</div>
                             <div class="feature-tag">✓ Auto-start on reboot</div>
-                            <div class="feature-tag">✓ SSL-ready configuration</div>
+                            <div class="feature-tag">✓ Prevents duplicate installations</div>
+                            <div class="feature-tag">✓ Custom port configuration</div>
                         </div>
                     </div>
 
@@ -478,15 +482,15 @@ curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.
                                     <path d="M19 5v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" stroke-width="2"/>
                                 </svg>
                             </div>
-                            <h3>Nginx Installation</h3>
+                            <h3>Update Existing Installation</h3>
                         </div>
                         <p class="install-description">
-                            Optimized for Nginx web server. Best performance for production deployments.
+                            Update your existing Flomark installation to the latest version with automatic backup.
                         </p>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
-                                <button class="copy-btn" data-copy="chmod +x install-nginx.sh&#10;sudo ./install-nginx.sh yourdomain.com">
+                                <button class="copy-btn" data-copy="cd flomark&#10;chmod +x update.sh&#10;sudo ./update.sh">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -494,8 +498,20 @@ curl -sSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.
                                     Copy
                                 </button>
                             </div>
-                            <pre><code>chmod +x install-nginx.sh
-sudo ./install-nginx.sh yourdomain.com</code></pre>
+                            <pre><code>cd flomark
+chmod +x update.sh
+sudo ./update.sh
+
+<span class="code-comment"># Or from installation directory:</span>
+sudo /var/www/flomark/update.sh</code></pre>
+                        </div>
+                        <div class="install-features">
+                            <div class="feature-tag">✓ Auto-detects installation</div>
+                            <div class="feature-tag">✓ Backs up config & data</div>
+                            <div class="feature-tag">✓ Downloads latest version</div>
+                            <div class="feature-tag">✓ Updates dependencies</div>
+                            <div class="feature-tag">✓ Rebuilds frontend</div>
+                            <div class="feature-tag">✓ Rollback on failure</div>
                         </div>
                     </div>
 
@@ -507,15 +523,15 @@ sudo ./install-nginx.sh yourdomain.com</code></pre>
                                     <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <h3>Apache Installation</h3>
+                            <h3>Useful Commands</h3>
                         </div>
                         <p class="install-description">
-                            For Apache/httpd users. Compatible with RHEL, CentOS, and Debian systems.
+                            Manage your Flomark installation with systemd commands.
                         </p>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
-                                <button class="copy-btn" data-copy="chmod +x install-apache.sh&#10;sudo ./install-apache.sh yourdomain.com">
+                                <button class="copy-btn" data-copy="sudo systemctl status flomark-backend&#10;sudo systemctl restart flomark-backend&#10;sudo journalctl -u flomark-backend -f">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -523,8 +539,17 @@ sudo ./install-nginx.sh yourdomain.com</code></pre>
                                     Copy
                                 </button>
                             </div>
-                            <pre><code>chmod +x install-apache.sh
-sudo ./install-apache.sh yourdomain.com</code></pre>
+                            <pre><code><span class="code-comment"># Check status</span>
+sudo systemctl status flomark-backend
+
+<span class="code-comment"># Restart service</span>
+sudo systemctl restart flomark-backend
+
+<span class="code-comment"># View logs</span>
+sudo journalctl -u flomark-backend -f
+
+<span class="code-comment"># Stop service</span>
+sudo systemctl stop flomark-backend</code></pre>
                         </div>
                     </div>
                 </div>
@@ -536,15 +561,15 @@ sudo ./install-apache.sh yourdomain.com</code></pre>
                         <div class="install-step">
                             <div class="step-number">1</div>
                             <div class="step-content">
-                                <h4>Web Server Setup</h4>
-                                <p>Installs and configures Nginx or Apache with reverse proxy, WebSocket support, and security headers</p>
+                                <h4>System Dependencies</h4>
+                                <p>Installs Node.js 20.x, pnpm, MongoDB (if production mode), and your choice of web server (Nginx or Apache)</p>
                             </div>
                         </div>
                         <div class="install-step">
                             <div class="step-number">2</div>
                             <div class="step-content">
-                                <h4>Backend Configuration</h4>
-                                <p>Sets up Node.js, PM2 process manager, installs dependencies, and runs database migrations</p>
+                                <h4>Backend Setup</h4>
+                                <p>Copies backend files, installs dependencies, generates JWT secrets, creates systemd service for auto-start</p>
                             </div>
                         </div>
                         <div class="install-step">
@@ -557,8 +582,15 @@ sudo ./install-apache.sh yourdomain.com</code></pre>
                         <div class="install-step">
                             <div class="step-number">4</div>
                             <div class="step-content">
-                                <h4>Owner Account</h4>
-                                <p>Interactive prompts to create your owner account with first/last name, email, and password</p>
+                                <h4>Web Server Configuration</h4>
+                                <p>Configures reverse proxy, WebSocket support for real-time features, and React Router handling</p>
+                            </div>
+                        </div>
+                        <div class="install-step">
+                            <div class="step-number">5</div>
+                            <div class="step-content">
+                                <h4>Admin Account</h4>
+                                <p>Creates admin account (in production mode) or uses demo credentials (in demo mode)</p>
                             </div>
                         </div>
                     </div>
@@ -571,16 +603,16 @@ sudo ./install-apache.sh yourdomain.com</code></pre>
                     <div class="manual-section">
                         <h3>Prerequisites</h3>
                         <ul class="checklist">
-                            <li>Node.js 18+ installed</li>
-                            <li>MongoDB 6+ running</li>
-                            <li>pnpm or npm package manager</li>
+                            <li>Node.js 20+ installed</li>
+                            <li>MongoDB 7+ running (or use demo mode)</li>
+                            <li>pnpm package manager</li>
                             <li>Nginx or Apache web server</li>
                             <li>Root/sudo access to your server</li>
                         </ul>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 1: Clone and Configure</h3>
+                        <h3>Step 1: Clone and Configure Backend</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
@@ -595,16 +627,20 @@ sudo ./install-apache.sh yourdomain.com</code></pre>
                             <pre><code>git clone https://github.com/cli1337/flomark.git
 cd flomark/backend
 cp env.example .env
-nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, BACKEND_URL</span></code></pre>
+nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, PORT, DEMO_MODE</span></code></pre>
                         </div>
+                        <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
+                            <strong>Key settings:</strong> Set <code>PORT=5000</code>, <code>DEMO_MODE=false</code> (or true for demo), 
+                            <code>DATABASE_URL=mongodb://localhost:27017/flomark</code>, and generate a secure <code>JWT_SECRET</code>
+                        </p>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 2: Install Dependencies</h3>
+                        <h3>Step 2: Install Backend Dependencies</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Backend</span>
-                                <button class="copy-btn" data-copy="cd backend&#10;pnpm install&#10;npx prisma db push">
+                                <button class="copy-btn" data-copy="cd backend&#10;pnpm install&#10;npx prisma generate&#10;npx prisma db push">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -614,8 +650,13 @@ nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, BACK
                             </div>
                             <pre><code>cd backend
 pnpm install
-npx prisma db push</code></pre>
+npx prisma generate
+npx prisma db push  <span class="code-comment"># Skip if using demo mode</span></code></pre>
                         </div>
+                    </div>
+
+                    <div class="manual-section">
+                        <h3>Step 3: Build Frontend</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Frontend</span>
@@ -629,16 +670,19 @@ npx prisma db push</code></pre>
                             </div>
                             <pre><code>cd ../frontend
 pnpm install
-pnpm build</code></pre>
+pnpm build  <span class="code-comment"># Creates dist/ folder with production files</span></code></pre>
                         </div>
+                        <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
+                            The built files will be in <code>frontend/dist/</code> - point your web server to this directory
+                        </p>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 3: Create Owner Account</h3>
+                        <h3>Step 4: Create Admin Account</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
-                                <button class="copy-btn" data-copy="cd backend&#10;node scripts/make-admin.js admin@example.com OWNER">
+                                <button class="copy-btn" data-copy="cd ../backend&#10;node scripts/make-admin.js">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -646,18 +690,19 @@ pnpm build</code></pre>
                                     Copy
                                 </button>
                             </div>
-                            <pre><code>cd backend
-node scripts/make-admin.js admin@example.com OWNER
-<span class="code-comment"># Follow interactive prompts for name and password</span></code></pre>
+                            <pre><code>cd ../backend
+node scripts/make-admin.js
+<span class="code-comment"># Follow interactive prompts for email, name, and password</span>
+<span class="code-comment"># Skip if using demo mode (uses demo@flomark.app / demo)</span></code></pre>
                         </div>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 4: Start Backend with PM2</h3>
+                        <h3>Step 5: Create Systemd Service</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
-                                <button class="copy-btn" data-copy="npm install -g pm2&#10;pm2 start src/server.js --name flomark-backend&#10;pm2 save&#10;pm2 startup">
+                                <button class="copy-btn" data-copy="sudo nano /etc/systemd/system/flomark-backend.service">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -665,15 +710,44 @@ node scripts/make-admin.js admin@example.com OWNER
                                     Copy
                                 </button>
                             </div>
-                            <pre><code>npm install -g pm2
-pm2 start src/server.js --name flomark-backend
-pm2 save
-pm2 startup  <span class="code-comment"># Follow the command output</span></code></pre>
+                            <pre><code>sudo nano /etc/systemd/system/flomark-backend.service
+
+<span class="code-comment"># Add this content (replace /path/to/flomark with your actual path):</span>
+[Unit]
+Description=Flomark Backend Server
+After=network.target mongod.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/path/to/flomark/backend
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target</code></pre>
+                        </div>
+                        <div class="code-block" style="margin-top: 12px;">
+                            <div class="code-header">
+                                <span>Enable & Start Service</span>
+                                <button class="copy-btn" data-copy="sudo systemctl daemon-reload&#10;sudo systemctl enable flomark-backend&#10;sudo systemctl start flomark-backend&#10;sudo systemctl status flomark-backend">
+                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                                    </svg>
+                                    Copy
+                                </button>
+                            </div>
+                            <pre><code>sudo systemctl daemon-reload
+sudo systemctl enable flomark-backend
+sudo systemctl start flomark-backend
+sudo systemctl status flomark-backend</code></pre>
                         </div>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 5: Configure Web Server</h3>
+                        <h3>Step 6: Configure Web Server</h3>
                         <p>Choose your web server:</p>
                         
                         <div class="web-server-tabs">
@@ -686,7 +760,7 @@ pm2 startup  <span class="code-comment"># Follow the command output</span></code
                             <div class="code-block">
                                 <div class="code-header">
                                     <span>nginx.conf</span>
-                                    <button class="copy-btn" data-copy="server {&#10;    listen 80;&#10;    server_name yourdomain.com;&#10;    root /path/to/flomark/frontend/dist;&#10;    &#10;    location /api {&#10;        proxy_pass http://localhost:3000;&#10;        proxy_http_version 1.1;&#10;        proxy_set_header Upgrade $http_upgrade;&#10;        proxy_set_header Connection 'upgrade';&#10;    }&#10;    &#10;    location /socket.io/ {&#10;        proxy_pass http://localhost:3000;&#10;        proxy_http_version 1.1;&#10;        proxy_set_header Upgrade $http_upgrade;&#10;        proxy_set_header Connection &quot;upgrade&quot;;&#10;    }&#10;}">
+                                    <button class="copy-btn" data-copy="server {&#10;    listen 80;&#10;    server_name yourdomain.com;&#10;    root /path/to/flomark/frontend;&#10;    index index.html;&#10;&#10;    location / {&#10;        try_files $uri $uri/ /index.html;&#10;    }&#10;&#10;    location /api {&#10;        proxy_pass http://localhost:5000;&#10;        proxy_http_version 1.1;&#10;        proxy_set_header Upgrade $http_upgrade;&#10;        proxy_set_header Connection 'upgrade';&#10;        proxy_set_header Host $host;&#10;        proxy_cache_bypass $http_upgrade;&#10;    }&#10;&#10;    location /socket.io {&#10;        proxy_pass http://localhost:5000;&#10;        proxy_http_version 1.1;&#10;        proxy_set_header Upgrade $http_upgrade;&#10;        proxy_set_header Connection &quot;upgrade&quot;;&#10;        proxy_set_header Host $host;&#10;    }&#10;}">
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                             <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                             <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -697,20 +771,31 @@ pm2 startup  <span class="code-comment"># Follow the command output</span></code
                                 <pre><code>server {
     listen 80;
     server_name yourdomain.com;
-    root /path/to/flomark/frontend/dist;
-    
+    root /path/to/flomark/frontend;
+    index index.html;
+
+    <span class="code-comment"># Handle React Router</span>
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    <span class="code-comment"># API proxy</span>
     location /api {
-        proxy_pass http://localhost:3000;
+        proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
     }
-    
-    location /socket.io/ {
-        proxy_pass http://localhost:3000;
+
+    <span class="code-comment"># Socket.IO proxy</span>
+    location /socket.io {
+        proxy_pass http://localhost:5000;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
     }
 }</code></pre>
                             </div>
@@ -736,7 +821,7 @@ sudo systemctl restart nginx</code></pre>
                             <div class="code-block">
                                 <div class="code-header">
                                     <span>apache.conf</span>
-                                    <button class="copy-btn" data-copy="<VirtualHost *:80>&#10;    ServerName yourdomain.com&#10;    DocumentRoot /path/to/flomark/frontend/dist&#10;    &#10;    ProxyPass /api http://localhost:3000/api&#10;    ProxyPassReverse /api http://localhost:3000/api&#10;    &#10;    RewriteEngine On&#10;    RewriteCond %{HTTP:Upgrade} =websocket [NC]&#10;    RewriteRule ^/socket.io/(.*)$ ws://localhost:3000/socket.io/$1 [P,L]&#10;</VirtualHost>">
+                                    <button class="copy-btn" data-copy="<VirtualHost *:80>&#10;    ServerName yourdomain.com&#10;    DocumentRoot /path/to/flomark/frontend&#10;&#10;    <Directory /path/to/flomark/frontend>&#10;        Options -Indexes +FollowSymLinks&#10;        AllowOverride All&#10;        Require all granted&#10;        RewriteEngine On&#10;        RewriteBase /&#10;        RewriteRule ^index\.html$ - [L]&#10;        RewriteCond %{REQUEST_FILENAME} !-f&#10;        RewriteCond %{REQUEST_FILENAME} !-d&#10;        RewriteRule . /index.html [L]&#10;    </Directory>&#10;&#10;    ProxyPreserveHost On&#10;    ProxyPass /api http://localhost:5000/api&#10;    ProxyPassReverse /api http://localhost:5000/api&#10;&#10;    ProxyPass /socket.io http://localhost:5000/socket.io&#10;    ProxyPassReverse /socket.io http://localhost:5000/socket.io&#10;&#10;    RewriteEngine on&#10;    RewriteCond %{HTTP:Upgrade} websocket [NC]&#10;    RewriteCond %{HTTP:Connection} upgrade [NC]&#10;    RewriteRule ^/?(.*) &quot;ws://localhost:5000/$1&quot; [P,L]&#10;</VirtualHost>">
                                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                             <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                             <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -746,14 +831,34 @@ sudo systemctl restart nginx</code></pre>
                                 </div>
                                 <pre><code>&lt;VirtualHost *:80&gt;
     ServerName yourdomain.com
-    DocumentRoot /path/to/flomark/frontend/dist
-    
-    ProxyPass /api http://localhost:3000/api
-    ProxyPassReverse /api http://localhost:3000/api
-    
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteRule ^/socket.io/(.*)$ ws://localhost:3000/socket.io/$1 [P,L]
+    DocumentRoot /path/to/flomark/frontend
+
+    &lt;Directory /path/to/flomark/frontend&gt;
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+        <span class="code-comment"># Handle React Router</span>
+        RewriteEngine On
+        RewriteBase /
+        RewriteRule ^index\.html$ - [L]
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteRule . /index.html [L]
+    &lt;/Directory&gt;
+
+    <span class="code-comment"># Proxy API requests</span>
+    ProxyPreserveHost On
+    ProxyPass /api http://localhost:5000/api
+    ProxyPassReverse /api http://localhost:5000/api
+
+    <span class="code-comment"># WebSocket proxy</span>
+    ProxyPass /socket.io http://localhost:5000/socket.io
+    ProxyPassReverse /socket.io http://localhost:5000/socket.io
+
+    RewriteEngine on
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^/?(.*) "ws://localhost:5000/$1" [P,L]
 &lt;/VirtualHost&gt;</code></pre>
                             </div>
                             <div class="code-block">
@@ -775,7 +880,7 @@ sudo systemctl restart apache2</code></pre>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 6: Enable SSL (Optional but Recommended)</h3>
+                        <h3>Step 7: Enable SSL (Optional but Recommended)</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
@@ -804,14 +909,14 @@ sudo certbot --apache -d yourdomain.com</code></pre>
                 <div class="install-help">
                     <h4>Need Help?</h4>
                     <div class="help-links">
-                        <a href="https://github.com/cli1337/flomark/blob/main/DEPLOYMENT.md" target="_blank" rel="noopener">
-                            📚 Full Deployment Guide
+                        <a href="https://github.com/cli1337/flomark/blob/main/INSTALLATION-README.md" target="_blank" rel="noopener">
+                            📚 Full Installation Guide
                         </a>
-                        <a href="https://github.com/cli1337/flomark/blob/main/DEPLOYMENT-QUICKSTART.md" target="_blank" rel="noopener">
-                            ⚡ Quick Reference
+                        <a href="https://github.com/cli1337/flomark/blob/main/COMPLETE-SETUP-GUIDE.md" target="_blank" rel="noopener">
+                            ⚡ Complete Setup Guide
                         </a>
-                        <a href="https://github.com/cli1337/flomark/blob/main/UPDATE-GUIDE.md" target="_blank" rel="noopener">
-                            🔄 Update Guide
+                        <a href="https://github.com/cli1337/flomark/blob/main/README.md" target="_blank" rel="noopener">
+                            📖 Main Documentation
                         </a>
                         <a href="https://github.com/cli1337/flomark/issues" target="_blank" rel="noopener">
                             💬 Get Support
