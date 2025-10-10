@@ -7,7 +7,9 @@ import tasksRoutes from "./routes/tasks.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { handleMulterError } from "./config/multer.config.js";
-import { isDemoMode, getDemoProjectId } from "./middlewares/demo.middleware.js";
+import databaseProtection from "./middlewares/database-protection.middleware.js";
+import demoRouter from "./middlewares/demo-router.middleware.js";
+import { ENV } from "./config/env.js";
 const mainRoutePath = "/api";
 import { createRequire } from 'module';
 
@@ -25,6 +27,9 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Database protection middleware (blocks raw queries in demo mode)
+app.use(databaseProtection);
+
 app.get(`${mainRoutePath}/health`, (req, res) => {
   res.status(200).json({
     status: 'ok',
@@ -36,12 +41,62 @@ app.get(`${mainRoutePath}/health`, (req, res) => {
   });
 });
 
-app.get(`${mainRoutePath}/demo-info`, (req, res) => {
-  res.status(200).json({
-    demoMode: isDemoMode(),
-    demoProjectId: isDemoMode() ? getDemoProjectId() : null
-  });
+app.get(`${mainRoutePath}/demo-info`, async (req, res) => {
+  if (ENV.DEMO_MODE) {
+    const { DemoDataService } = await import('./services/demo-data.service.js');
+    const stats = DemoDataService.getStats();
+    const allData = DemoDataService.getAllData();
+    
+    res.status(200).json({
+      demoMode: true,
+      demoUser: { email: 'demo@flomark.app' },
+      stats: {
+        projects: stats.projects,
+        tasks: stats.tasks,
+        timeUntilReset: Math.round(stats.timeUntilReset / 60000) // minutes
+      },
+      debug: {
+        projectIds: allData.projects.map(p => ({ id: p.id, name: p.name })),
+        userCount: allData.users.length,
+        userIds: allData.users.map(u => u.id),
+        listsCount: allData.lists.length,
+        tasksCount: allData.tasks.length,
+        membersCount: allData.members.length,
+        memberMappings: allData.members.map(m => ({ userId: m.userId, projectId: m.projectId, role: m.role }))
+      }
+    });
+  } else {
+    res.status(200).json({
+      demoMode: false,
+      demoUser: null
+    });
+  }
 });
+
+// Debug endpoint to test demo data (demo mode only)
+if (ENV.DEMO_MODE) {
+  app.get(`${mainRoutePath}/demo-debug`, async (req, res) => {
+    const { DemoDataService } = await import('./services/demo-data.service.js');
+    const allData = DemoDataService.getAllData();
+    res.json(allData);
+  });
+  
+  // Test endpoint to verify demo router is working
+  app.get(`${mainRoutePath}/demo-test`, (req, res) => {
+    res.json({
+      message: 'Demo router is working!',
+      path: req.path,
+      originalUrl: req.originalUrl,
+      method: req.method
+    });
+  });
+}
+
+// Demo router handles all requests in demo mode
+if (ENV.DEMO_MODE) {
+  console.log('🎭 Registering demo router middleware');
+  app.use(demoRouter);
+}
 
 app.use(`${mainRoutePath}/user`, userRoutes);
 app.use(`${mainRoutePath}/projects`, projectsRoutes);

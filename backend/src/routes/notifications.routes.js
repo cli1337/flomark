@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/auth.middleware.js";
+import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
   getNotifications,
   getUnreadCount,
@@ -21,7 +21,7 @@ import {
 const router = Router();
 
 // Apply authentication to all routes
-router.use(authenticate);
+router.use(authenticateToken);
 
 // ===== Query Operations =====
 router.get("/", getNotifications);                 // Get all notifications (paginated) - supports ?limit=50&skip=0&unreadOnly=false

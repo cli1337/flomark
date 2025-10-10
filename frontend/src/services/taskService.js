@@ -64,5 +64,26 @@ export const taskService = {
   async removeLabel(taskId, labelId) {
     const response = await api.delete(`/tasks/${taskId}/labels/${labelId}`)
     return response.data
+  },
+
+  async uploadAttachment(taskId, file) {
+    const formData = new FormData()
+    formData.append('file', file)
+    const response = await api.post(`/tasks/${taskId}/attachments`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    })
+    return response.data
+  },
+
+  async getAttachments(taskId) {
+    const response = await api.get(`/tasks/${taskId}/attachments`)
+    return response.data
+  },
+
+  async deleteAttachment(attachmentId) {
+    const response = await api.delete(`/tasks/attachments/${attachmentId}`)
+    return response.data
   }
 }

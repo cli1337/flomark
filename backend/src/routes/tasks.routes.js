@@ -15,14 +15,17 @@ import {
   addLabel,
   removeLabel
 } from "../controllers/tasks.controller.js";
+import {
+  uploadAttachment,
+  getAttachments,
+  deleteAttachment
+} from "../controllers/attachments.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
-import { demoModeMiddleware, preventDemoDestruction } from "../middlewares/demo.middleware.js";
+import { uploadTaskFile } from "../config/multer.config.js";
 
 const router = Router();
 
-router.use(demoModeMiddleware);
 router.use(authenticateToken);
-router.use(preventDemoDestruction);
 
 router.get("/lists/:listId/tasks", getTasksByList);
 
@@ -47,5 +50,10 @@ router.delete("/subtasks/:subTaskId", deleteSubTask);
 
 router.post("/:taskId/labels", addLabel);
 router.delete("/:taskId/labels/:labelId", removeLabel);
+
+// Attachment routes
+router.post("/:taskId/attachments", uploadTaskFile, uploadAttachment);
+router.get("/:taskId/attachments", getAttachments);
+router.delete("/attachments/:attachmentId", deleteAttachment);
 
 export default router;

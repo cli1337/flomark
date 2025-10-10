@@ -11,6 +11,11 @@ Flomark is a powerful, feature-rich task and project management application desi
 
 ---
 
+## ⚡ Try Demo Mode
+
+https://demo.flomark.app
+---
+
 ## ✨ Features
 
 ### 🎯 Core Features
@@ -66,8 +71,10 @@ Flomark is a powerful, feature-rich task and project management application desi
 
 ### Prerequisites
 - Node.js 18+ 
-- MongoDB 6+
+- MongoDB 6+ (not required for demo mode)
 - pnpm (recommended) or npm
+
+💡 **Demo Mode:** Enable `DEMO_MODE=true` in `.env` to run without database using in-memory storage!
 
 ### Installation
 
@@ -397,15 +404,24 @@ BACKEND_URL=http://localhost:3000
 
 #### Optional: Demo Mode
 ```env
-# Demo Mode (allows public access to demo project)
+# Demo Mode (no database required, auto-login)
 DEMO_MODE=false
 DEMO_PROJECT_ID=demo-project
 ```
 
 **To enable demo mode:**
 1. Set `DEMO_MODE=true` in `.env`
-2. Run `pnpm run setup-demo` in backend directory
-3. Access demo at `/projects/demo-project`
+2. Start backend (no database setup needed!)
+3. Access demo at `/demo`
+
+**Demo Mode Features:**
+- ✅ No MongoDB required
+- ✅ Auto-login (no authentication)
+- ✅ In-memory data storage
+- ✅ Perfect for landing pages
+- ⚠️ Data resets on restart
+
+See [DEMO-MODE-NO-DATABASE.md](DEMO-MODE-NO-DATABASE.md) for details.
 
 #### Optional: Email/SMTP Configuration
 Email functionality is optional but required for:

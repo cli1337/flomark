@@ -49,14 +49,14 @@ function App() {
                   <UpdateNotification />
                   <Routes>
                     <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                    <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
+                    {/* <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} /> */}
                     <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                     <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                     <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                     <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
                     <Route path="/join/:inviteLink" element={<JoinProject />} />
                     <Route path="/logout" element={<LogoutRoute />} />
-                  <Route path="/" element={<Navigate to="/projects" />} />
+                  <Route path="/" element={<Navigate to="/login" />} />
                   {/* 404 - Catch all undefined routes */}
                   <Route path="*" element={<ErrorPage />} />
                   {/* Uncomment to test error pages during development */}

@@ -23,22 +23,18 @@ import {
 } from "../controllers/projects.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { uploadPhoto, handleMulterError } from "../config/multer.config.js";
-import { demoModeMiddleware, preventDemoDestruction } from "../middlewares/demo.middleware.js";
 
 /**
  * Projects Routes
  * Base path: /api/projects
  * 
  * Handles projects, lists, labels, members, and invitations
- * All routes require authentication (unless in demo mode for demo project)
+ * All routes require authentication
  */
 
 const router = Router();
 
-// Apply demo mode middleware first, then authentication
-router.use(demoModeMiddleware);
 router.use(authenticateToken);
-router.use(preventDemoDestruction);
 
 // ===== Project Operations =====
 router.get("/", getProjects);

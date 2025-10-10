@@ -328,8 +328,23 @@ html {
 .hero-actions {
     display: flex;
     gap: 16px;
-    margin-bottom: 60px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
+}
+
+.hero-note {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin-bottom: 40px;
+}
+
+.hero-note svg {
+    flex-shrink: 0;
+    color: #6366f1;
 }
 
 .hero-stats {

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext'
 import { useToast } from '../../../contexts/ToastContext'
@@ -7,6 +7,7 @@ import { Button } from '../../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/Card'
 import { LockKeyhole, Mail, Eye, EyeOff } from 'lucide-react'
 import * as Form from '@radix-ui/react-form'
+import api from '../../../services/api'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -23,6 +24,45 @@ function Login() {
   const [needs2FA, setNeeds2FA] = useState(false)
   const [pendingToken, setPendingToken] = useState('')
   const [totp, setTotp] = useState('')
+
+  // Check for demo mode and auto-login
+  useEffect(() => {
+    const checkDemoMode = async () => {
+      try {
+        const response = await api.get('/demo-info')
+        if (response.data.demoMode && response.data.demoUser) {
+          // Auto-fill and submit the demo credentials
+          setEmail('demo@flomark.app')
+          setPassword('demo')
+          // Auto-submit after a short delay
+          setTimeout(() => {
+            handleDemoLogin()
+          }, 500)
+        }
+      } catch (error) {
+        // If demo-info endpoint fails, just continue normally
+        console.log('Demo mode check skipped')
+      }
+    }
+
+    checkDemoMode()
+  }, [])
+
+  const handleDemoLogin = async () => {
+    setLoading(true)
+    const result = await login('demo@flomark.app', 'demo')
+    
+    if (result.success && result.needs2FA) {
+      setNeeds2FA(true)
+      setPendingToken(result.pendingToken)
+    } else if (result.success) {
+      showSuccess('Demo Mode', 'Welcome to Flomark Demo!')
+      navigate('/projects')
+    } else {
+      showError('Login Failed', result.message)
+    }
+    setLoading(false)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -185,12 +225,12 @@ function Login() {
               </Form.Submit>
 
               {/* Sign up link */}
-              <p className="text-center text-sm text-gray-400">
+              {/* <p className="text-center text-sm text-gray-400">
                 Don't have an account?{" "}
                 <Link to="/register" className="text-primary hover:text-primary/80 font-medium transition-colors">
                   Sign up
                 </Link>
-              </p>
+              </p> */}
             </Form.Root>
             ) : (
             <form onSubmit={handleVerify2FA} className="space-y-4">

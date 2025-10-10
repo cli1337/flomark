@@ -126,7 +126,8 @@ export const getProjectById = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        // Skip ObjectId validation in demo mode (demo IDs are simple strings)
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -227,7 +228,7 @@ export const updateProject = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
 
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -294,7 +295,7 @@ export const uploadProjectImage = async (req, res, next) => {
             return res.status(400).json({ message: "File is required", key: "file_required", success: false });
         }
         
-        if (!ObjectId.isValid(req.params.id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(req.params.id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -365,7 +366,7 @@ export const createList = async (req, res, next) => {
             return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
         }
 
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -414,7 +415,7 @@ export const getListsByProject = async (req, res, next) => {
     try {
         const { id } = req.params;
         
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -456,7 +457,7 @@ export const createInviteLink = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
         const project = await prisma.project.findUnique({ 
@@ -622,7 +623,7 @@ export const getMembersByProject = async (req, res, next) => {
     try {
         const { id } = req.params;
         
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -669,10 +670,10 @@ export const removeMemberFromProject = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
-        if (!ObjectId.isValid(memberId)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(memberId)) {
             return res.status(400).json({ message: "Invalid member ID", key: "invalid_member_id", success: false });
         }
         const member = await prisma.projectMember.delete({
@@ -708,10 +709,10 @@ export const updateMemberRole = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
-        if (!ObjectId.isValid(memberId)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(memberId)) {
             return res.status(400).json({ message: "Invalid member ID", key: "invalid_member_id", success: false });
         }
         if (!role || !['ADMIN', 'MEMBER'].includes(role)) {
@@ -1018,7 +1019,7 @@ export const updateList = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
         
@@ -1080,7 +1081,7 @@ export const reorderLists = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
         
@@ -1136,7 +1137,7 @@ export const deleteProject = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
         
@@ -1193,7 +1194,7 @@ export const getProjectDataOptimized = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        if (!ENV.DEMO_MODE && !ObjectId.isValid(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 

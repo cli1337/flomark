@@ -374,14 +374,57 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
   }
 
   const uploadFiles = async () => {
+    if (selectedFiles.length === 0) return
+    
     try {
+      setLoading(true)
+      
+      // Upload each file
+      for (const file of selectedFiles) {
+        await taskService.uploadAttachment(taskData.id, file)
+      }
 
-      showSuccess('Files Uploaded', 'Files have been uploaded successfully')
+      // Refresh task data to get updated attachments
+      const response = await taskService.getTaskById(taskData.id)
+      if (response.success) {
+        setTaskData(response.data)
+        onUpdate?.(response.data)
+      }
+
+      showSuccess('Files Uploaded', `${selectedFiles.length} file(s) uploaded successfully`)
       setShowFileUpload(false)
       setSelectedFiles([])
     } catch (error) {
-      showError('Failed to Upload Files', 'Please try again later')
+      console.error('Upload error:', error)
+      showError('Failed to Upload Files', error.response?.data?.message || 'Please try again later')
+    } finally {
+      setLoading(false)
     }
+  }
+
+  const handleDeleteAttachment = async (attachmentId) => {
+    try {
+      const response = await taskService.deleteAttachment(attachmentId)
+      if (response.success) {
+        const updatedTaskData = {
+          ...taskData,
+          attachments: taskData.attachments?.filter(att => att.id !== attachmentId) || []
+        }
+        setTaskData(updatedTaskData)
+        onUpdate?.(updatedTaskData)
+        showSuccess('Attachment Deleted', 'Attachment has been removed')
+      }
+    } catch (error) {
+      showError('Failed to Delete Attachment', 'Please try again later')
+    }
+  }
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return '0 Bytes'
+    const k = 1024
+    const sizes = ['Bytes', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i]
   }
 
   const completedSubTasks = taskData?.subTasks?.filter(sub => sub.isCompleted).length || 0
@@ -708,6 +751,48 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
                 </div>
               </div>
             </div>
+
+            {/* Attachments Section */}
+            {taskData.attachments && taskData.attachments.length > 0 && (
+              <div className="mt-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <Paperclip className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-400 text-sm font-medium">
+                    Attachments ({taskData.attachments.length})
+                  </span>
+                </div>
+                
+                <div className="space-y-2">
+                  {taskData.attachments.map(attachment => (
+                    <div key={attachment.id} className="flex items-center justify-between bg-white/5 rounded-lg p-3 border border-white/10 hover:border-white/20 transition-colors">
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <Paperclip className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <a 
+                            href={attachment.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-white text-sm hover:text-blue-400 transition-colors truncate block"
+                          >
+                            {attachment.originalName}
+                          </a>
+                          <p className="text-gray-500 text-xs mt-0.5">
+                            {formatFileSize(attachment.size)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteAttachment(attachment.id)}
+                        className="p-1.5 hover:bg-red-500/20 rounded transition-colors flex-shrink-0"
+                        title="Delete attachment"
+                      >
+                        <Trash2 className="h-4 w-4 text-red-400" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div className={`space-y-4 ${isMobile ? 'p-4 border-t border-white/10' : 'w-64 p-6 border-l border-white/10'}`}>
@@ -838,7 +923,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
               >
                 <Upload className="h-8 w-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-400 text-sm mb-1">Click to upload or drag and drop</p>
-                <p className="text-gray-500 text-xs">Any file type</p>
+                <p className="text-gray-500 text-xs">Images, PDF, Word, Excel, PowerPoint, text files (max 10MB)</p>
               </label>
             </div>
 
@@ -868,10 +953,17 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
               </Button>
               <Button
                 onClick={uploadFiles}
-                disabled={selectedFiles.length === 0}
-                className="bg-white hover:bg-gray-100 text-black px-4 py-2 disabled:opacity-50"
+                disabled={selectedFiles.length === 0 || loading}
+                className="bg-white hover:bg-gray-100 text-black px-4 py-2 disabled:opacity-50 flex items-center gap-2"
               >
-                Upload
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  'Upload'
+                )}
               </Button>
             </div>
           </div>

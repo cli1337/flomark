@@ -1,4 +1,4 @@
-import prisma from '../src/config/database.js';
+import { prisma } from '../src/config/database.js';
 import bcrypt from 'bcrypt';
 import readline from 'readline';
 

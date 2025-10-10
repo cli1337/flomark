@@ -14,14 +14,13 @@ console.log = originalConsoleLog;
 
 export const ENV = {
   PORT: process.env.PORT || 5000,
-  DATABASE_URL: process.env.DATABASE_URL,
+  DATABASE_URL: process.env.DEMO_MODE === "true" ? null : process.env.DATABASE_URL, // Force null in demo mode
   JWT_SECRET: process.env.JWT_SECRET,
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
   BACKEND_URL: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
   
   // Demo Mode Configuration
   DEMO_MODE: process.env.DEMO_MODE === "true",
-  DEMO_PROJECT_ID: process.env.DEMO_PROJECT_ID || "demo-project",
   
   // Email Configuration (SMTP)
   SMTP_HOST: process.env.SMTP_HOST,
@@ -33,8 +32,16 @@ export const ENV = {
   SMTP_FROM_EMAIL: process.env.SMTP_FROM_EMAIL,
 };
 
-if (!ENV.DATABASE_URL) {
-  throw new Error("❌ DATABASE_URL is missing in .env file.");
+// Database validation
+if (ENV.DEMO_MODE) {
+  console.log('🎭 Demo Mode: DATABASE_URL is ignored (forced to null)');
+  if (process.env.DATABASE_URL) {
+    console.warn('⚠️  DATABASE_URL is set but will NOT be used in demo mode');
+  }
+} else {
+  if (!ENV.DATABASE_URL) {
+    throw new Error("❌ DATABASE_URL is missing in .env file. (Not required if DEMO_MODE=true)");
+  }
 }
 
 if (!ENV.JWT_SECRET) {
