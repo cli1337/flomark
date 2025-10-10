@@ -4,6 +4,18 @@ import { generateToken, generateRefreshToken, verifyToken } from "../utils/jwt.u
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
 
+/**
+ * User Controller
+ * Handles all user-related operations including authentication, registration, 2FA, and profile management
+ */
+
+/**
+ * Register a new user
+ * POST /api/user/register
+ * 
+ * Body: { name, email, password, confirmPassword }
+ * Returns: { data: user, success: true }
+ */
 export const createUser = async (req, res, next) => {
   try {
     if (!req.body) {
@@ -42,6 +54,14 @@ export const createUser = async (req, res, next) => {
   }
 };
 
+/**
+ * Authenticate user and generate JWT token
+ * POST /api/user/login
+ * 
+ * Body: { email, password }
+ * Returns: { data: { token, refreshToken, user }, success: true }
+ * Or: { data: { requires2fa: true, pendingToken }, success: true } if 2FA is enabled
+ */
 export const authenticateUser = async (req, res, next) => {
   try {
     if (!req.body) {
@@ -100,6 +120,13 @@ export const authenticateUser = async (req, res, next) => {
   }
 };
 
+/**
+ * Refresh access token using refresh token
+ * POST /api/user/refresh
+ * 
+ * Body: { refreshToken }
+ * Returns: { data: { token, refreshToken, user }, success: true }
+ */
 export const refreshToken = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
@@ -156,6 +183,13 @@ export const refreshToken = async (req, res, next) => {
   }
 };
 
+/**
+ * Get authenticated user's profile
+ * GET /api/user/profile
+ * Requires: Authentication
+ * 
+ * Returns: { data: user, success: true }
+ */
 export const getProfile = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
@@ -179,6 +213,13 @@ export const getProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Initialize two-factor authentication (2FA)
+ * POST /api/user/2fa/init
+ * Requires: Authentication
+ * 
+ * Returns: { data: { otpauthUrl, qrDataUrl }, success: true }
+ */
 export const initTwoFactor = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -209,6 +250,14 @@ export const initTwoFactor = async (req, res, next) => {
   }
 };
 
+/**
+ * Verify and enable 2FA after scanning QR code
+ * POST /api/user/2fa/verify
+ * Requires: Authentication
+ * 
+ * Body: { code }
+ * Returns: { success: true }
+ */
 export const verifyTwoFactorSetup = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -244,6 +293,14 @@ export const verifyTwoFactorSetup = async (req, res, next) => {
   }
 };
 
+/**
+ * Disable two-factor authentication
+ * POST /api/user/2fa/disable
+ * Requires: Authentication
+ * 
+ * Body: { code } (if 2FA is currently enabled)
+ * Returns: { success: true }
+ */
 export const disableTwoFactor = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -274,6 +331,13 @@ export const disableTwoFactor = async (req, res, next) => {
   }
 };
 
+/**
+ * Complete login with 2FA code
+ * POST /api/user/2fa/login
+ * 
+ * Body: { pendingToken, code }
+ * Returns: { data: { token, refreshToken, user }, success: true }
+ */
 export const verifyTwoFactorLogin = async (req, res, next) => {
   try {
     if (!req.body) {
@@ -325,6 +389,14 @@ export const verifyTwoFactorLogin = async (req, res, next) => {
   }
 };
 
+/**
+ * Update user profile (name)
+ * PUT /api/user/profile
+ * Requires: Authentication
+ * 
+ * Body: { name }
+ * Returns: { data: updatedUser, success: true }
+ */
 export const updateUserProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -360,6 +432,14 @@ export const updateUserProfile = async (req, res, next) => {
   }
 };
 
+/**
+ * Update user password
+ * PUT /api/user/password
+ * Requires: Authentication
+ * 
+ * Body: { currentPassword, newPassword }
+ * Returns: { message, success: true }
+ */
 export const updateUserPassword = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -414,6 +494,13 @@ export const updateUserPassword = async (req, res, next) => {
   }
 };
 
+/**
+ * Upload user profile image
+ * POST /api/user/profile-image
+ * Requires: Authentication, multipart/form-data
+ * 
+ * Returns: { data: updatedUser, success: true }
+ */
 export const uploadProfileImage = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -450,6 +537,13 @@ export const uploadProfileImage = async (req, res, next) => {
   }
 };
 
+/**
+ * Get all users (Admin only)
+ * GET /api/user/all
+ * Requires: Authentication, Admin or Owner role
+ * 
+ * Returns: { data: users[], success: true }
+ */
 export const getAllUsers = async (req, res, next) => {
   try {
     if (req.user.role !== 'ADMIN' && req.user.role !== 'OWNER') {
@@ -486,6 +580,14 @@ export const getAllUsers = async (req, res, next) => {
   }
 };
 
+/**
+ * Update user profile by admin
+ * PUT /api/user/:userId
+ * Requires: Authentication, Admin or Owner role
+ * 
+ * Body: { name, email }
+ * Returns: { data: updatedUser, success: true }
+ */
 export const updateUserByAdmin = async (req, res, next) => {
   try {
     if (req.user.role !== 'ADMIN' && req.user.role !== 'OWNER') {
@@ -567,6 +669,13 @@ export const updateUserByAdmin = async (req, res, next) => {
   }
 };
 
+/**
+ * Promote/demote user to/from admin role
+ * POST /api/user/:userId/promote
+ * Requires: Authentication, Admin or Owner role
+ * 
+ * Returns: { data: updatedUser, success: true }
+ */
 export const promoteUserToAdmin = async (req, res, next) => {
   try {
     if (req.user.role !== 'ADMIN' && req.user.role !== 'OWNER') {

@@ -5,8 +5,23 @@ import crypto from "crypto";
 import { ENV } from "../config/env.js";
 import { SocketService } from "../services/socket.service.js";
 
+/**
+ * Projects Controller
+ * Handles project management, lists, labels, members, and invitations
+ * All endpoints require authentication unless specified
+ */
+
+// In-memory cache for invite links (consider using Redis in production)
 const cache = new Map();
 
+/**
+ * Broadcast project updates to all connected clients in real-time
+ * @param {string} projectId - Project ID
+ * @param {string} type - Update type (e.g., 'project-created', 'list-created')
+ * @param {object} payload - Update payload
+ * @param {string} userId - User who made the change
+ * @param {string} userName - Name of user who made the change
+ */
 const broadcastProjectUpdate = (projectId, type, payload, userId, userName) => {
   if (SocketService.instance) {
 
@@ -34,6 +49,13 @@ const broadcastProjectUpdate = (projectId, type, payload, userId, userName) => {
   }
 };
 
+/**
+ * Get all projects for authenticated user (paginated)
+ * GET /api/projects?page=1&limit=5
+ * 
+ * Query: { page, limit }
+ * Returns: { data: projects[], success: true, total, page, limit, totalPages }
+ */
 export const getProjects = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -90,6 +112,12 @@ export const getProjects = async (req, res, next) => {
     }
 };
 
+/**
+ * Get project by ID with members
+ * GET /api/projects/:id
+ * 
+ * Returns: { data: project, success: true }
+ */
 export const getProjectById = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -127,6 +155,14 @@ export const getProjectById = async (req, res, next) => {
     }
 };
 
+/**
+ * Create a new project
+ * POST /api/projects
+ * 
+ * Body: { name }
+ * Returns: { data: project, success: true }
+ * Note: Creator is automatically added as OWNER
+ */
 export const createProject = async (req, res, next) => {
     try {
         if (!req.body) {
@@ -313,6 +349,13 @@ export const uploadProjectImage = async (req, res, next) => {
     }
 };
 
+/**
+ * Create a list within a project
+ * POST /api/projects/:id/lists
+ * 
+ * Body: { name, color }
+ * Returns: { data: list, success: true }
+ */
 export const createList = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -400,6 +443,13 @@ export const getListsByProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Create an invite link for a project (Owner only)
+ * POST /api/projects/:id/invite
+ * 
+ * Body: { email } (optional - restrict invite to specific email)
+ * Returns: { data: inviteLink, success: true }
+ */
 export const createInviteLink = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -431,6 +481,12 @@ export const createInviteLink = async (req, res, next) => {
     }
 };
 
+/**
+ * Join a project using an invite link
+ * POST /api/projects/join/:inviteLink
+ * 
+ * Returns: { data: { member, project }, success: true }
+ */
 export const joinProject = async (req, res, next) => {
     try {
         const { inviteLink } = req.params;
@@ -597,6 +653,13 @@ export const getMembersByProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Remove a member from a project
+ * DELETE /api/projects/:id/members/:memberId
+ * 
+ * Returns: { data: member, success: true }
+ * Note: Cannot remove project owner
+ */
 export const removeMemberFromProject = async (req, res, next) => {
     try {
         const { id, memberId } = req.params;
@@ -754,6 +817,13 @@ export const getLabelsByProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Create a label for a project
+ * POST /api/projects/:id/labels
+ * 
+ * Body: { name, color }
+ * Returns: { data: label, success: true }
+ */
 export const createLabel = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -1108,6 +1178,13 @@ export const deleteProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Get complete project data (project, lists, tasks, members) - Optimized
+ * GET /api/projects/:id/data
+ * 
+ * Returns: { data: { project, lists, tasks, members }, success: true }
+ * Note: This is an optimized endpoint that fetches all project data in minimal queries
+ */
 export const getProjectDataOptimized = async (req, res, next) => {
     try {
         const { id } = req.params;

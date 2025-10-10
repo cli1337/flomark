@@ -129,6 +129,12 @@ export class SocketService {
         }
       });
 
+      // Handle notification acknowledgment
+      socket.on("notification-received", (data) => {
+        const { notificationId } = data;
+        console.log(`✅ User ${socket.user.name} acknowledged notification ${notificationId}`);
+      });
+
 
       socket.on("disconnect", (reason) => {
         console.log(`🔌 User ${socket.user.name} disconnected: ${reason}`);
@@ -257,6 +263,26 @@ export class SocketService {
       projectId,
       activeUsers,
       timestamp: new Date().toISOString()
+    });
+  }
+
+  /**
+   * Send notification to a specific user
+   * @param {string} userId - User ID to send notification to
+   * @param {Object} notification - Notification data
+   */
+  sendNotification(userId, notification) {
+    this.broadcastToUser(userId, "notification", notification);
+  }
+
+  /**
+   * Send notification to multiple users
+   * @param {Array<string>} userIds - Array of user IDs
+   * @param {Object} notification - Notification data
+   */
+  sendNotificationToMany(userIds, notification) {
+    userIds.forEach((userId) => {
+      this.sendNotification(userId, notification);
     });
   }
 }

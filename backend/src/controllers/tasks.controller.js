@@ -2,7 +2,20 @@ import { prisma } from "../config/database.js";
 import { ObjectId } from "mongodb";
 import { SocketService } from "../services/socket.service.js";
 
+/**
+ * Tasks Controller
+ * Handles all task-related operations including CRUD, members, subtasks, and labels
+ * All endpoints require authentication
+ */
 
+/**
+ * Broadcast task updates to all connected clients in project in real-time
+ * @param {string} projectId - Project ID
+ * @param {string} type - Update type (e.g., 'task-created', 'task-updated')
+ * @param {object} payload - Update payload
+ * @param {string} userId - User who made the change
+ * @param {string} userName - Name of user who made the change
+ */
 const broadcastTaskUpdate = (projectId, type, payload, userId, userName) => {
   if (SocketService.instance) {
 
@@ -17,6 +30,12 @@ const broadcastTaskUpdate = (projectId, type, payload, userId, userName) => {
   }
 };
 
+/**
+ * Get all tasks in a list
+ * GET /api/tasks/list/:listId
+ * 
+ * Returns: { data: tasks[], success: true }
+ */
 export const getTasksByList = async (req, res, next) => {
     try {
         const { listId } = req.params;
@@ -67,6 +86,13 @@ export const getTasksByList = async (req, res, next) => {
     }
 };
 
+/**
+ * Create a new task in a list
+ * POST /api/tasks/list/:listId
+ * 
+ * Body: { name, description, dueDate }
+ * Returns: { data: task, success: true }
+ */
 export const createTask = async (req, res, next) => {
     try {
         const { listId } = req.params;
@@ -135,6 +161,12 @@ export const createTask = async (req, res, next) => {
     }
 };
 
+/**
+ * Get task by ID with all details
+ * GET /api/tasks/:taskId
+ * 
+ * Returns: { data: task, success: true }
+ */
 export const getTaskById = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -183,6 +215,13 @@ export const getTaskById = async (req, res, next) => {
     }
 };
 
+/**
+ * Update a task
+ * PUT /api/tasks/:taskId
+ * 
+ * Body: { name, description, dueDate, labels }
+ * Returns: { data: updatedTask, success: true }
+ */
 export const updateTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -264,6 +303,13 @@ export const updateTask = async (req, res, next) => {
     }
 };
 
+/**
+ * Move a task to a different list
+ * PUT /api/tasks/:taskId/move
+ * 
+ * Body: { listId }
+ * Returns: { data: movedTask, success: true }
+ */
 export const moveTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -461,6 +507,13 @@ export const deleteTask = async (req, res, next) => {
     }
 };
 
+/**
+ * Assign a member to a task
+ * POST /api/tasks/:taskId/members
+ * 
+ * Body: { userId }
+ * Returns: { data: taskMember, success: true }
+ */
 export const assignMember = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -532,6 +585,12 @@ export const assignMember = async (req, res, next) => {
     }
 };
 
+/**
+ * Remove a member from a task
+ * DELETE /api/tasks/:taskId/members/:userId
+ * 
+ * Returns: { data: { taskId, userId }, success: true }
+ */
 export const removeMember = async (req, res, next) => {
     try {
         const { taskId, userId } = req.params;
@@ -588,6 +647,13 @@ export const removeMember = async (req, res, next) => {
     }
 };
 
+/**
+ * Add a subtask to a task
+ * POST /api/tasks/:taskId/subtasks
+ * 
+ * Body: { name }
+ * Returns: { data: subTask, success: true }
+ */
 export const addSubTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -645,6 +711,13 @@ export const addSubTask = async (req, res, next) => {
     }
 };
 
+/**
+ * Update a subtask (name or completion status)
+ * PUT /api/tasks/subtasks/:subTaskId
+ * 
+ * Body: { name, isCompleted }
+ * Returns: { data: updatedSubTask, success: true }
+ */
 export const updateSubTask = async (req, res, next) => {
     try {
         const { subTaskId } = req.params;

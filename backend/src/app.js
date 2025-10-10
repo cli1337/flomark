@@ -4,6 +4,7 @@ import userRoutes from "./routes/user.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
 import storageRoutes from "./routes/storage.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
+import notificationsRoutes from "./routes/notifications.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { handleMulterError } from "./config/multer.config.js";
 const mainRoutePath = "/api";
@@ -38,6 +39,7 @@ app.use(`${mainRoutePath}/user`, userRoutes);
 app.use(`${mainRoutePath}/projects`, projectsRoutes);
 app.use(`${mainRoutePath}/storage`, storageRoutes);
 app.use(`${mainRoutePath}/tasks`, tasksRoutes);
+app.use(`${mainRoutePath}/notifications`, notificationsRoutes);
 
 if (!fs.existsSync('./storage')) {
   fs.mkdirSync('./storage');

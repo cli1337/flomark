@@ -24,31 +24,44 @@ import {
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { uploadPhoto, handleMulterError } from "../config/multer.config.js";
 
+/**
+ * Projects Routes
+ * Base path: /api/projects
+ * 
+ * Handles projects, lists, labels, members, and invitations
+ * All routes require authentication
+ */
+
 const router = Router();
 
+// Apply authentication to all routes
 router.use(authenticateToken);
 
+// ===== Project Operations =====
 router.get("/", getProjects);
 router.post("/", createProject);
 router.put("/:id", updateProject);
 router.delete("/:id", deleteProject);
-router.get("/:id/data", getProjectDataOptimized);
+router.get("/:id/data", getProjectDataOptimized); // Optimized - get all project data at once
 router.get("/:id", getProjectById);
-
 router.post("/:id/image", uploadPhoto.single('image'), handleMulterError, uploadProjectImage);
 
+// ===== List Operations =====
 router.post("/:id/list", createList);
 router.get("/:id/lists", getListsByProject);
 router.put("/lists/:listId", updateList);
 router.put("/:id/lists/reorder", reorderLists);
 
+// ===== Member Management =====
 router.get("/:id/members", getMembersByProject);
 router.delete("/:id/members/:memberId", removeMemberFromProject);
 router.put("/:id/members/:memberId/role", updateMemberRole);
 
+// ===== Invitations =====
 router.post("/:id/invite", createInviteLink);
 router.post("/join/:inviteLink", joinProject);
 
+// ===== Label Management =====
 router.get("/:id/labels", getLabelsByProject);
 router.post("/:id/labels", createLabel);
 router.put("/labels/:labelId", updateLabel);

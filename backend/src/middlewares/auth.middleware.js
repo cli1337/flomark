@@ -1,6 +1,21 @@
 import { verifyToken, extractTokenFromHeader } from "../utils/jwt.utils.js";
 import { prisma } from "../config/database.js";
 
+/**
+ * Authentication Middleware
+ * Provides token verification for protected routes
+ */
+
+/**
+ * Authenticate JWT token from request headers
+ * Middleware for protected routes
+ * 
+ * Extracts token from Authorization header (Bearer token)
+ * Verifies token and attaches user object to req.user
+ * 
+ * Usage: Apply to routes that require authentication
+ * Example: router.get('/protected', authenticateToken, handler)
+ */
 export const authenticateToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -65,6 +80,13 @@ export const authenticateToken = async (req, res, next) => {
 };
 
 
+/**
+ * Optional authentication middleware
+ * Attaches user to request if valid token is provided, but doesn't fail if missing
+ * 
+ * Usage: For routes that work with or without authentication
+ * Example: router.get('/public-or-private', optionalAuth, handler)
+ */
 export const optionalAuth = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
