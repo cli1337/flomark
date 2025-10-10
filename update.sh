@@ -169,11 +169,15 @@ if [ -d "$BACKUP_DIR/storage" ]; then
     cp -r "$BACKUP_DIR/storage"/* "$INSTALL_PATH/backend/storage/" 2>/dev/null || true
 fi
 
-# Update database schema if needed
+# Generate Prisma Client (always required)
+print_info "Generating Prisma Client..."
+npx prisma generate
+print_success "Prisma Client generated"
+
+# Update database schema if needed (only for production)
 DEMO_MODE=$(grep "^DEMO_MODE=" "$INSTALL_PATH/backend/.env" | cut -d'=' -f2 || echo "false")
 if [ "$DEMO_MODE" != "true" ]; then
     print_info "Updating database schema..."
-    npx prisma generate
     npx prisma db push
     print_success "Database schema updated"
 fi

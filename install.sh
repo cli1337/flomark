@@ -339,10 +339,14 @@ EOF
 
 print_success ".env file created"
 
-# Initialize database
+# Generate Prisma Client (required for both demo and production mode)
+print_info "Generating Prisma Client..."
+npx prisma generate
+print_success "Prisma Client generated"
+
+# Initialize database (only for production mode)
 if [ "$DEMO_MODE" = false ]; then
     print_info "Initializing database..."
-    npx prisma generate
     npx prisma db push
     print_success "Database initialized"
 fi
