@@ -2,7 +2,7 @@
 
 # Flomark Remote Installer
 # Downloads and installs Flomark automatically
-# Usage: curl -fsSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash
+# Usage: bash <(curl -s https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh)
 
 set -e
 
@@ -25,8 +25,9 @@ echo ""
 
 # Check if running as root
 if [ "$EUID" -ne 0 ]; then 
-    echo -e "${RED}Please run as root (use sudo)${NC}"
-    echo "Try: curl -fsSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash"
+    echo -e "${RED}Please run as root${NC}"
+    echo ""
+    echo "Try: sudo bash <(curl -s https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh)"
     exit 1
 fi
 
@@ -60,7 +61,7 @@ echo ""
 echo -e "${YELLOW}Where do you want to install Flomark?${NC}"
 echo "  Default: $DEFAULT_INSTALL_DIR"
 echo ""
-read -p "Installation path [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR </dev/tty
+read -p "Installation path [$DEFAULT_INSTALL_DIR]: " INSTALL_DIR
 INSTALL_DIR=${INSTALL_DIR:-$DEFAULT_INSTALL_DIR}
 
 echo -e "${GREEN}✓ Installing to: $INSTALL_DIR${NC}"
@@ -79,7 +80,7 @@ if [ -d "$INSTALL_DIR" ]; then
         echo "  2) Update existing installation"
         echo "  3) Cancel installation"
         echo ""
-        read -p "Choose option [1-3]: " reinstall_choice </dev/tty
+        read -p "Choose option [1-3]: " reinstall_choice
         
         case $reinstall_choice in
             1)
@@ -112,7 +113,7 @@ if [ -d "$INSTALL_DIR" ]; then
         # Directory exists but not Flomark
         if [ "$(ls -A $INSTALL_DIR)" ]; then
             echo -e "${YELLOW}⚠️  Directory $INSTALL_DIR exists and contains files${NC}"
-            read -p "Remove contents and continue? [y/N]: " remove_choice </dev/tty
+            read -p "Remove contents and continue? [y/N]: " remove_choice
             
             if [[ $remove_choice =~ ^[Yy]$ ]]; then
                 rm -rf "$INSTALL_DIR"/*
@@ -156,7 +157,7 @@ echo "  - Demo mode (optional)"
 echo "  - Environment configuration"
 echo "  - Admin account details"
 echo ""
-read -p "Press Enter to continue..." </dev/tty
+read -p "Press Enter to continue..."
 echo ""
 
 # Run the main installer

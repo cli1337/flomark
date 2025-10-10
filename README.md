@@ -83,7 +83,7 @@ https://demo.flomark.app
 **Install everything with one command:**
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh | sudo bash
+bash <(curl -s https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh)
 ```
 
 **That's it!** The script will:
