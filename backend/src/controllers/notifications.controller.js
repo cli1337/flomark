@@ -54,6 +54,26 @@ export const getUnreadCount = async (req, res, next) => {
 };
 
 /**
+ * Get unread notification counts grouped by project
+ * GET /api/notifications/unread-count-by-project
+ * 
+ * Returns: { success: true, countsByProject: { projectId: count } }
+ */
+export const getUnreadCountsByProject = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+    const countsByProject = await notificationService.getUnreadCountsByProject(userId);
+
+    res.json({
+      success: true,
+      countsByProject,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Mark a specific notification as read
  * PUT /api/notifications/:id/read
  * 

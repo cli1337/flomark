@@ -240,6 +240,39 @@ export const notificationService = {
     }
   },
 
+  /**
+   * Get unread notification counts grouped by project
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} Object with projectId as keys and counts as values
+   */
+  async getUnreadCountsByProject(userId) {
+    try {
+      const notifications = await prisma.notification.findMany({
+        where: {
+          userId,
+          isRead: false,
+        },
+        select: {
+          data: true,
+        },
+      });
+
+      // Group by projectId from the data field
+      const countsByProject = {};
+      notifications.forEach((notification) => {
+        if (notification.data && notification.data.projectId) {
+          const projectId = notification.data.projectId;
+          countsByProject[projectId] = (countsByProject[projectId] || 0) + 1;
+        }
+      });
+
+      return countsByProject;
+    } catch (error) {
+      console.error("Failed to get unread counts by project:", error);
+      throw error;
+    }
+  },
+
   // ===== Helper methods for common notification types =====
 
   /**

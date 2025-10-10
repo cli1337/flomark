@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { projectService } from '../../services/projectService'
+import { notificationService } from '../../services/notificationService'
 import usePageTitle from '../../hooks/usePageTitle'
 import useWebSocketEvents from '../../hooks/useWebSocketEvents'
 import { Button } from '../../components/ui/Button'
@@ -52,6 +53,7 @@ const Projects = () => {
   
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
+  const [notificationCounts, setNotificationCounts] = useState({})
   
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -137,6 +139,20 @@ const Projects = () => {
     }
   }, [showSuccess])
 
+  const handleNotification = useCallback((notification) => {
+    // When a new notification is received, update the notification counts
+    if (notification.data?.projectId) {
+      setNotificationCounts(prev => ({
+        ...prev,
+        [notification.data.projectId]: (prev[notification.data.projectId] || 0) + 1
+      }))
+    }
+  }, [])
+
+  const handleNotificationRead = useCallback((data) => {
+    // When a notification is read, refetch notification counts
+    fetchNotificationCounts()
+  }, [])
 
   useWebSocketEvents(null, {
     onProjectCreated: handleProjectCreated,
@@ -145,8 +161,22 @@ const Projects = () => {
     onProjectDeleted: handleProjectDeleted,
     onMemberJoined: handleMemberJoined,
     onMemberRemoved: handleMemberRemoved,
-    onMemberRoleUpdated: handleMemberRoleUpdated
+    onMemberRoleUpdated: handleMemberRoleUpdated,
+    onNotification: handleNotification,
+    onNotificationRead: handleNotificationRead
   })
+
+  const fetchNotificationCounts = async () => {
+    try {
+      const response = await notificationService.getUnreadCountsByProject()
+      if (response.success) {
+        setNotificationCounts(response.countsByProject || {})
+      }
+    } catch (error) {
+      console.error('Error fetching notification counts:', error)
+      // Don't show error to user, just fail silently
+    }
+  }
 
   const fetchProjects = async (page = 1) => {
     try {
@@ -163,6 +193,8 @@ const Projects = () => {
         setTotalProjects(0)
         setTotalPages(1)
       }
+      // Fetch notification counts after loading projects
+      await fetchNotificationCounts()
     } catch (error) {
       console.error('Error fetching projects:', error)
       showError('Failed to load projects', 'Please try again later')
@@ -284,7 +316,7 @@ const Projects = () => {
     const completedTasks = project.lists?.reduce((acc, list) => 
       acc + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0
     const totalLists = project.lists?.length || 0
-    const assignmentCount = Math.floor(Math.random() * 5)
+    const assignmentCount = notificationCounts[project.id] || 0
     
 
     const lastActivity = project.updatedAt
@@ -555,7 +587,7 @@ const Projects = () => {
     const completedTasks = project.lists?.reduce((acc, list) => 
       acc + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0
     const totalLists = project.lists?.length || 0
-    const assignmentCount = Math.floor(Math.random() * 5)
+    const assignmentCount = notificationCounts[project.id] || 0
 
     return (
       <tr 

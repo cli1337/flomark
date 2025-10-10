@@ -3,6 +3,7 @@ import { authenticateToken } from "../middlewares/auth.middleware.js";
 import {
   getNotifications,
   getUnreadCount,
+  getUnreadCountsByProject,
   markAsRead,
   markAllAsRead,
   deleteNotification,
@@ -26,6 +27,7 @@ router.use(authenticateToken);
 // ===== Query Operations =====
 router.get("/", getNotifications);                 // Get all notifications (paginated) - supports ?limit=50&skip=0&unreadOnly=false
 router.get("/unread-count", getUnreadCount);       // Get unread notification count
+router.get("/unread-count-by-project", getUnreadCountsByProject); // Get unread notification counts by project
 
 // ===== Bulk Operations =====
 router.put("/mark-all-read", markAllAsRead);       // Mark all notifications as read
