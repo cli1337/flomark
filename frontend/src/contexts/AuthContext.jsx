@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 import { authService } from '../services/authService'
 
 const AuthContext = createContext()
@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     try {
       const response = await authService.login(email, password)
       
@@ -60,9 +60,9 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: error.message || 'An error occurred during login' }
     }
-  }
+  }, [])
 
-  const completeTwoFactorLogin = async (pendingToken, code) => {
+  const completeTwoFactorLogin = useCallback(async (pendingToken, code) => {
     try {
       const response = await authService.verify2FALogin(pendingToken, code)
       if (response.success) {
@@ -78,9 +78,9 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: error.message || 'Failed to verify 2FA code' }
     }
-  }
+  }, [])
 
-  const register = async (name, email, password, confirmPassword) => {
+  const register = useCallback(async (name, email, password, confirmPassword) => {
     try {
       const response = await authService.register(name, email, password, confirmPassword)
       
@@ -95,16 +95,16 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: error.message || 'An error occurred during registration' }
     }
-  }
+  }, [])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     localStorage.removeItem('token')
     localStorage.removeItem('refreshToken')
     localStorage.removeItem('projectViewMode')
     setUser(null)
-  }
+  }, [])
 
-  const updateProfile = async (name) => {
+  const updateProfile = useCallback(async (name) => {
     try {
       const response = await authService.updateProfile(name)
       
@@ -120,9 +120,9 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: error.message || 'An error occurred while updating profile' }
     }
-  }
+  }, [])
 
-  const updatePassword = async (currentPassword, newPassword) => {
+  const updatePassword = useCallback(async (currentPassword, newPassword) => {
     try {
       const response = await authService.updatePassword(currentPassword, newPassword)
       
@@ -137,9 +137,9 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: error.message || 'An error occurred while updating password' }
     }
-  }
+  }, [])
 
-  const uploadProfileImage = async (file) => {
+  const uploadProfileImage = useCallback(async (file) => {
     try {
       const response = await authService.uploadProfileImage(file)
       
@@ -155,9 +155,9 @@ export function AuthProvider({ children }) {
       }
       return { success: false, message: error.message || 'An error occurred while uploading image' }
     }
-  }
+  }, [])
 
-  const value = {
+  const value = useMemo(() => ({
     user,
     login,
     completeTwoFactorLogin,
@@ -167,7 +167,7 @@ export function AuthProvider({ children }) {
     updatePassword,
     uploadProfileImage,
     loading
-  }
+  }), [user, login, completeTwoFactorLogin, register, logout, updateProfile, updatePassword, uploadProfileImage, loading])
 
   return (
     <AuthContext.Provider value={value}>

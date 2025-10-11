@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, memo } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Login from './pages/auth/login/Login'
 import Register from './pages/auth/register/Register'
@@ -19,7 +19,7 @@ import { WebSocketProvider } from './contexts/WebSocketContext'
 import { useServerStatus } from './hooks/useServerStatus'
 import LoadingState from './components/ui/LoadingState'
 
-function LogoutRoute() {
+const LogoutRoute = memo(function LogoutRoute() {
   const { logout } = useAuth()
   const navigate = useNavigate()
 
@@ -33,7 +33,7 @@ function LogoutRoute() {
       <LoadingState message="Logging out..." />
     </div>
   )
-}
+})
 
 function App() {
   useServerStatus()
@@ -71,7 +71,7 @@ function App() {
   )
 }
 
-function ProtectedRoute({ children }) {
+const ProtectedRoute = memo(function ProtectedRoute({ children }) {
   const { user, loading } = useAuth()
   
   if (loading) {
@@ -83,9 +83,9 @@ function ProtectedRoute({ children }) {
   }
   
   return user ? children : <Navigate to="/login" />
-}
+})
 
-function PublicRoute({ children }) {
+const PublicRoute = memo(function PublicRoute({ children }) {
   const { user, loading } = useAuth()
   
   if (loading) {
@@ -97,9 +97,9 @@ function PublicRoute({ children }) {
   }
   
   return user ? <Navigate to="/projects" replace /> : children
-}
+})
 
-function AdminRoute({ children }) {
+const AdminRoute = memo(function AdminRoute({ children }) {
   const { user, loading } = useAuth()
   
   if (loading) {
@@ -119,6 +119,6 @@ function AdminRoute({ children }) {
   }
   
   return children
-}
+})
 
 export default App

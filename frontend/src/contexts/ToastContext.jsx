@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react'
 import * as Toast from '@radix-ui/react-toast'
 import { CheckCircle, XCircle, AlertCircle, Info, X } from 'lucide-react'
 
@@ -94,16 +94,18 @@ export const ToastProvider = ({ children }) => {
     }
   }
 
+  const value = useMemo(() => ({
+    addToast,
+    removeToast,
+    showSuccess,
+    showError,
+    showWarning,
+    showInfo,
+    showServerStatus
+  }), [addToast, removeToast, showSuccess, showError, showWarning, showInfo, showServerStatus])
+
   return (
-    <ToastContext.Provider value={{
-      addToast,
-      removeToast,
-      showSuccess,
-      showError,
-      showWarning,
-      showInfo,
-      showServerStatus
-    }}>
+    <ToastContext.Provider value={value}>
       <Toast.Provider swipeDirection="right" duration={300}>
         {children}
         <Toast.Viewport className="fixed top-4 right-4 z-[9999] flex max-h-screen w-full max-w-sm flex-col-reverse gap-2 p-4 sm:flex-col md:max-w-[420px]" />

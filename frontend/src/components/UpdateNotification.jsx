@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { X, RefreshCw, Download, AlertCircle } from 'lucide-react';
 import { checkForUpdates, formatVersion } from '../services/versionService';
 import { useAuth } from '../contexts/AuthContext';
@@ -8,7 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
  * Automatically checks for updates and shows a notification banner
  * Shows for all users but only OWNER can see detailed instructions
  */
-export default function UpdateNotification() {
+const UpdateNotification = memo(function UpdateNotification() {
   const { user } = useAuth();
   const [updateInfo, setUpdateInfo] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -164,4 +164,6 @@ export default function UpdateNotification() {
       </div>
     </div>
   );
-}
+})
+
+export default UpdateNotification

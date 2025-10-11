@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
 import api from '../services/api'
 
 export const useServerStatus = () => {
   const [isOnline, setIsOnline] = useState(true)
   const [isChecking, setIsChecking] = useState(false)
   const { showServerStatus } = useToast()
+  const { user } = useAuth()
 
   const checkServerStatus = useCallback(async () => {
     setIsChecking(true)
@@ -63,6 +65,9 @@ export const useServerStatus = () => {
   }, [isOnline, showServerStatus])
 
   useEffect(() => {
+    // Only check server status when user is logged in
+    if (!user) return
+
     checkServerStatus()
     
     const handleFocus = () => {
@@ -88,15 +93,18 @@ export const useServerStatus = () => {
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }
-  }, [checkServerStatus])
+  }, [checkServerStatus, user])
 
   useEffect(() => {
+    // Only run periodic checks when user is logged in
+    if (!user) return
+
     const interval = setInterval(() => {
       checkAuthEndpoint()
     }, 30000) 
 
     return () => clearInterval(interval)
-  }, [checkAuthEndpoint])
+  }, [checkAuthEndpoint, user])
 
   return {
     isOnline,

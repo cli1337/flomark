@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react'
 import socketService from '../services/socketService'
 import { useAuth } from './AuthContext'
 import { useToast } from './ToastContext'
@@ -136,17 +136,19 @@ export const WebSocketProvider = ({ children }) => {
     }
   }, [user?.id])
 
-  const value = {
+  const activeUsersArray = useMemo(() => Array.from(activeUsers.values()), [activeUsers])
+
+  const value = useMemo(() => ({
     isConnected,
     isReconnecting,
-    activeUsers: Array.from(activeUsers.values()),
+    activeUsers: activeUsersArray,
     joinProject: socketService.joinProject,
     leaveProject: socketService.leaveProject,
     updateUserPresence: socketService.updateUserPresence,
     on: socketService.on,
     broadcastProjectUpdate: socketService.broadcastProjectUpdate,
     broadcastTaskUpdate: socketService.broadcastTaskUpdate
-  }
+  }), [isConnected, isReconnecting, activeUsersArray])
 
   return (
     <WebSocketContext.Provider value={value}>

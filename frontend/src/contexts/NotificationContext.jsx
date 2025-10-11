@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react'
 
 const NotificationContext = createContext()
 
@@ -77,7 +77,7 @@ export function NotificationProvider({ children }) {
     localStorage.setItem('notifications', JSON.stringify(notifications))
   }, [notifications])
 
-  const addNotification = (notification) => {
+  const addNotification = useCallback((notification) => {
     const newNotification = {
       id: Date.now(),
       read: false,
@@ -86,9 +86,9 @@ export function NotificationProvider({ children }) {
     }
     setNotifications(prev => [newNotification, ...prev])
     setUnreadCount(prev => prev + 1)
-  }
+  }, [])
 
-  const markAsRead = (notificationId) => {
+  const markAsRead = useCallback((notificationId) => {
     setNotifications(prev => 
       prev.map(notification => 
         notification.id === notificationId 
@@ -97,30 +97,30 @@ export function NotificationProvider({ children }) {
       )
     )
     setUnreadCount(prev => Math.max(0, prev - 1))
-  }
+  }, [])
 
-  const markAllAsRead = () => {
+  const markAllAsRead = useCallback(() => {
     setNotifications(prev => 
       prev.map(notification => ({ ...notification, read: true }))
     )
     setUnreadCount(0)
-  }
+  }, [])
 
-  const clearAllNotifications = () => {
+  const clearAllNotifications = useCallback(() => {
     setNotifications([])
     setUnreadCount(0)
-  }
+  }, [])
 
-  const deleteNotification = (notificationId) => {
+  const deleteNotification = useCallback((notificationId) => {
     setNotifications(prev => {
       const notification = prev.find(n => n.id === notificationId)
       const newNotifications = prev.filter(n => n.id !== notificationId)
       setUnreadCount(current => notification && !notification.read ? current - 1 : current)
       return newNotifications
     })
-  }
+  }, [])
 
-  const value = {
+  const value = useMemo(() => ({
     notifications,
     unreadCount,
     addNotification,
@@ -128,7 +128,7 @@ export function NotificationProvider({ children }) {
     markAllAsRead,
     clearAllNotifications,
     deleteNotification
-  }
+  }), [notifications, unreadCount, addNotification, markAsRead, markAllAsRead, clearAllNotifications, deleteNotification])
 
   return (
     <NotificationContext.Provider value={value}>

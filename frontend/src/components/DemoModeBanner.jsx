@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, memo } from 'react';
 import { Eye } from 'lucide-react';
 import api from '../services/api';
 
@@ -6,7 +6,7 @@ import api from '../services/api';
  * Demo Mode Banner Component
  * Displays a banner when the backend is in demo mode
  */
-export default function DemoModeBanner() {
+const DemoModeBanner = memo(function DemoModeBanner() {
   const [demoInfo, setDemoInfo] = useState(null);
 
   useEffect(() => {
@@ -36,5 +36,7 @@ export default function DemoModeBanner() {
       </div>
     </div>
   );
-}
+})
+
+export default DemoModeBanner
 
