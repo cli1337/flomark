@@ -1,18 +1,18 @@
 # 🚀 Complete Flomark Setup Guide
 
-**Everything you need to deploy, update, and manage Flomark**
+**Everything you need to deploy, update, and manage Flomark with multi-database support**
 
 ---
 
 ## 📋 Table of Contents
 
 1. [Quick Start](#-quick-start)
-2. [Installation](#-installation)
-3. [Updates](#-updates)
-4. [Demo Mode](#-demo-mode)
-5. [All Features](#-all-features)
-6. [Documentation Index](#-documentation-index)
-7. [Common Tasks](#-common-tasks)
+2. [Database Support](#-database-support)
+3. [Installation](#-installation)
+4. [Updates](#-updates)
+5. [Configuration](#-configuration)
+6. [Common Tasks](#-common-tasks)
+7. [Troubleshooting](#-troubleshooting)
 
 ---
 
@@ -21,83 +21,112 @@
 ### One-Command Installation
 
 ```bash
-# Clone repository
-git clone https://github.com/cli1337/flomark.git
-cd flomark
-
-# Configure environment
-cd backend && cp env.example .env && nano .env && cd ..
-
-# Run installer (choose Nginx or Apache when prompted)
-chmod +x install.sh
-sudo ./install.sh yourdomain.com
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
 ```
 
-**What happens:**
-1. Detects your OS
-2. Prompts for web server choice (Nginx/Apache)
-3. Asks about demo mode
-4. Installs all dependencies
-5. Builds frontend
-6. Prompts for owner account details
-7. Sets up database
-8. Configures web server
-9. Starts all services
+**The installer will guide you through:**
 
-**You'll be asked for:**
-- Owner First Name
-- Owner Last Name
-- Owner Email
-- Owner Password (hidden)
+1. **Package Manager** - Choose npm or pnpm (auto-detected)
+2. **Database Selection** - MongoDB, PostgreSQL, MySQL, or SQLite
+3. **Database Connection** - Enter your connection string
+4. **Server Configuration** - Domain, ports, web server
+5. **Admin Account** - Create your admin user
+
+**Installation completes in ~5-10 minutes!**
+
+---
+
+## 💾 Database Support
+
+Flomark supports multiple databases through Prisma ORM:
+
+### MongoDB (Document Database)
+```bash
+# Local
+mongodb://localhost:27017/flomark
+
+# MongoDB Atlas (Cloud)
+mongodb+srv://user:password@cluster.mongodb.net/flomark
+```
+
+### PostgreSQL (Relational Database)
+```bash
+# Local
+postgresql://user:password@localhost:5432/flomark
+
+# Cloud with SSL
+postgresql://user:password@host:5432/flomark?sslmode=require&schema=public
+```
+
+### MySQL/MariaDB (Popular SQL)
+```bash
+# Local
+mysql://user:password@localhost:3306/flomark
+
+# Cloud
+mysql://user:password@host:3306/flomark
+```
+
+### SQLite (Serverless, File-Based)
+```bash
+# Relative path
+file:./flomark.db
+
+# Absolute path
+file:/var/lib/flomark/database.db
+```
+
+**Which database to choose?**
+- **MongoDB**: Best for flexibility, JSON-like data, easy scaling
+- **PostgreSQL**: Best for complex queries, data integrity, advanced features
+- **MySQL**: Best for compatibility, proven reliability, wide hosting support
+- **SQLite**: Best for single-server, embedded, zero-config deployments
 
 ---
 
 ## 📦 Installation
 
-### Choose Your Method
+### Quick Install (Recommended)
 
-#### Method 1: Unified Script (Recommended)
 ```bash
-chmod +x install.sh
-sudo ./install.sh yourdomain.com
-# Interactive prompts for web server & demo mode
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
 ```
 
-#### Method 2: Nginx-Specific
-```bash
-chmod +x install-nginx.sh
-sudo ./install-nginx.sh yourdomain.com
-# Optimized for Nginx, faster performance
-```
+### Features
 
-#### Method 3: Apache-Specific
-```bash
-chmod +x install-apache.sh
-sudo ./install-apache.sh yourdomain.com
-# For Apache/httpd users
-```
+- ✅ **Multi-Database Support** - Choose your preferred database
+- ✅ **Package Manager Detection** - Works with npm or pnpm
+- ✅ **Auto-Configuration** - Generates configs for your database
+- ✅ **Web Server Setup** - Nginx or Apache with full config
+- ✅ **Systemd Integration** - Auto-restart and logging
+- ✅ **One Script** - No need for multiple install files
 
 ### What Gets Installed
+
+✅ **Database** (Your Choice)
+- Auto-installs if using localhost
+- Generates Prisma schema
+- Creates tables/collections
+- Handles migrations
 
 ✅ **Web Server** (Nginx or Apache)
 - Reverse proxy configured
 - WebSocket support enabled
 - SSL-ready configuration
-- Gzip compression
-- Security headers
+- React Router handling
 
-✅ **Backend** (Node.js + PM2)
+✅ **Backend** (Node.js + Systemd)
 - Express API server
 - Socket.io for real-time
-- MongoDB with Prisma
-- PM2 process manager
-- Auto-restart enabled
+- Prisma ORM with your database
+- Systemd service (auto-restart)
+- Rate limiting for security
 
 ✅ **Frontend** (React + Vite)
 - Production build
-- Optimized assets
+- Optimized & minified assets
 - Code splitting
-- Service worker ready
+- Modern bundle
 
 ✅ **Database**
 - Schema deployed
@@ -108,152 +137,145 @@ sudo ./install-apache.sh yourdomain.com
 
 ## 🔄 Updates
 
-### Safe Update Process
+### Quick Update (Recommended)
 
-Flomark provides separate update scripts to protect your customizations:
-
-#### Update Backend Only
 ```bash
-chmod +x update-backend.sh
-./update-backend.sh
+# From anywhere (auto-detects installation):
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)
+
+# Or from installation directory:
+cd /var/www/flomark
+git pull
+sudo bash update.sh
 ```
 
-**Preserves:**
-- `.env` configuration
-- `uploads/` directory
-- `storage/` directory
-- Custom middleware
+### Update Features
 
-**Updates:**
-- Server code
-- Dependencies
-- Database schema
-- API routes
+**Smart Detection:**
+- ✅ Auto-detects installation path
+- ✅ Detects npm vs pnpm
+- ✅ Lets you choose package manager if both available
+- ✅ Works with all database types
+- ✅ Handles missing lockfiles gracefully
 
-#### Update Frontend Only
-```bash
-chmod +x update-frontend.sh
-./update-frontend.sh
-```
+**Safety:**
+- ✅ Automatic backup before update
+- ✅ Backs up .env file
+- ✅ Backs up storage directory
+- ✅ Rollback on failure
+- ✅ Service health check
 
-**Preserves:**
-- `frontend/src/custom/` directory
-- Custom configurations
-- Environment-specific settings
+**What Gets Updated:**
+- ✅ Backend source code
+- ✅ Frontend build
+- ✅ Dependencies (npm/pnpm)
+- ✅ Database schema (if changed)
+- ✅ Prisma client
 
-**Updates:**
-- UI components
-- Dependencies
-- Build configuration
-- Styles and assets
+**What's Preserved:**
+- ✅ .env configuration
+- ✅ storage/ directory (uploads)
+- ✅ Database data
+- ✅ User accounts
+- ✅ Projects and tasks
 
-### Update Notification
+### Automatic Update Notifications
 
-Owners see an update notification panel with:
-- Link to releases
-- Update instructions
-- Command examples
-- Dismissible banner
+The app now checks for updates automatically:
+
+**For Users:**
+- Checks GitHub for latest version every 30 minutes
+- Shows update banner when new version available
+- Compares backend and frontend versions separately
+
+**For OWNER Role:**
+- See detailed update instructions
+- Quick links to update commands
+- Expandable instruction panel
+- Dismissible notifications (remembers per version)
 
 ---
 
-## 🎭 Demo Mode
+## ⚙️ Configuration
 
-### What is Demo Mode?
+### Environment Variables
 
-Demo mode allows public access to a specific project without login:
-- Perfect for showcasing features
-- No registration required
-- Full functionality available
-- Real-time collaboration works
+Edit `backend/.env` to configure:
 
-### Enable Demo Mode
+```bash
+# Database (choose one)
+DATABASE_URL="mongodb://localhost:27017/flomark"
+DATABASE_URL="postgresql://user:password@localhost:5432/flomark"
+DATABASE_URL="mysql://user:password@localhost:3306/flomark"
+DATABASE_URL="file:./flomark.db"
 
-1. **Edit `.env`:**
-   ```env
-   DEMO_MODE=true
-   DEMO_PROJECT_ID=demo-project
-   ```
+# JWT Authentication
+JWT_SECRET="your-secret-here"  # Generate with: openssl rand -hex 32
+JWT_EXPIRES_IN="24h"
 
-2. **Create Demo Project:**
-   ```bash
-   cd backend
-   pnpm run setup-demo
-   ```
+# Server
+PORT=5000
+BACKEND_URL="http://yourdomain.com:5000"
 
-3. **Restart Backend:**
-   ```bash
-   pm2 restart flomark-backend
-   ```
+# Demo Mode (optional)
+DEMO_MODE=false  # Set to true to enable demo login
 
-4. **Access Demo:**
-   ```
-   http://yourdomain.com/projects/demo-project
-   ```
+# Email (optional)
+SMTP_HOST=""
+SMTP_PORT=587
+SMTP_USER=""
+SMTP_PASS=""
+SMTP_FROM_EMAIL=""
+```
 
-### Demo Mode Features
+### Demo Mode
 
-✅ **Public Access**
-- No login required
-- Auto-creates demo user
-- Full CRUD operations
-- Real-time updates
-
-✅ **Sample Data**
-- Pre-configured lists
-- Sample tasks
-- Multiple labels
-- Welcome messages
-
-✅ **Security**
-- Isolated to demo project
-- Prevents project deletion
-- No admin access
-- Protected user data
+When `DEMO_MODE=true` in backend `.env`:
+- Login page shows demo credentials
+- Users can log in with: `demo@flomark.app` / `demo`
+- Banner shows "Demo Mode Active"
+- All features available with backend demo setup
 
 ---
 
-## ✨ All Features
+## ✨ Key Features
 
-### Installation Scripts (3)
+### Multi-Database Support
 
-| Script | Purpose | Best For |
-|--------|---------|----------|
-| `install.sh` | Unified installer | Most users - interactive |
-| `install-nginx.sh` | Nginx-specific | Production - best performance |
-| `install-apache.sh` | Apache-specific | Apache/RHEL users |
+| Database | Best For | ID Type | Auto-Install |
+|----------|----------|---------|--------------|
+| MongoDB | Flexibility, JSON data | ObjectId | ✅ Yes |
+| PostgreSQL | Data integrity, complex queries | CUID | ✅ Yes |
+| MySQL | Compatibility, reliability | CUID | ✅ Yes |
+| SQLite | Embedded, zero-config | CUID | N/A |
 
-### Update Scripts (2)
+### Security Features
 
-| Script | Updates | Preserves |
-|--------|---------|-----------|
-| `update-backend.sh` | Server code | .env, uploads, storage |
-| `update-frontend.sh` | UI code | custom/ directory |
+✅ **Rate Limiting** (NEW)
+- Login: 5 attempts / 15 min
+- Registration: 3 attempts / hour
+- Password changes: 10 attempts / 15 min
+- Token refresh: 20 attempts / 15 min
 
-### Demo Mode Components
+✅ **Authentication**
+- JWT tokens with refresh
+- 2FA with TOTP
+- Password hashing (bcrypt)
+- Session management
 
-**Backend:**
-- `demo.middleware.js` - Access control
-- `setup-demo.js` - Sample data creation
-- Demo configuration in `.env`
+### Installation & Updates
 
-**Frontend:**
-- `DemoModeBanner.jsx` - Visual indicator
-- `UpdateNotification.jsx` - Owner alerts
+✅ **Package Manager Support**
+- Auto-detects npm and pnpm
+- Lets you choose if both available
+- Uses lockfiles when present
+- Falls back gracefully
 
-### Enhanced Features
-
-✅ **Owner Account Creation**
-- First/last name input
-- Password during installation
-- Interactive or scripted
-- Enhanced validation
-
-✅ **Update Notifications**
-- Shows for OWNER role only
-- Expandable instructions
-- Links to documentation
-- Dismissible panel
+✅ **Auto Update Notifications**
+- Checks GitHub every 30 minutes
+- Shows version differences
+- OWNER sees update commands
+- Dismissible per version
 
 ---
 
@@ -334,135 +356,153 @@ Demo mode allows public access to a specific project without login:
 ### Initial Deployment
 
 ```bash
-# 1. Clone and configure
-git clone https://github.com/cli1337/flomark.git
-cd flomark
-cd backend && cp env.example .env && nano .env && cd ..
+# One-command installation
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
 
-# 2. Install
-chmod +x install.sh
-sudo ./install.sh yourdomain.com
+# Follow interactive prompts for:
+# - Database type and connection
+# - Server configuration
+# - Admin credentials
 
-# 3. Setup SSL (optional but recommended)
+# Setup SSL (recommended)
 sudo apt-get install certbot python3-certbot-nginx
 sudo certbot --nginx -d yourdomain.com
 ```
 
-### Add Demo Mode to Existing Installation
+### Update Existing Installation
 
 ```bash
-# 1. Enable in .env
-echo "DEMO_MODE=true" >> backend/.env
-echo "DEMO_PROJECT_ID=demo-project" >> backend/.env
+# Quick update (auto-detects everything)
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)
 
-# 2. Setup demo project
-cd backend && pnpm run setup-demo && cd ..
-
-# 3. Restart
-pm2 restart flomark-backend
+# Or from installation directory
+cd /var/www/flomark
+git pull
+sudo bash update.sh
 ```
 
-### Update Installation
+### Switch Database Type
 
 ```bash
-# Check for updates
-git fetch origin
-git log HEAD..origin/main --oneline
+cd /var/www/flomark/backend
 
-# Update backend
-./update-backend.sh
+# 1. Backup current data
+npx prisma studio  # Export data manually
 
-# Update frontend
-./update-frontend.sh
+# 2. Update .env with new DATABASE_URL
+nano .env
 
-# Restart services
-pm2 restart flomark-backend
-systemctl reload nginx
+# 3. Update Prisma schema
+# Edit prisma/schema.prisma - change provider to:
+# mongodb | postgresql | mysql | sqlite
+
+# 4. Generate and migrate
+npx prisma generate
+npx prisma db push
+
+# 5. Import data back (if needed)
+
+# 6. Restart service
+sudo systemctl restart flomark-backend
 ```
 
 ### Create Additional Admin
 
 ```bash
-cd backend
-node scripts/make-admin.js newadmin@example.com ADMIN
-# Or with details:
-node scripts/make-admin.js admin@example.com ADMIN Jane Smith password123
+cd /var/www/flomark/backend
+node scripts/make-admin.js
+# Follow interactive prompts
 ```
 
 ### Backup Everything
 
 ```bash
 # Create backup directory
-mkdir -p ~/flomark-backup-$(date +%Y%m%d)
+BACKUP_DIR=~/flomark-backup-$(date +%Y%m%d-%H%M%S)
+mkdir -p $BACKUP_DIR
 
-# Backup database
-mongodump --db flomark --out ~/flomark-backup-$(date +%Y%m%d)/mongo
+# Backup based on database type:
 
-# Backup uploads
-cp -r backend/uploads ~/flomark-backup-$(date +%Y%m%d)/
+# MongoDB
+mongodump --uri="mongodb://localhost:27017/flomark" --out=$BACKUP_DIR/db
 
-# Backup .env
-cp backend/.env ~/flomark-backup-$(date +%Y%m%d)/
+# PostgreSQL
+pg_dump flomark > $BACKUP_DIR/db/flomark.sql
+
+# MySQL
+mysqldump flomark > $BACKUP_DIR/db/flomark.sql
+
+# SQLite
+cp /var/www/flomark/backend/flomark.db $BACKUP_DIR/db/
+
+# Backup storage & config
+cp -r /var/www/flomark/backend/storage $BACKUP_DIR/
+cp /var/www/flomark/backend/.env $BACKUP_DIR/
 ```
 
 ### Restore from Backup
 
 ```bash
-# Stop services
-pm2 stop flomark-backend
-systemctl stop nginx
+BACKUP_DIR=~/flomark-backup-20241011-120000
 
-# Restore database
-mongorestore --db flomark --drop ~/flomark-backup-20241010/mongo/flomark
+# Stop service
+sudo systemctl stop flomark-backend
 
-# Restore uploads
-cp -r ~/flomark-backup-20241010/uploads backend/
+# Restore based on database type:
 
-# Restore .env
-cp ~/flomark-backup-20241010/.env backend/
+# MongoDB
+mongorestore --uri="mongodb://localhost:27017/flomark" --drop $BACKUP_DIR/db/flomark
 
-# Start services
-pm2 start flomark-backend
-systemctl start nginx
+# PostgreSQL
+psql flomark < $BACKUP_DIR/db/flomark.sql
+
+# MySQL
+mysql flomark < $BACKUP_DIR/db/flomark.sql
+
+# SQLite
+cp $BACKUP_DIR/db/flomark.db /var/www/flomark/backend/
+
+# Restore storage & config
+cp -r $BACKUP_DIR/storage /var/www/flomark/backend/
+cp $BACKUP_DIR/.env /var/www/flomark/backend/
+
+# Start service
+sudo systemctl start flomark-backend
 ```
 
 ### Monitor Services
 
 ```bash
-# View all processes
-pm2 list
+# Check backend status
+sudo systemctl status flomark-backend
 
 # View backend logs
-pm2 logs flomark-backend
+sudo journalctl -u flomark-backend -f
 
 # View nginx logs
 sudo tail -f /var/log/nginx/error.log
+sudo tail -f /var/log/nginx/access.log
 
 # Monitor resources
-pm2 monit
 htop
 ```
 
-### Troubleshooting
+### Database Management
 
 ```bash
-# Backend not starting
-pm2 logs flomark-backend --err
-cd backend && pnpm install
-pm2 restart flomark-backend
-
-# Frontend not loading
-cd frontend && pnpm build
-systemctl restart nginx
-
-# Database issues
-cd backend && npx prisma db push
+# Open Prisma Studio (GUI)
+cd /var/www/flomark/backend
 npx prisma studio
+# Access at http://localhost:5555
 
-# Check services
-systemctl status nginx
-pm2 status
-systemctl status mongod
+# View database schema
+npx prisma db pull
+
+# Reset database (CAUTION!)
+npx prisma migrate reset
+
+# Generate Prisma client after schema changes
+npx prisma generate
 ```
 
 ---
@@ -471,8 +511,8 @@ systemctl status mongod
 
 After installation:
 
-- [ ] Change JWT_SECRET to random value
-- [ ] Use strong MongoDB password
+- [ ] Change JWT_SECRET to random value (auto-generated by installer)
+- [ ] Use strong database password
 - [ ] Enable SSL/HTTPS with certbot
 - [ ] Configure firewall (ufw/firewalld)
 - [ ] Disable root SSH login
@@ -480,28 +520,9 @@ After installation:
 - [ ] Enable auto security updates
 - [ ] Configure regular backups
 - [ ] Review and monitor logs
-- [ ] Use .env files (never commit)
-- [ ] Enable 2FA for owner account
-
----
-
-## 📈 Performance Optimization
-
-```bash
-# Enable PM2 cluster mode
-pm2 delete flomark-backend
-pm2 start backend/src/server.js -i max --name flomark-backend
-pm2 save
-
-# Add database indexes
-cd backend
-npx prisma studio
-# Add indexes in Prisma schema
-
-# Enable HTTP/2 (with SSL)
-# Edit Nginx config: listen 443 ssl http2;
-sudo systemctl reload nginx
-```
+- [ ] Never commit .env files
+- [ ] Enable 2FA for admin accounts
+- [ ] Review rate limits in production
 
 ---
 
@@ -511,31 +532,39 @@ sudo systemctl reload nginx
 
 Required in `backend/.env`:
 ```env
+# Database (choose one)
 DATABASE_URL=mongodb://localhost:27017/flomark
-JWT_SECRET=<random-32-char-string>
+DATABASE_URL=postgresql://user:password@localhost:5432/flomark
+DATABASE_URL=mysql://user:password@localhost:3306/flomark
+DATABASE_URL=file:./flomark.db
+
+# Authentication
+JWT_SECRET=<random-32-char-string>  # Auto-generated
 JWT_EXPIRES_IN=24h
-PORT=3000
+
+# Server
+PORT=5000
 BACKEND_URL=https://yourdomain.com
 ```
 
 Optional:
 ```env
-DEMO_MODE=true
-DEMO_PROJECT_ID=demo-project
+DEMO_MODE=false  # Set true to show demo credentials
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=email@example.com
 SMTP_PASS=app-password
+SMTP_FROM_EMAIL=noreply@yourdomain.com
 ```
 
 ### Important Commands
 
 ```bash
-# PM2
-pm2 status                    # View processes
-pm2 logs flomark-backend      # View logs
-pm2 restart flomark-backend   # Restart
-pm2 monit                     # Monitor
+# Systemd (replaces PM2)
+sudo systemctl status flomark-backend   # View status
+sudo systemctl restart flomark-backend  # Restart
+sudo journalctl -u flomark-backend -f   # View logs
+sudo systemctl enable flomark-backend   # Enable auto-start
 
 # Nginx
 sudo systemctl status nginx
@@ -543,23 +572,25 @@ sudo systemctl reload nginx
 sudo nginx -t
 
 # Database
-npx prisma studio
-npx prisma db push
-mongodump --db flomark
+npx prisma studio              # GUI at localhost:5555
+npx prisma db push             # Apply schema changes
+npx prisma generate            # Regenerate client
 
 # Updates
-./update-backend.sh
-./update-frontend.sh
+sudo bash update.sh            # Update everything
+git pull                       # Get latest code
 ```
 
 ### File Locations
 
-- Backend: `./backend/`
-- Frontend: `./frontend/`
-- Uploads: `./backend/uploads/`
-- Logs: `~/.pm2/logs/`
-- Nginx Config: `/etc/nginx/sites-available/flomark`
-- Apache Config: `/etc/apache2/sites-available/flomark.conf`
+- Backend: `/var/www/flomark/backend/`
+- Frontend: `/var/www/flomark/frontend/`
+- Storage: `/var/www/flomark/backend/storage/`
+- Config: `/var/www/flomark/backend/.env`
+- Service: `/etc/systemd/system/flomark-backend.service`
+- Nginx: `/etc/nginx/sites-available/flomark`
+- Apache: `/etc/apache2/sites-available/flomark.conf`
+- Logs: `sudo journalctl -u flomark-backend`
 
 ---
 
@@ -577,16 +608,22 @@ mongodump --db flomark
 ### Common Issues
 
 **502 Bad Gateway**
-→ Backend not running: `pm2 restart flomark-backend`
+→ Backend not running: `sudo systemctl restart flomark-backend`
 
 **404 Not Found**
-→ Frontend not built: `cd frontend && pnpm build`
+→ Frontend not built or web server misconfigured
 
 **WebSocket Not Working**
-→ Check proxy config in web server
+→ Check proxy config in web server (Upgrade headers)
 
 **File Upload Fails**
-→ Check file size limits and permissions
+→ Check file size limits and storage permissions
+
+**Database Connection Failed**
+→ Verify DATABASE_URL in .env and database is running
+
+**Rate Limit Hit**
+→ Wait for the cooldown period or adjust limits in rate-limit.middleware.js
 
 ---
 
@@ -595,31 +632,33 @@ mongodump --db flomark
 After installation, verify:
 
 ✅ Application loads at your domain  
-✅ Login/registration works  
-✅ Can create projects  
-✅ Can create and move tasks  
+✅ Login works with admin credentials  
+✅ Can create projects and tasks  
+✅ Drag & drop works  
 ✅ Real-time updates work  
 ✅ File uploads work  
-✅ Demo mode works (if enabled)  
+✅ Demo mode shows credentials (if enabled)  
 ✅ No errors in logs  
 ✅ SSL certificate valid (if configured)  
-✅ Services auto-start on reboot  
+✅ Service auto-starts on reboot  
+✅ Database connected (check logs)  
+✅ Rate limiting active  
 
 ---
 
 ## 📊 What You Get
 
-- ✨ **7 Automation Scripts** - Installation & updates
-- 📚 **8 Documentation Files** - 3,500+ lines
-- 🎭 **Demo Mode System** - Public demonstrations
-- 🔔 **Update Notifications** - For administrators
-- 👤 **Enhanced Admin Creation** - With full details
-- 🔒 **Security Ready** - Best practices included
-- ⚡ **Performance Optimized** - Production ready
+- ✨ **One Installation Script** - Multi-database, multi-package-manager
+- 📚 **Complete Documentation** - Installation, updates, troubleshooting
+- 🗄️ **4 Database Options** - MongoDB, PostgreSQL, MySQL, SQLite
+- 🔒 **Rate Limiting** - Brute force protection
+- 🔔 **Update Notifications** - Automatic version checking
+- 👤 **Admin Management** - Full user management
+- ⚡ **Production Ready** - Systemd, auto-restart, logging
 
 ---
 
-**Everything you need to deploy, manage, and scale Flomark! 🚀**
+**Everything you need to deploy, manage, and scale Flomark on any database! 🚀**
 
-*For detailed information, refer to specific documentation files listed above.*
+*For detailed information about specific features, refer to the documentation files listed above.*
 

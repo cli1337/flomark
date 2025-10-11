@@ -1,13 +1,13 @@
 # 🚀 Flomark
 
-> **A modern, real-time project management platform built with React, Node.js, and MongoDB**
+> **A modern, self-hosted project management platform with multi-database support**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20+-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
-[![MongoDB](https://img.shields.io/badge/MongoDB-6+-green.svg)](https://www.mongodb.com/)
+[![Databases](https://img.shields.io/badge/Database-MongoDB%20%7C%20PostgreSQL%20%7C%20MySQL%20%7C%20SQLite-blue.svg)](https://www.prisma.io/)
 
-Flomark is a powerful, feature-rich task and project management application designed for teams of all sizes. Manage projects, track tasks, collaborate in real-time, and stay organized with an intuitive Kanban-style interface.
+Flomark is a powerful, feature-rich task and project management application designed for teams of all sizes. Manage projects, track tasks, collaborate in real-time, and stay organized with an intuitive Kanban-style interface. **Choose your database:** MongoDB, PostgreSQL, MySQL, or SQLite.
 
 ---
 
@@ -58,9 +58,15 @@ https://demo.flomark.app
 
 ### Backend
 - **Node.js & Express** - Server framework
-- **MongoDB & Prisma** - Database and ORM
+- **Prisma ORM** - Multi-database support
+- **Database Options:**
+  - **MongoDB** - Document database
+  - **PostgreSQL** - Relational database
+  - **MySQL/MariaDB** - Popular SQL database
+  - **SQLite** - Serverless database
 - **Socket.io** - WebSocket server
 - **JWT** - Authentication
+- **Express Rate Limit** - Brute force protection
 - **Speakeasy** - 2FA implementation
 - **Multer** - File uploads
 - **bcrypt** - Password hashing
@@ -70,33 +76,41 @@ https://demo.flomark.app
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Node.js 18+ 
-- MongoDB 6+ (not required for demo mode)
-- pnpm (recommended) or npm
-
-💡 **Demo Mode:** Enable `DEMO_MODE=true` in `.env` to run without database using in-memory storage!
+- Node.js 20+ 
+- One of: MongoDB, PostgreSQL, MySQL, or SQLite
+- npm or pnpm package manager
+- Ubuntu/Debian Linux (for automated install)
 
 ### Installation
 
-#### Option 1: Automated Installation (Recommended) ⚡
-
-**Two-step installation:**
+#### One-Command Installation (Recommended) ⚡
 
 ```bash
-# Step 1: Download the installer
-curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh -o /tmp/flomark-install.sh
-
-# Step 2: Run with sudo
-sudo bash /tmp/flomark-install.sh
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
 ```
 
-**Or clone and install:**
+**The installer will ask you for:**
+- 📦 Package manager (npm or pnpm)
+- 💾 Database type (MongoDB/PostgreSQL/MySQL/SQLite)
+- 🔗 Database connection string
+- 📁 Installation path
+- 🌐 Web server (Nginx or Apache)
+- 👤 Admin credentials
 
+**Supported Database Connection Strings:**
 ```bash
-git clone https://github.com/cli1337/flomark.git
-cd flomark
-chmod +x install.sh
-sudo ./install.sh
+# MongoDB
+mongodb://localhost:27017/flomark
+mongodb+srv://user:password@cluster.mongodb.net/flomark
+
+# PostgreSQL
+postgresql://user:password@localhost:5432/flomark
+
+# MySQL
+mysql://user:password@localhost:3306/flomark
+
+# SQLite
+file:./flomark.db
 ```
 
 **The script will:**
@@ -181,76 +195,51 @@ sudo ./install.sh
 
 ## 🌐 Production Deployment
 
-Deploy Flomark to production with automated installation scripts or manual setup.
+Deploy Flomark with one command! The installer handles everything.
 
-### 🚀 Automated Installation (Recommended)
+### 🚀 Quick Update
 
-#### One-Command Installation
-
-The unified installation script automatically sets everything up:
+Update existing installations:
 
 ```bash
-# 1. Clone and configure
-git clone https://github.com/cli1337/flomark.git
-cd flomark
-cd backend && cp env.example .env && nano .env && cd ..
-
-# 2. Run unified installer
-chmod +x install.sh
-sudo ./install.sh yourdomain.com
+# Auto-detects installation and package manager:
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)
 ```
 
-**Interactive Prompts:**
-- Choose web server (Nginx or Apache)
-- Enable demo mode (optional)
-- Enter owner account details:
-  - First Name
-  - Last Name
-  - Email
-  - Password
-
-#### Web Server-Specific Scripts
-
-**Nginx (Recommended for production):**
-```bash
-chmod +x install-nginx.sh
-sudo ./install-nginx.sh yourdomain.com
-```
-
-**Apache (For Apache/httpd users):**
-```bash
-chmod +x install-apache.sh
-sudo ./install-apache.sh yourdomain.com
-```
+**Update Features:**
+- ✅ Auto-backup before update
+- ✅ Detects npm vs pnpm
+- ✅ Updates backend & frontend
+- ✅ Preserves .env and storage
+- ✅ Rollback on failure
 
 ### 📦 What Gets Installed
 
-All installation scripts automatically:
+The quick-install script automatically:
 
-1. **🌐 Web Server Setup**
+1. **💾 Database Setup**
+   - Installs selected database (if localhost)
+   - Generates Prisma schema for your database type
+   - Creates all tables/collections
+   - Handles migrations
+
+2. **🌐 Web Server**
    - Installs Nginx or Apache
-   - Configures reverse proxy
+   - Configures reverse proxy for API
    - Enables WebSocket support
    - Sets up security headers
-   - Configures gzip compression
 
-2. **⚙️ Backend Configuration**
-   - Installs Node.js 18+
-   - Sets up systemd service
-   - Installs dependencies
-   - Runs database migrations
-   - Creates owner account
+3. **⚙️ Backend**
+   - Installs Node.js 20+
+   - Sets up systemd service (auto-restart)
+   - Installs dependencies with npm or pnpm
+   - Generates JWT secrets
+   - Creates admin account
 
-3. **🎨 Frontend Build**
+4. **🎨 Frontend**
    - Builds production bundle
-   - Optimizes assets
+   - Optimizes and minifies assets
    - Enables code splitting
-
-4. **🔒 Security & Performance**
-   - SSL-ready configuration
-   - Auto-restart on crashes
-   - Load balancing ready
-   - Caching optimization
 
 ### 🛠️ Manual Installation
 
@@ -258,9 +247,9 @@ All installation scripts automatically:
 <summary><b>Click to expand manual installation steps</b></summary>
 
 #### Prerequisites
-- Node.js 18+
-- MongoDB 6+
-- pnpm or npm
+- Node.js 20+
+- One of: MongoDB, PostgreSQL, MySQL, or SQLite
+- npm or pnpm package manager
 - Nginx or Apache
 - Root/sudo access
 
@@ -270,29 +259,57 @@ All installation scripts automatically:
 git clone https://github.com/cli1337/flomark.git
 cd flomark/backend
 cp env.example .env
-nano .env  # Configure DATABASE_URL, JWT_SECRET, BACKEND_URL
+nano .env  # Configure DATABASE_URL with your database
 ```
 
-#### Step 2: Install Dependencies
+**Example Database URLs:**
+```bash
+# MongoDB
+DATABASE_URL="mongodb://localhost:27017/flomark"
+
+# PostgreSQL  
+DATABASE_URL="postgresql://user:password@localhost:5432/flomark"
+
+# MySQL
+DATABASE_URL="mysql://user:password@localhost:3306/flomark"
+
+# SQLite
+DATABASE_URL="file:./flomark.db"
+```
+
+#### Step 2: Update Prisma Schema (if not using MongoDB)
+
+The repository includes a MongoDB schema. For other databases:
+
+```bash
+# Edit prisma/schema.prisma
+# Change "provider" from "mongodb" to your database:
+# - postgresql
+# - mysql  
+# - sqlite
+```
+
+#### Step 3: Install Dependencies
 
 ```bash
 # Backend
 cd backend
-pnpm install
+npm install  # or pnpm install
+npx prisma generate
 npx prisma db push
 
 # Frontend
 cd ../frontend
-pnpm install
-pnpm build
+npm install  # or pnpm install
+npm run build  # or pnpm build
 ```
 
-#### Step 3: Create Owner Account
+#### Step 4: Create Admin Account
 
 ```bash
 cd backend
-node scripts/make-admin.js admin@example.com OWNER
-# Follow interactive prompts for name and password
+node scripts/make-admin.js
+# Follow interactive prompts
 ```
 
 #### Step 4: Create Systemd Service

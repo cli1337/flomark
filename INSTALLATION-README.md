@@ -1,6 +1,6 @@
 # 🚀 Flomark Installation Guide
 
-Complete guide for installing and updating Flomark on your server.
+Complete guide for installing and updating Flomark on your server with multi-database support.
 
 ## 📋 Prerequisites
 
@@ -9,74 +9,89 @@ Complete guide for installing and updating Flomark on your server.
 - Internet connection
 - At least 2GB RAM
 - 10GB free disk space
+- One of: MongoDB, PostgreSQL, MySQL, or SQLite
 
 ## 🎯 Quick Installation
 
-### Method 1: Clone and Install (Recommended)
+### One-Command Installation (Recommended)
 
 ```bash
-# Step 1: Clone the repository
-git clone https://github.com/cli1337/flomark.git
-cd flomark
-
-# Step 2: Make script executable
-chmod +x install.sh
-
-# Step 3: Run installation
-sudo ./install.sh
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
 ```
 
-### Method 2: Remote Installation
+**What you'll be asked:**
+1. **Package Manager**: npm or pnpm (auto-detected)
+2. **Database Type**: MongoDB, PostgreSQL, MySQL, or SQLite
+3. **Database Connection**: Connection string for your database
+4. **Installation Path**: Where to install (default: /var/www/flomark)
+5. **Domain/IP**: Your server's domain or IP
+6. **Ports**: Frontend (default: 80) and Backend (default: 5000)
+7. **Web Server**: Nginx or Apache
+8. **Admin Credentials**: Your admin email, name, and password
 
+**The installer will:**
+- ✅ Auto-install Node.js 20+ if needed
+- ✅ Install your chosen database (if using localhost)
+- ✅ Generate Prisma schema for your database
+- ✅ Build and deploy frontend & backend
+- ✅ Configure web server with proxy & WebSocket
+- ✅ Create systemd service for auto-restart
+- ✅ Create your admin account
+
+## 💾 Supported Databases
+
+Flomark supports multiple databases through Prisma ORM:
+
+### MongoDB
 ```bash
-# Step 1: Download the installer
-curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh -o /tmp/flomark-install.sh
+# Local
+mongodb://localhost:27017/flomark
 
-# Step 2: Run with sudo
-sudo bash /tmp/flomark-install.sh
+# Atlas (Cloud)
+mongodb+srv://username:password@cluster.mongodb.net/flomark
 ```
 
-**Note:** Do NOT pipe curl directly to bash (e.g., `curl | sudo bash`). Always download first, then execute.
+### PostgreSQL
+```bash
+# Local
+postgresql://username:password@localhost:5432/flomark
 
-## 📝 Interactive Setup
+# Cloud (with SSL)
+postgresql://username:password@host:5432/flomark?sslmode=require
+```
 
-The installer will ask you:
+### MySQL/MariaDB
+```bash
+# Local
+mysql://username:password@localhost:3306/flomark
 
-1. **Web Server**: Choose between `apache` or `nginx`
-2. **Installation Path**: Default is `/var/www/flomark`
-3. **Domain/IP**: Enter your domain or press Enter to use local IP
-4. **Frontend Port**: Default is `80`
-5. **Backend Port**: Default is `5000`
-6. **Demo Mode**: Choose `y` for demo mode or `n` for production
-7. **Admin Credentials** (if not demo mode):
-   - First name
-   - Last name
-   - Email
-   - Password
+# Cloud
+mysql://username:password@host:3306/flomark
+```
 
-## 🎭 Installation Modes
+### SQLite
+```bash
+# Local file
+file:./flomark.db
 
-### Demo Mode
+# Absolute path
+file:/var/lib/flomark/flomark.db
+```
 
-Perfect for testing and demonstrations:
-- ✅ No MongoDB required (uses in-memory storage)
-- ✅ Auto-creates sample projects
-- ✅ Auto-resets every 20-30 minutes
-- ✅ Pre-configured demo user
-- ✅ Quick setup
+## 📝 What the Installer Does
 
-**Demo Credentials:**
-- Email: `demo@flomark.app`
-- Password: `demo`
+The quick-install script will:
 
-### Production Mode
-
-Full-featured installation:
-- ✅ MongoDB database
-- ✅ Persistent storage
-- ✅ Custom admin account
-- ✅ Full email support (optional)
-- ✅ Production-ready
+1. **Detect Package Managers** - Finds npm/pnpm, lets you choose
+2. **Database Selection** - Choose from 4 database types
+3. **Database Installation** - Auto-installs if using localhost
+4. **Schema Generation** - Creates Prisma schema for your database
+5. **Dependency Installation** - Installs all required packages
+6. **Database Migration** - Creates tables/collections
+7. **Frontend Build** - Production-optimized build
+8. **Web Server Config** - Nginx or Apache with proxy setup
+9. **Systemd Service** - Auto-restart on crashes/reboots
+10. **Admin Account** - Creates your admin user
 
 ## 🌐 Web Server Options
 
