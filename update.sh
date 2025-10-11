@@ -50,6 +50,49 @@ print_header "🔄 Flomark Update Script"
 echo ""
 
 # ==================================
+# Detect package manager
+# ==================================
+print_info "Detecting package manager..."
+PKG_MANAGER=""
+
+# Check if user has preference
+if command -v pnpm &> /dev/null; then
+    print_info "Found pnpm: $(pnpm --version)"
+    PKG_MANAGER_AVAILABLE="pnpm"
+fi
+
+if command -v npm &> /dev/null; then
+    print_info "Found npm: $(npm --version)"
+    if [ -z "$PKG_MANAGER_AVAILABLE" ]; then
+        PKG_MANAGER_AVAILABLE="npm"
+    else
+        PKG_MANAGER_AVAILABLE="both"
+    fi
+fi
+
+# Let user choose if both are available
+if [ "$PKG_MANAGER_AVAILABLE" = "both" ]; then
+    while true; do
+        read -p "$(echo -e ${CYAN}Choose package manager [npm/pnpm]:${NC} )" PKG_MANAGER
+        PKG_MANAGER=$(echo "$PKG_MANAGER" | tr '[:upper:]' '[:lower:]')
+        if [[ "$PKG_MANAGER" == "npm" ]] || [[ "$PKG_MANAGER" == "pnpm" ]]; then
+            break
+        else
+            print_error "Invalid choice. Please enter 'npm' or 'pnpm'"
+        fi
+    done
+elif [ "$PKG_MANAGER_AVAILABLE" = "pnpm" ]; then
+    PKG_MANAGER="pnpm"
+    print_success "Using pnpm"
+elif [ "$PKG_MANAGER_AVAILABLE" = "npm" ]; then
+    PKG_MANAGER="npm"
+    print_success "Using npm"
+else
+    print_error "Neither npm nor pnpm found. Please install Node.js first."
+    exit 1
+fi
+
+# ==================================
 # Find installation directory
 # ==================================
 print_info "Detecting Flomark installation..."
@@ -153,10 +196,19 @@ cp "$TEMP_DIR/backend/prisma" "$INSTALL_PATH/backend/" -r 2>/dev/null || true
 
 print_info "Installing backend dependencies..."
 cd "$INSTALL_PATH/backend"
-if [ -f "pnpm-lock.yaml" ]; then
-    pnpm install --prod --frozen-lockfile
+
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    if [ -f "pnpm-lock.yaml" ]; then
+        pnpm install --prod --frozen-lockfile
+    else
+        pnpm install --prod
+    fi
 else
-    pnpm install --prod
+    if [ -f "package-lock.json" ]; then
+        npm ci --omit=dev
+    else
+        npm install --omit=dev
+    fi
 fi
 print_success "Backend dependencies installed"
 
@@ -219,12 +271,21 @@ export default defineConfig({
 })
 EOF
 
-if [ -f "pnpm-lock.yaml" ]; then
-    pnpm install --frozen-lockfile
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    if [ -f "pnpm-lock.yaml" ]; then
+        pnpm install --frozen-lockfile
+    else
+        pnpm install
+    fi
+    pnpm run build
 else
-    pnpm install
+    if [ -f "package-lock.json" ]; then
+        npm ci
+    else
+        npm install
+    fi
+    npm run build
 fi
-pnpm run build
 print_success "Frontend built"
 
 print_info "Updating frontend files..."

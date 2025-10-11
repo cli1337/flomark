@@ -75,6 +75,48 @@ echo ""
 print_header "📝 Configuration"
 echo ""
 
+# Package manager selection
+print_info "Detecting available package managers..."
+PKG_MANAGER_OPTIONS=""
+
+if command -v pnpm &> /dev/null; then
+    print_success "Found pnpm: $(pnpm --version)"
+    PKG_MANAGER_OPTIONS="pnpm"
+fi
+
+if command -v npm &> /dev/null; then
+    print_success "Found npm: $(npm --version)"
+    if [ -z "$PKG_MANAGER_OPTIONS" ]; then
+        PKG_MANAGER_OPTIONS="npm"
+    else
+        PKG_MANAGER_OPTIONS="both"
+    fi
+fi
+
+if [ -z "$PKG_MANAGER_OPTIONS" ]; then
+    print_error "Neither npm nor pnpm found. Please install Node.js first."
+    exit 1
+fi
+
+if [ "$PKG_MANAGER_OPTIONS" = "both" ]; then
+    while true; do
+        read -p "$(echo -e ${CYAN}Choose package manager [npm/pnpm]:${NC} )" PKG_MANAGER
+        PKG_MANAGER=$(echo "$PKG_MANAGER" | tr '[:upper:]' '[:lower:]')
+        if [[ "$PKG_MANAGER" == "npm" ]] || [[ "$PKG_MANAGER" == "pnpm" ]]; then
+            break
+        else
+            print_error "Invalid choice. Please enter 'npm' or 'pnpm'"
+        fi
+    done
+elif [ "$PKG_MANAGER_OPTIONS" = "pnpm" ]; then
+    PKG_MANAGER="pnpm"
+    print_success "Using pnpm"
+else
+    PKG_MANAGER="npm"
+    print_success "Using npm"
+fi
+echo ""
+
 # Web server selection
 while true; do
     read -p "$(echo -e ${CYAN}Select web server [apache/nginx]:${NC} )" WEBSERVER
@@ -144,6 +186,7 @@ fi
 echo ""
 print_header "📦 Installation Summary"
 echo ""
+echo "Package Manager:  $PKG_MANAGER"
 echo "Web Server:       $WEBSERVER"
 echo "Install Path:     $INSTALL_PATH"
 echo "Domain/IP:        $DOMAIN"
@@ -176,11 +219,13 @@ if ! command -v node &> /dev/null; then
 fi
 print_success "Node.js $(node --version) installed"
 
-print_info "Installing pnpm..."
-if ! command -v pnpm &> /dev/null; then
-    npm install -g pnpm
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    print_info "Installing pnpm..."
+    if ! command -v pnpm &> /dev/null; then
+        npm install -g pnpm
+    fi
+    print_success "pnpm installed"
 fi
-print_success "pnpm installed"
 
 print_info "Installing MongoDB (if not demo mode)..."
 if [ "$DEMO_MODE" = false ]; then
@@ -236,12 +281,21 @@ fi
 print_info "Building frontend for production..."
 cd "$SCRIPT_DIR/frontend"
 
-# Check if lockfile exists, otherwise install without frozen flag
-if [ -f "pnpm-lock.yaml" ]; then
-    pnpm install --frozen-lockfile
+# Install dependencies based on package manager
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    if [ -f "pnpm-lock.yaml" ]; then
+        pnpm install --frozen-lockfile
+    else
+        print_info "No pnpm lockfile found, installing dependencies..."
+        pnpm install
+    fi
 else
-    print_info "No pnpm lockfile found, installing dependencies..."
-    pnpm install
+    if [ -f "package-lock.json" ]; then
+        npm ci
+    else
+        print_info "No npm lockfile found, installing dependencies..."
+        npm install
+    fi
 fi
 
 # Update vite config with custom backend port
@@ -272,7 +326,11 @@ export default defineConfig({
 })
 EOF
 
-pnpm run build
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    pnpm run build
+else
+    npm run build
+fi
 print_success "Frontend built successfully"
 
 # Copy built frontend
@@ -291,10 +349,18 @@ cd "$INSTALL_PATH/backend"
 # Configure backend
 # ==================================
 print_info "Installing backend dependencies..."
-if [ -f "pnpm-lock.yaml" ]; then
-    pnpm install --prod --frozen-lockfile
+if [ "$PKG_MANAGER" = "pnpm" ]; then
+    if [ -f "pnpm-lock.yaml" ]; then
+        pnpm install --prod --frozen-lockfile
+    else
+        pnpm install --prod
+    fi
 else
-    pnpm install --prod
+    if [ -f "package-lock.json" ]; then
+        npm ci --omit=dev
+    else
+        npm install --omit=dev
+    fi
 fi
 
 print_info "Generating JWT secret..."
@@ -607,10 +673,16 @@ cp -r "$TEMP_DIR/backend/scripts" "$INSTALL_PATH/backend/"
 cp "$TEMP_DIR/backend/package.json" "$INSTALL_PATH/backend/"
 
 cd "$INSTALL_PATH/backend"
-if [ -f "pnpm-lock.yaml" ]; then
+
+# Detect which package manager to use
+if command -v pnpm &> /dev/null && [ -f "pnpm-lock.yaml" ]; then
     pnpm install --prod --frozen-lockfile
-else
+elif command -v pnpm &> /dev/null; then
     pnpm install --prod
+elif [ -f "package-lock.json" ]; then
+    npm ci --omit=dev
+else
+    npm install --omit=dev
 fi
 
 print_info "Restoring .env file..."
@@ -618,12 +690,21 @@ mv "$TEMP_DIR/backend/.env.backup" "$INSTALL_PATH/backend/.env"
 
 print_info "Building new frontend..."
 cd "$TEMP_DIR/frontend"
-if [ -f "pnpm-lock.yaml" ]; then
+
+# Detect which package manager to use
+if command -v pnpm &> /dev/null && [ -f "pnpm-lock.yaml" ]; then
     pnpm install --frozen-lockfile
-else
+    pnpm run build
+elif command -v pnpm &> /dev/null; then
     pnpm install
+    pnpm run build
+elif [ -f "package-lock.json" ]; then
+    npm ci
+    npm run build
+else
+    npm install
+    npm run build
 fi
-pnpm run build
 
 print_info "Updating frontend..."
 rm -rf "$INSTALL_PATH/frontend"/*
