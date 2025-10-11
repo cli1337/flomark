@@ -1,5 +1,7 @@
 import api from './api'
 import axios from 'axios'
+import demoApi from './demoApiService'
+import demoDataService from './demoDataService'
 
 const API_BASE_URL = '/api'
 
@@ -23,21 +25,33 @@ const createFileApiInstance = () => {
 
 export const projectService = {
   async getAllProjects(page = 1, limit = 5) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.getProjects();
+    }
     const response = await api.get(`/projects?page=${page}&limit=${limit}`)
     return response.data
   },
 
   async getProjectById(id) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.getProjectById(id);
+    }
     const response = await api.get(`/projects/${id}`)
     return response.data
   },
 
   async createProject(projectName) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.createProject({ name: projectName });
+    }
     const response = await api.post('/projects', { name: projectName })
     return response.data
   },
 
   async updateProject(id, projectName) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.updateProject(id, { name: projectName });
+    }
     const response = await api.put(`/projects/${id}`, { name: projectName })
     return response.data
   },
@@ -104,36 +118,74 @@ export const projectService = {
   },
 
   async getLabelsByProject(projectId) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.getLabelsByProject(projectId);
+    }
     const response = await api.get(`/projects/${projectId}/labels`)
     return response.data
   },
 
   async createLabel(projectId, labelData) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.createLabel(projectId, labelData);
+    }
     const response = await api.post(`/projects/${projectId}/labels`, labelData)
     return response.data
   },
 
   async updateLabel(labelId, labelData) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.updateLabel(labelId, labelData);
+    }
     const response = await api.put(`/labels/${labelId}`, labelData)
     return response.data
   },
 
   async deleteLabel(labelId) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.deleteLabel(labelId);
+    }
     const response = await api.delete(`/labels/${labelId}`)
     return response.data
   },
 
   async getMembersByProject(projectId) {
+    if (demoDataService.isDemoMode()) {
+      // Return demo user as member
+      const user = demoDataService.getDemoUser();
+      return {
+        success: true,
+        data: [{ id: 'demo-member-1', userId: user.id, projectId, role: 'OWNER', user }]
+      };
+    }
     const response = await api.get(`/projects/${projectId}/members`)
     return response.data
   },
 
   async deleteProject(projectId) {
+    if (demoDataService.isDemoMode()) {
+      return await demoApi.deleteProject(projectId);
+    }
     const response = await api.delete(`/projects/${projectId}`)
     return response.data
   },
 
   async getProjectDataOptimized(projectId) {
+    if (demoDataService.isDemoMode()) {
+      // Get all related data for the project
+      const project = await demoApi.getProjectById(projectId);
+      const lists = await demoApi.getListsByProject(projectId);
+      const labels = await demoApi.getLabelsByProject(projectId);
+      
+      return {
+        success: true,
+        data: {
+          project: project.data,
+          lists: lists.data,
+          labels: labels.data
+        }
+      };
+    }
     const response = await api.get(`/projects/${projectId}/data`)
     return response.data
   }
