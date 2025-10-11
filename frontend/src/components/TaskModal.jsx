@@ -26,11 +26,35 @@ import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import useMobileDetection from '../hooks/useMobileDetection'
 
-const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
+const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }) => {
   const { showSuccess, showError } = useToast()
   const { user } = useAuth()
   const isMobile = useMobileDetection()
-  const [taskData, setTaskData] = useState(task)
+  
+  // Helper function to ensure labels is always an array
+  const parseLabels = (labels) => {
+    if (!labels) return []
+    if (Array.isArray(labels)) return labels
+    if (typeof labels === 'string') {
+      try {
+        return JSON.parse(labels)
+      } catch (e) {
+        return []
+      }
+    }
+    return []
+  }
+  
+  // Helper function to ensure task data has parsed labels
+  const normalizeTaskData = (taskData) => {
+    if (!taskData) return taskData
+    return {
+      ...taskData,
+      labels: parseLabels(taskData.labels)
+    }
+  }
+  
+  const [taskData, setTaskData] = useState(normalizeTaskData(task))
   const [canManageMembers, setCanManageMembers] = useState(false)
   const [newSubTask, setNewSubTask] = useState('')
   const [newComment, setNewComment] = useState('')
@@ -53,14 +77,15 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
   const [selectedFiles, setSelectedFiles] = useState([])
   const [dueDate, setDueDate] = useState(task?.dueDate || '')
   const [dueTime, setDueTime] = useState('')
-  const [selectedLabels, setSelectedLabels] = useState(task?.labels || [])
+  const [selectedLabels, setSelectedLabels] = useState(parseLabels(task?.labels))
 
   useEffect(() => {
     if (task) {
-      setTaskData(task)
+      const normalized = normalizeTaskData(task)
+      setTaskData(normalized)
       setTempName(task.name || '')
       setTempDescription(task.description || '')
-      setSelectedLabels(task.labels || [])
+      setSelectedLabels(parseLabels(task.labels))
       setDueDate(task.dueDate || '')
       if (task.dueDate) {
         const date = new Date(task.dueDate)
@@ -88,8 +113,9 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
     try {
       const response = await taskService.updateTask(taskData.id, updates)
       if (response.success) {
-        setTaskData(response.data)
-        onUpdate?.(response.data)
+        const normalized = normalizeTaskData(response.data)
+        setTaskData(normalized)
+        onUpdate?.(normalized)
         showSuccess('Task Updated', 'Task has been updated successfully')
       }
     } catch (error) {
@@ -203,10 +229,13 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
 
   const loadAvailableMembers = async () => {
     try {
+      // Check if taskData exists before accessing its properties
+      if (!taskData) return
 
-      const projectId = taskData.list?.projectId
-      if (projectId) {
-        const response = await projectService.getMembersByProject(projectId)
+      // Use projectId from props or fallback to taskData.list.projectId
+      const taskProjectId = projectId || taskData.list?.projectId
+      if (taskProjectId) {
+        const response = await projectService.getMembersByProject(taskProjectId)
         if (response.success) {
           const assignedMemberIds = taskData.members?.map(m => m.userId) || []
           const available = response.data.filter(m => !assignedMemberIds.includes(m.userId))
@@ -228,12 +257,22 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
 
   const loadAvailableLabels = async () => {
     try {
-      const projectId = taskData.list?.projectId
-      if (projectId) {
-        const response = await projectService.getLabelsByProject(projectId)
+      // Check if taskData exists before accessing its properties
+      if (!taskData) return
+
+      // Use projectId from props or fallback to taskData.list.projectId
+      const taskProjectId = projectId || taskData.list?.projectId
+      console.log('🔍 TaskModal - Attempting to load labels with projectId:', taskProjectId)
+      if (taskProjectId) {
+        const response = await projectService.getLabelsByProject(taskProjectId)
         if (response.success) {
+          console.log('📋 Loaded labels:', response.data)
           setAvailableLabels(response.data)
+        } else {
+          console.warn('⚠️ Failed to load labels:', response)
         }
+      } else {
+        console.warn('⚠️ No projectId found in taskData:', taskData)
       }
     } catch (error) {
       console.error('Error loading labels:', error)
@@ -387,8 +426,9 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
       // Refresh task data to get updated attachments
       const response = await taskService.getTaskById(taskData.id)
       if (response.success) {
-        setTaskData(response.data)
-        onUpdate?.(response.data)
+        const normalized = normalizeTaskData(response.data)
+        setTaskData(normalized)
+        onUpdate?.(normalized)
       }
 
       showSuccess('Files Uploaded', `${selectedFiles.length} file(s) uploaded successfully`)
@@ -1038,29 +1078,37 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated }) => {
             </div>
             
             <div className="space-y-2 mb-4 max-h-60 overflow-y-auto">
-              {availableLabels.map((label) => (
-                <div
-                  key={label.id}
-                  className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer"
-                  onClick={() => {
-                    const isSelected = selectedLabels.some(l => l.id === label.id)
-                    if (isSelected) {
-                      setSelectedLabels(prev => prev.filter(l => l.id !== label.id))
-                    } else {
-                      setSelectedLabels(prev => [...prev, label])
-                    }
-                  }}
-                >
-                  <div 
-                    className="w-4 h-4 rounded-full"
-                    style={{ backgroundColor: label.color }}
-                  />
-                  <span className="text-white text-sm flex-1">{label.name}</span>
-                  {selectedLabels.some(l => l.id === label.id) && (
-                    <Check className="h-4 w-4 text-green-400" />
-                  )}
+              {availableLabels.length === 0 ? (
+                <div className="text-center py-8">
+                  <Tag className="h-12 w-12 text-gray-600 mx-auto mb-3" />
+                  <p className="text-gray-400 text-sm mb-2">No labels available</p>
+                  <p className="text-gray-500 text-xs">Create labels in the project settings first</p>
                 </div>
-              ))}
+              ) : (
+                availableLabels.map((label) => (
+                  <div
+                    key={label.id}
+                    className="flex items-center gap-3 p-2 hover:bg-white/5 rounded cursor-pointer"
+                    onClick={() => {
+                      const isSelected = selectedLabels.some(l => l.id === label.id)
+                      if (isSelected) {
+                        setSelectedLabels(prev => prev.filter(l => l.id !== label.id))
+                      } else {
+                        setSelectedLabels(prev => [...prev, label])
+                      }
+                    }}
+                  >
+                    <div 
+                      className="w-4 h-4 rounded-full"
+                      style={{ backgroundColor: label.color }}
+                    />
+                    <span className="text-white text-sm flex-1">{label.name}</span>
+                    {selectedLabels.some(l => l.id === label.id) && (
+                      <Check className="h-4 w-4 text-green-400" />
+                    )}
+                  </div>
+                ))
+              )}
             </div>
 
             <div className="flex gap-3 justify-end">

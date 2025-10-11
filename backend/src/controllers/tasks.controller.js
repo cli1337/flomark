@@ -1,6 +1,7 @@
 import { prisma } from "../config/database.js";
 import { SocketService } from "../services/socket.service.js";
 import { isValidId } from "../utils/id-validator.js";
+import { safeUserSelect } from "../utils/user-sanitizer.js";
 
 /**
  * Tasks Controller
@@ -71,7 +72,9 @@ export const getTasksByList = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true
@@ -164,7 +167,9 @@ export const createTask = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true
@@ -213,7 +218,9 @@ export const getTaskById = async (req, res, next) => {
                 },
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true,
@@ -623,7 +630,9 @@ export const assignMember = async (req, res, next) => {
                 userId
             },
             include: {
-                user: true
+                user: {
+                    select: safeUserSelect
+                }
             }
         });
         

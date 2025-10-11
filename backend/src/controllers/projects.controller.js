@@ -3,6 +3,7 @@ import fs from "fs";
 import crypto from "crypto";
 import { SocketService } from "../services/socket.service.js";
 import { isValidId } from "../utils/id-validator.js";
+import { safeUserSelect, sanitizeProject, sanitizeProjects, sanitizeMembers } from "../utils/user-sanitizer.js";
 
 /**
  * Projects Controller
@@ -82,7 +83,9 @@ export const getProjects = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 lists: {
@@ -134,7 +137,9 @@ export const getProjectById = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 }
             }
@@ -648,7 +653,9 @@ export const getMembersByProject = async (req, res, next) => {
         const members = await prisma.projectMember.findMany({ 
             where: { projectId: id },
             include: {
-                user: true
+                user: {
+                    select: safeUserSelect
+                }
             }
         });
         
@@ -1233,7 +1240,9 @@ export const getProjectDataOptimized = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 }
             }
@@ -1262,7 +1271,9 @@ export const getProjectDataOptimized = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true,

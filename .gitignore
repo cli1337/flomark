@@ -57,3 +57,7 @@ Thumbs.db
 *.temp
 tmp/
 temp/
+
+# SQLite database
+dev.db
+dev.db-journal

@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import { generateToken, generateRefreshToken, verifyToken } from "../utils/jwt.utils.js";
 import speakeasy from "speakeasy";
 import QRCode from "qrcode";
+import { sanitizeUser } from "../utils/user-sanitizer.js";
 
 /**
  * User Controller
@@ -48,7 +49,7 @@ export const createUser = async (req, res, next) => {
         lastIP: registerIP
       },
     });
-    res.json({ data: user, success: true });
+    res.json({ data: sanitizeUser(user), success: true });
   } catch (err) {
     next(err);
   }
@@ -109,7 +110,6 @@ export const authenticateUser = async (req, res, next) => {
           name: user.name,
           email: user.email,
           profileImage: user.profileImage || null,
-          twoFactorEnabled: user.twoFactorEnabled || false,
           role: user.role,
         }
       }, 
@@ -149,7 +149,7 @@ export const refreshToken = async (req, res, next) => {
     }
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, name: true, profileImage: true, twoFactorEnabled: true, role: true },
+      select: { id: true, email: true, name: true, profileImage: true, role: true },
     });
 
     if (!user) {
@@ -172,7 +172,6 @@ export const refreshToken = async (req, res, next) => {
           name: user.name,
           email: user.email,
           profileImage: user.profileImage || null,
-          twoFactorEnabled: user.twoFactorEnabled || false,
           role: user.role,
         },
       },
@@ -206,7 +205,6 @@ export const getProfile = async (req, res, next) => {
         name: true,
         email: true,
         profileImage: true,
-        twoFactorEnabled: true,
         role: true,
       },
     });
@@ -382,7 +380,6 @@ export const verifyTwoFactorLogin = async (req, res, next) => {
           name: user.name,
           email: user.email,
           profileImage: user.profileImage || null,
-          twoFactorEnabled: user.twoFactorEnabled,
           role: user.role,
         },
       },
@@ -425,7 +422,6 @@ export const updateUserProfile = async (req, res, next) => {
         name: true,
         email: true,
         profileImage: true,
-        twoFactorEnabled: true,
         role: true,
       },
     });
@@ -530,7 +526,6 @@ export const uploadProfileImage = async (req, res, next) => {
         name: true,
         email: true,
         profileImage: true,
-        twoFactorEnabled: true,
         role: true,
       },
     });
@@ -569,9 +564,6 @@ export const getAllUsers = async (req, res, next) => {
         profileImage: true,
         role: true,
         createdAt: true,
-        registerIP: true,
-        lastIP: true,
-        twoFactorEnabled: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -661,9 +653,6 @@ export const updateUserByAdmin = async (req, res, next) => {
         profileImage: true,
         role: true,
         createdAt: true,
-        registerIP: true,
-        lastIP: true,
-        twoFactorEnabled: true,
       },
     });
 
@@ -735,9 +724,6 @@ export const promoteUserToAdmin = async (req, res, next) => {
         profileImage: true,
         role: true,
         createdAt: true,
-        registerIP: true,
-        lastIP: true,
-        twoFactorEnabled: true,
       },
     });
 

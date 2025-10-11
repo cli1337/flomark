@@ -1163,6 +1163,7 @@ const ProjectDetail = () => {
         task={selectedTask}
         isOpen={showTaskModal}
         labelsUpdated={labelsUpdated}
+        projectId={id}
         onClose={() => {
           setShowTaskModal(false)
           setSelectedTask(null)

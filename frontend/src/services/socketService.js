@@ -44,8 +44,11 @@ class SocketService {
     }
 
     this.connecting = true;
-    // Use current domain for production, localhost for dev
-    const serverUrl = import.meta.env.VITE_API_URL || window.location.origin;
+    // Use environment variable or determine based on environment
+    // In development, the backend runs on port 5000 while frontend is on 3000
+    const isDevelopment = import.meta.env.DEV || window.location.hostname === 'localhost';
+    const serverUrl = import.meta.env.VITE_API_URL || 
+                     (isDevelopment ? 'http://localhost:5000' : window.location.origin);
     
 
     this.connectionTimeout = setTimeout(() => {
