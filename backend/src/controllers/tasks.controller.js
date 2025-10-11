@@ -1,6 +1,6 @@
 import { prisma } from "../config/database.js";
-import { ObjectId } from "mongodb";
 import { SocketService } from "../services/socket.service.js";
+import { isValidId } from "../utils/id-validator.js";
 
 /**
  * Tasks Controller
@@ -44,7 +44,7 @@ export const getTasksByList = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!isValidId(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
 
@@ -102,7 +102,7 @@ export const createTask = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!isValidId(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
         
@@ -181,7 +181,7 @@ export const getTaskById = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -237,7 +237,7 @@ export const updateTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -325,7 +325,7 @@ export const moveTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -333,7 +333,7 @@ export const moveTask = async (req, res, next) => {
             return res.status(400).json({ message: "New list ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(newListId)) {
+        if (!isValidId(newListId)) {
             return res.status(400).json({ message: "Invalid new list ID", key: "invalid_list_id", success: false });
         }
 
@@ -415,7 +415,7 @@ export const reorderTasks = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!isValidId(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
         
@@ -470,7 +470,7 @@ export const deleteTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -529,7 +529,7 @@ export const assignMember = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -537,7 +537,7 @@ export const assignMember = async (req, res, next) => {
             return res.status(400).json({ message: "User ID is required", key: "user_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(userId)) {
+        if (!isValidId(userId)) {
             return res.status(400).json({ message: "Invalid user ID", key: "invalid_user_id", success: false });
         }
 
@@ -605,7 +605,7 @@ export const removeMember = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -613,7 +613,7 @@ export const removeMember = async (req, res, next) => {
             return res.status(400).json({ message: "User ID is required", key: "user_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(userId)) {
+        if (!isValidId(userId)) {
             return res.status(400).json({ message: "Invalid user ID", key: "invalid_user_id", success: false });
         }
 
@@ -669,7 +669,7 @@ export const addSubTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -733,7 +733,7 @@ export const updateSubTask = async (req, res, next) => {
             return res.status(400).json({ message: "Subtask ID is required", key: "subtask_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(subTaskId)) {
+        if (!isValidId(subTaskId)) {
             return res.status(400).json({ message: "Invalid subtask ID", key: "invalid_subtask_id", success: false });
         }
 
@@ -794,7 +794,7 @@ export const deleteSubTask = async (req, res, next) => {
             return res.status(400).json({ message: "Subtask ID is required", key: "subtask_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(subTaskId)) {
+        if (!isValidId(subTaskId)) {
             return res.status(400).json({ message: "Invalid subtask ID", key: "invalid_subtask_id", success: false });
         }
 
@@ -844,7 +844,7 @@ export const addLabel = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -852,7 +852,7 @@ export const addLabel = async (req, res, next) => {
             return res.status(400).json({ message: "Label ID is required", key: "label_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(labelId)) {
+        if (!isValidId(labelId)) {
             return res.status(400).json({ message: "Invalid label ID", key: "invalid_label_id", success: false });
         }
 
@@ -900,7 +900,7 @@ export const removeLabel = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         

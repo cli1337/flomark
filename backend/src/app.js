@@ -32,6 +32,13 @@ try {
 
 const app = express();
 
+// Security: Remove X-Powered-By header
+app.disable('x-powered-by');
+
+// Trust proxy - needed when behind reverse proxy (nginx, load balancer, etc.)
+// This allows express-rate-limit to correctly identify users by IP
+app.set('trust proxy', true);
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
