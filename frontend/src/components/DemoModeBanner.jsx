@@ -1,47 +1,59 @@
 import { useEffect, useState } from 'react';
-import { Eye, Clock } from 'lucide-react';
-import api from '../services/api';
+import { Eye, RefreshCw, X } from 'lucide-react';
+import demoDataService from '../services/demoDataService';
 
 /**
  * Demo Mode Banner Component
- * Displays a banner when the app is in demo mode
+ * Displays a banner when the app is in client-side demo mode
  */
 export default function DemoModeBanner() {
-  const [demoInfo, setDemoInfo] = useState(null);
+  const [isDemoActive, setIsDemoActive] = useState(false);
 
   useEffect(() => {
-    checkDemoMode();
-    // Refresh demo info every minute
-    const interval = setInterval(checkDemoMode, 60000);
-    return () => clearInterval(interval);
+    setIsDemoActive(demoDataService.isDemoMode());
   }, []);
 
-  const checkDemoMode = async () => {
-    try {
-      const response = await api.get('/demo-info');
-      if (response.data.demoMode) {
-        setDemoInfo(response.data);
-      }
-    } catch (error) {
-      console.error('Error checking demo mode:', error);
+  const handleReset = () => {
+    demoDataService.resetDemoData();
+    window.location.reload();
+  };
+
+  const handleExit = () => {
+    if (confirm('Exit demo mode? This will clear all demo data and require login.')) {
+      demoDataService.disableDemoMode();
+      window.location.href = '/login';
     }
   };
 
-  if (!demoInfo) return null;
-
-  const resetMinutes = demoInfo.stats?.timeUntilReset || 0;
+  if (!isDemoActive) return null;
 
   return (
     <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-2 shadow-md">
-      <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 text-sm flex-wrap">
-        <Eye className="w-4 h-4" />
-        <span className="font-medium">Demo Mode Active</span>
-        <span className="hidden sm:inline">• Logged in as demo@flomark.app</span>
-        {resetMinutes > 0 && (
-          <span className="hidden sm:inline">
-            Resets in {resetMinutes} min
-          </span>
-        )}
+      <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 text-sm">
+        <div className="flex items-center gap-2 flex-wrap">
+          <Eye className="w-4 h-4" />
+          <span className="font-medium">Demo Mode Active</span>
+          <span className="hidden sm:inline">• Try all features without signup!</span>
+          <span className="hidden sm:inline opacity-80">• All data stored in your browser</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-1 px-2 py-1 bg-white/20 hover:bg-white/30 rounded transition-colors"
+            title="Reset demo data"
+          >
+            <RefreshCw className="w-3 h-3" />
+            <span className="hidden sm:inline">Reset</span>
+          </button>
+          <button
+            onClick={handleExit}
+            className="flex items-center gap-1 px-2 py-1 bg-white/20 hover:bg-white/30 rounded transition-colors"
+            title="Exit demo mode"
+          >
+            <X className="w-3 h-3" />
+            <span className="hidden sm:inline">Exit</span>
+          </button>
+        </div>
       </div>
     </div>
   );

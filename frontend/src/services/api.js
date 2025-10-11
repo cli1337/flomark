@@ -1,4 +1,5 @@
 import axios from 'axios'
+import demoDataService from './demoDataService'
 
 const API_BASE_URL = '/api'
 
@@ -19,6 +20,13 @@ const createApiInstance = (contentType = 'application/json') => {
 }
 
 api.interceptors.request.use((config) => {
+  // In demo mode, use demo token
+  if (demoDataService.isDemoMode()) {
+    const demoToken = localStorage.getItem('demo_token') || 'demo-token';
+    config.headers.Authorization = `Bearer ${demoToken}`;
+    return config;
+  }
+  
   const token = localStorage.getItem('token')
   
 
@@ -35,6 +43,11 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Skip error handling in demo mode
+    if (demoDataService.isDemoMode()) {
+      return Promise.reject(error);
+    }
+    
     const originalRequest = error.config;
 
     if (error.response?.status === 401) {

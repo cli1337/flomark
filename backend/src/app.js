@@ -19,6 +19,17 @@ import fs from 'fs';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
+// Try to read frontend package.json for version info
+let frontendVersion = 'unknown';
+try {
+  const frontendPackageJsonPath = new URL('../../frontend/package.json', import.meta.url);
+  const frontendPackageJson = JSON.parse(readFileSync(frontendPackageJsonPath, 'utf8'));
+  frontendVersion = frontendPackageJson.version;
+} catch (err) {
+  // Frontend package.json might not exist in production deployments
+  console.log('⚠️  Could not read frontend package.json, version will show as unknown');
+}
+
 const app = express();
 
 app.use(cors());
@@ -32,7 +43,10 @@ app.get(`${mainRoutePath}/health`, (req, res) => {
     uptime: process.uptime(),
     message: 'API is running',
     key: 'api_running',
-    version: packageJson.version
+    version: {
+      backend: packageJson.version,
+      frontend: frontendVersion
+    }
   });
 });
 

@@ -1,123 +1,167 @@
 import { useState, useEffect } from 'react';
-import { AlertCircle, Download, X, RefreshCw } from 'lucide-react';
+import { X, RefreshCw, Download, AlertCircle } from 'lucide-react';
+import { checkForUpdates, formatVersion } from '../services/versionService';
 import { useAuth } from '../contexts/AuthContext';
 
 /**
- * Update Notification Component
- * Shows update warning for OWNER role users
+ * UpdateNotification Component
+ * Automatically checks for updates and shows a notification banner
+ * Shows for all users but only OWNER can see detailed instructions
  */
 export default function UpdateNotification() {
   const { user } = useAuth();
-  const [dismissed, setDismissed] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [isVisible, setIsVisible] = useState(false);
+  const [isChecking, setIsChecking] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    // Check if user previously dismissed
-    const isDismissed = localStorage.getItem('update-notification-dismissed');
-    if (isDismissed) {
-      setDismissed(true);
-    }
-  }, []);
+    // Only check for updates if user is authenticated
+    if (!user) return;
 
-  const handleDismiss = () => {
-    localStorage.setItem('update-notification-dismissed', 'true');
-    setDismissed(true);
+    // Check for updates on mount
+    checkForUpdatesOnMount();
+
+    // Check for updates every 30 minutes
+    const interval = setInterval(checkForUpdatesOnMount, 30 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const checkForUpdatesOnMount = async () => {
+    try {
+      setIsChecking(true);
+      const result = await checkForUpdates();
+      
+      if (result.hasUpdate) {
+        // Check if user has dismissed this version
+        const dismissedVersion = localStorage.getItem('dismissed_update_version');
+        const latestVersion = `${result.latest.backend}-${result.latest.frontend}`;
+        
+        if (dismissedVersion !== latestVersion) {
+          setUpdateInfo(result);
+          setIsVisible(true);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to check for updates:', error);
+    } finally {
+      setIsChecking(false);
+    }
   };
 
-  // Only show for OWNER role
-  if (!user || user.role !== 'OWNER' || dismissed) {
+  const handleDismiss = () => {
+    if (updateInfo) {
+      const latestVersion = `${updateInfo.latest.backend}-${updateInfo.latest.frontend}`;
+      localStorage.setItem('dismissed_update_version', latestVersion);
+    }
+    setIsVisible(false);
+  };
+
+  const handleUpdate = () => {
+    window.open('https://github.com/cli1337/flomark#-update', '_blank');
+  };
+
+  if (!isVisible || !updateInfo) {
     return null;
   }
 
+  const backendNeedsUpdate = updateInfo.latest.backend !== updateInfo.current.backend;
+  const frontendNeedsUpdate = updateInfo.latest.frontend !== updateInfo.current.frontend;
+  const isOwner = user?.role === 'OWNER';
+
   return (
-    <div className="fixed bottom-4 right-4 z-50 max-w-md">
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg shadow-2xl p-4 text-white">
-        <div className="flex items-start gap-3">
-          <RefreshCw className="w-5 h-5 mt-0.5 flex-shrink-0" />
-          
-          <div className="flex-1">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="font-semibold text-sm">System Updates Available</h3>
-              <button
-                onClick={handleDismiss}
-                className="text-white/80 hover:text-white transition-colors"
-                title="Dismiss"
-              >
-                <X className="w-4 h-4" />
-              </button>
+    <div className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 text-white shadow-lg animate-slideDown">
+      <div className="container mx-auto px-4 py-3">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3 flex-1">
+            <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded-full backdrop-blur-sm flex-shrink-0 mt-0.5">
+              <Download className="w-4 h-4" />
             </div>
             
-            <p className="text-xs text-white/90 mb-3">
-              Keep your Flomark instance up to date with the latest features and security patches.
-            </p>
-
-            <button
-              onClick={() => setShowDetails(!showDetails)}
-              className="text-xs underline text-white/90 hover:text-white mb-2"
-            >
-              {showDetails ? 'Hide' : 'Show'} update instructions
-            </button>
-
-            {showDetails && (
-              <div className="mt-3 p-3 bg-black/20 rounded-md text-xs space-y-2">
-                <div>
-                  <p className="font-semibold mb-1">🔄 Update Backend Only:</p>
-                  <code className="bg-black/30 px-2 py-1 rounded block">
-                    ./update-backend.sh
-                  </code>
-                  <p className="text-white/70 mt-1 text-[10px]">
-                    Updates server code, preserves .env and uploads
-                  </p>
-                </div>
-
-                <div>
-                  <p className="font-semibold mb-1">🎨 Update Frontend Only:</p>
-                  <code className="bg-black/30 px-2 py-1 rounded block">
-                    ./update-frontend.sh
-                  </code>
-                  <p className="text-white/70 mt-1 text-[10px]">
-                    Updates UI, preserves customizations in custom/
-                  </p>
-                </div>
-
-                <div className="pt-2 border-t border-white/20">
-                  <p className="text-white/70 text-[10px]">
-                    ⚠️ <strong>Important:</strong> Always backup before updating!
-                    <br />
-                    📚 <a 
-                      href="https://github.com/cli1337/flomark#updates" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="underline hover:text-white"
-                    >
-                      Read full update guide →
-                    </a>
-                  </p>
-                </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <p className="font-semibold text-sm">
+                  🎉 New version available!
+                </p>
               </div>
-            )}
+              
+              <div className="text-xs opacity-90 space-y-0.5 mb-2">
+                {backendNeedsUpdate && (
+                  <p>
+                    <span className="font-medium">Backend:</span> {formatVersion(updateInfo.current.backend)} → <span className="font-semibold">{formatVersion(updateInfo.latest.backend)}</span>
+                  </p>
+                )}
+                {frontendNeedsUpdate && (
+                  <p>
+                    <span className="font-medium">Frontend:</span> {formatVersion(updateInfo.current.frontend)} → <span className="font-semibold">{formatVersion(updateInfo.latest.frontend)}</span>
+                  </p>
+                )}
+              </div>
 
-            <div className="flex gap-2 mt-3">
-              <a
-                href="https://github.com/cli1337/flomark/releases"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 bg-white/20 hover:bg-white/30 text-white text-xs py-2 px-3 rounded-md transition-colors flex items-center justify-center gap-1"
-              >
-                <Download className="w-3 h-3" />
-                View Releases
-              </a>
-              <button
-                onClick={handleDismiss}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white text-xs py-2 px-3 rounded-md transition-colors"
-              >
-                Dismiss
-              </button>
+              {isOwner && (
+                <>
+                  <button
+                    onClick={() => setShowDetails(!showDetails)}
+                    className="text-xs underline opacity-90 hover:opacity-100 mb-2"
+                  >
+                    {showDetails ? '▼ Hide' : '▶ Show'} update instructions
+                  </button>
+
+                  {showDetails && (
+                    <div className="mt-2 p-3 bg-black/20 rounded-md text-xs space-y-2 backdrop-blur-sm">
+                      <div>
+                        <p className="font-semibold mb-1">🔄 Full Update (Recommended):</p>
+                        <code className="bg-black/30 px-2 py-1 rounded block font-mono">
+                          sudo bash update.sh
+                        </code>
+                        <p className="text-white/80 mt-1 text-[10px]">
+                          Updates both backend and frontend, preserves .env and storage
+                        </p>
+                      </div>
+
+                      <div className="pt-2 border-t border-white/20">
+                        <p className="text-white/80 text-[10px]">
+                          ⚠️ <strong>Important:</strong> Always backup before updating!
+                          <br />
+                          📚 <a 
+                            href="https://github.com/cli1337/flomark#-update" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="underline hover:text-white"
+                          >
+                            Read full update guide →
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
             </div>
+          </div>
+
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {isOwner && (
+              <button
+                onClick={handleUpdate}
+                className="flex items-center gap-2 px-4 py-2 bg-white text-purple-600 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium whitespace-nowrap"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Update Guide
+              </button>
+            )}
+            
+            <button
+              onClick={handleDismiss}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+              aria-label="Dismiss"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       </div>
     </div>
   );
 }
-

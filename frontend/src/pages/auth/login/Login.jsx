@@ -5,9 +5,10 @@ import { useToast } from '../../../contexts/ToastContext'
 import usePageTitle from '../../../hooks/usePageTitle'
 import { Button } from '../../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/Card'
-import { LockKeyhole, Mail, Eye, EyeOff } from 'lucide-react'
+import { LockKeyhole, Mail, Eye, EyeOff, Play } from 'lucide-react'
 import * as Form from '@radix-ui/react-form'
 import api from '../../../services/api'
+import demoDataService from '../../../services/demoDataService'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -25,43 +26,35 @@ function Login() {
   const [pendingToken, setPendingToken] = useState('')
   const [totp, setTotp] = useState('')
 
-  // Check for demo mode and auto-login
+  // Check for client-side demo mode and auto-login
   useEffect(() => {
-    const checkDemoMode = async () => {
-      try {
-        const response = await api.get('/demo-info')
-        if (response.data.demoMode && response.data.demoUser) {
-          // Auto-fill and submit the demo credentials
-          setEmail('demo@flomark.app')
-          setPassword('demo')
-          // Auto-submit after a short delay
-          setTimeout(() => {
-            handleDemoLogin()
-          }, 500)
-        }
-      } catch (error) {
-        // If demo-info endpoint fails, just continue normally
-        console.log('Demo mode check skipped')
-      }
+    if (demoDataService.isDemoMode()) {
+      // Auto-login in demo mode
+      handleDemoLogin();
     }
-
-    checkDemoMode()
   }, [])
 
   const handleDemoLogin = async () => {
     setLoading(true)
     const result = await login('demo@flomark.app', 'demo')
     
-    if (result.success && result.needs2FA) {
-      setNeeds2FA(true)
-      setPendingToken(result.pendingToken)
-    } else if (result.success) {
+    if (result.success) {
       showSuccess('Demo Mode', 'Welcome to Flomark Demo!')
       navigate('/projects')
     } else {
       showError('Login Failed', result.message)
     }
     setLoading(false)
+  }
+
+  const handleTryDemo = () => {
+    // Enable demo mode and login
+    demoDataService.enableDemoMode();
+    showSuccess('Demo Mode Enabled', 'Logging you in...');
+    // Wait a moment then reload to trigger demo login
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
   }
 
   const handleSubmit = async (e) => {
@@ -223,6 +216,29 @@ function Login() {
                   )}
                 </Button>
               </Form.Submit>
+
+              {/* Try Demo Button */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-white/10" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-[#1e2023] px-2 text-gray-400">Or</span>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleTryDemo}
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium py-2.5 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <Play className="w-4 h-4" />
+                Try Demo Mode
+              </Button>
+              <p className="text-center text-xs text-gray-400">
+                No signup required • All features available • Data stored locally
+              </p>
 
               {/* Sign up link */}
               {/* <p className="text-center text-sm text-gray-400">
