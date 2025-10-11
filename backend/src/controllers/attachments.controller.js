@@ -1,6 +1,5 @@
 import { prisma } from "../config/database.js";
 import { ObjectId } from "mongodb";
-import { ENV } from "../config/env.js";
 import { SocketService } from "../services/socket.service.js";
 import fs from 'fs';
 import path from 'path';
@@ -42,7 +41,7 @@ export const uploadAttachment = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ENV.DEMO_MODE && !ObjectId.isValid(taskId)) {
+        if (!ObjectId.isValid(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -124,7 +123,7 @@ export const getAttachments = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ENV.DEMO_MODE && !ObjectId.isValid(taskId)) {
+        if (!ObjectId.isValid(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -172,7 +171,7 @@ export const deleteAttachment = async (req, res, next) => {
             return res.status(400).json({ message: "Attachment ID is required", key: "attachment_id_required", success: false });
         }
         
-        if (!ENV.DEMO_MODE && !ObjectId.isValid(attachmentId)) {
+        if (!ObjectId.isValid(attachmentId)) {
             return res.status(400).json({ message: "Invalid attachment ID", key: "invalid_attachment_id", success: false });
         }
 

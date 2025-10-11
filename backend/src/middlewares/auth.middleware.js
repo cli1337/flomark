@@ -98,6 +98,10 @@ export const optionalAuth = async (req, res, next) => {
     }
 
     const decoded = verifyToken(token);
+    if (!decoded) {
+      req.user = null;
+      return next();
+    }
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: {

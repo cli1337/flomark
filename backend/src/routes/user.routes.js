@@ -18,6 +18,12 @@ import {
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { getClientIP } from "../middlewares/ip.middleware.js";
 import { uploadPhoto, handleMulterError } from "../config/multer.config.js";
+import { 
+  loginRateLimiter, 
+  registrationRateLimiter, 
+  passwordRateLimiter,
+  refreshTokenRateLimiter 
+} from "../middlewares/rate-limit.middleware.js";
 
 /**
  * User Routes
@@ -31,23 +37,23 @@ const router = Router();
 // ===== Public Routes (No Authentication Required) =====
 
 // User registration and authentication
-router.post("/create", getClientIP, createUser);
-router.post("/auth", getClientIP, authenticateUser);
-router.post("/refresh", refreshToken);
-router.post("/2fa/verify-login", verifyTwoFactorLogin); // Complete 2FA login
+router.post("/create", registrationRateLimiter, getClientIP, createUser);
+router.post("/auth", loginRateLimiter, getClientIP, authenticateUser);
+router.post("/refresh", refreshTokenRateLimiter, refreshToken);
+router.post("/2fa/verify-login", loginRateLimiter, verifyTwoFactorLogin); // Complete 2FA login
 
 // ===== Protected Routes (Authentication Required) =====
 
 // Profile management
 router.get("/profile", authenticateToken, getProfile);
 router.put("/profile", authenticateToken, updateUserProfile);
-router.put("/password", authenticateToken, updateUserPassword);
+router.put("/password", passwordRateLimiter, authenticateToken, updateUserPassword);
 router.post("/profile/image", authenticateToken, uploadPhoto.single('profileImage'), handleMulterError, uploadProfileImage);
 
 // Two-factor authentication (2FA)
-router.post("/2fa/init", authenticateToken, initTwoFactor);
-router.post("/2fa/verify-setup", authenticateToken, verifyTwoFactorSetup);
-router.post("/2fa/disable", authenticateToken, disableTwoFactor);
+router.post("/2fa/init", passwordRateLimiter, authenticateToken, initTwoFactor);
+router.post("/2fa/verify-setup", passwordRateLimiter, authenticateToken, verifyTwoFactorSetup);
+router.post("/2fa/disable", passwordRateLimiter, authenticateToken, disableTwoFactor);
 
 // Admin operations (requires Admin or Owner role)
 router.get("/admin/users", authenticateToken, getAllUsers);

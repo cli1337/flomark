@@ -140,6 +140,13 @@ export const refreshToken = async (req, res, next) => {
     }
 
     const decoded = verifyToken(refreshToken);
+    if (!decoded) {
+      return res.status(401).json({
+        message: "Invalid refresh token",
+        key: "invalid_refresh_token",
+        success: false,
+      });
+    }
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
       select: { id: true, email: true, name: true, profileImage: true, twoFactorEnabled: true, role: true },

@@ -20,6 +20,10 @@ export const authenticateSocket = async (socket, next) => {
     }
 
     const decoded = verifyToken(token);
+
+    if (!decoded) {
+      return next(new Error("Invalid token"));
+    }
     
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
