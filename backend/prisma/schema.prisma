@@ -3,21 +3,21 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = env("DATABASE_PROVIDER")
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id  String @id @default(auto()) @map("_id") @db.ObjectId
-  createdAt DateTime @default(now())
-  name  String
-  email String @unique
-  password String
-  profileImage String?
-  role  Role @default(USER)
-  registerIP String?
-  lastIP String?
-  twoFactorEnabled Boolean @default(false)
+  id               String    @id @default(cuid())
+  createdAt        DateTime  @default(now())
+  name             String
+  email            String    @unique
+  password         String
+  profileImage     String?
+  role             Role      @default(USER)
+  registerIP       String?
+  lastIP           String?
+  twoFactorEnabled Boolean   @default(false)
   twoFactorSecret  String?
   
   projectMemberships ProjectMember[]
@@ -26,124 +26,120 @@ model User {
 }
 
 model Project {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   name        String
   imageHash   String?
-  labels      Json[]
+  labels      Json
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
   members     ProjectMember[]
-  
   lists       List[]
   
   @@map("projects")
 }
 
 model List {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   name        String
-  order       Int    @default(0)
-  color       String @default("#3b82f6")
+  order       Int      @default(0)
+  color       String   @default("#3b82f6")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  projectId   String @db.ObjectId
-  project     Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
-
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   tasks       Task[]
   
   @@map("lists")
 }
 
 model Task {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  id          String    @id @default(cuid())
   name        String
   description String?
-  labels      Json[]
+  labels      Json
   dueDate     DateTime?
-  order       Int    @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
   
-  listId      String @db.ObjectId
-  list        List @relation(fields: [listId], references: [id], onDelete: Cascade)
+  listId      String
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
   
   members     TaskMember[]
-  
   subTasks    SubTask[]
-
   attachments Attachment[]
   
   @@map("tasks")
 }
 
 model SubTask {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
+  id          String   @id @default(cuid())
   name        String
-  isCompleted Boolean @default(false)
+  isCompleted Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  taskId      String @db.ObjectId
-  task        Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@map("subtasks")
 }
 
 model Attachment {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  filename    String
+  id           String   @id @default(cuid())
+  filename     String
   originalName String
-  mimeType    String
-  size        Int
-  url         String
-  createdAt   DateTime @default(now())
+  mimeType     String
+  size         Int
+  url          String
+  createdAt    DateTime @default(now())
 
-  taskId      String @db.ObjectId
-  task        Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@map("attachments")
 }
 
 model ProjectMember {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String @db.ObjectId
-  projectId String @db.ObjectId
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
   role      ProjectRole @default(MEMBER)
-  joinedAt  DateTime @default(now())
+  joinedAt  DateTime    @default(now())
   
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
   @@unique([userId, projectId])
   @@map("project_members")
 }
 
 model TaskMember {
-  id        String @id @default(auto()) @map("_id") @db.ObjectId
-  userId    String @db.ObjectId
-  taskId    String @db.ObjectId
+  id         String   @id @default(cuid())
+  userId     String
+  taskId     String
   assignedAt DateTime @default(now())
   
-  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  task      Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@unique([userId, taskId])
   @@map("task_members")
 }
 
 model Notification {
-  id          String @id @default(auto()) @map("_id") @db.ObjectId
-  userId      String @db.ObjectId
-  type        NotificationType
-  title       String
-  message     String
-  data        Json?
-  isRead      Boolean @default(false)
-  createdAt   DateTime @default(now())
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
   
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("notifications")
   @@index([userId, isRead])

@@ -5,7 +5,7 @@ Node.js + Express backend server for Flomark project management application.
 ## 📋 Features
 
 - 🔐 JWT Authentication with 2FA support
-- 📊 MongoDB database with Prisma ORM
+- 📊 Multi-database support (MongoDB, PostgreSQL, MySQL, SQLite) with Prisma ORM
 - 🔌 Real-time updates via Socket.IO
 - 📧 Email notifications (SMTP)
 - 📎 File upload support
@@ -15,7 +15,7 @@ Node.js + Express backend server for Flomark project management application.
 ## 🛠️ Tech Stack
 
 - **Node.js & Express** - Server framework
-- **MongoDB & Prisma** - Database and ORM
+- **Prisma ORM** - Database toolkit (MongoDB/PostgreSQL/MySQL/SQLite)
 - **Socket.IO** - WebSocket communication
 - **JWT** - Token-based authentication
 - **Speakeasy** - Two-factor authentication
@@ -28,7 +28,7 @@ Node.js + Express backend server for Flomark project management application.
 ### Prerequisites
 
 - Node.js 18+
-- MongoDB 6+
+- One of: MongoDB, PostgreSQL, MySQL, or SQLite
 - pnpm (or npm)
 
 ### Installation
@@ -49,7 +49,10 @@ Node.js + Express backend server for Flomark project management application.
 
 3. **Set up database**
    ```bash
-   # Push Prisma schema to MongoDB
+   # Generate Prisma Client
+   npx prisma generate
+   
+   # Push Prisma schema to your database
    npx prisma db push
    
    # (Optional) Open Prisma Studio to view data
@@ -76,8 +79,32 @@ Server will run at `http://localhost:3000` (or your configured PORT)
 
 ### Required
 ```env
+# Database provider: mongodb, postgresql, mysql, or sqlite
+DATABASE_PROVIDER=mongodb
 DATABASE_URL=mongodb://localhost:27017/flomark
+
+# JWT secret (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 JWT_SECRET=your-super-secret-key
+```
+
+### Database Examples
+```env
+# MongoDB
+DATABASE_PROVIDER=mongodb
+DATABASE_URL=mongodb://localhost:27017/flomark
+DATABASE_URL=mongodb+srv://user:password@cluster.mongodb.net/flomark
+
+# PostgreSQL
+DATABASE_PROVIDER=postgresql
+DATABASE_URL=postgresql://user:password@localhost:5432/flomark
+
+# MySQL
+DATABASE_PROVIDER=mysql
+DATABASE_URL=mysql://user:password@localhost:3306/flomark
+
+# SQLite
+DATABASE_PROVIDER=sqlite
+DATABASE_URL=file:./flomark.db
 ```
 
 ### Optional
@@ -107,7 +134,7 @@ SMTP_FROM_EMAIL=noreply@flomark.com
 backend/
 ├── src/
 │   ├── config/          # Configuration files
-│   │   ├── database.js  # MongoDB connection
+│   │   ├── database.js  # Database connection (Prisma)
 │   │   ├── env.js       # Environment variables
 │   │   ├── email.config.js
 │   │   └── multer.config.js
@@ -289,9 +316,10 @@ After configuring SMTP:
 ## 🐛 Troubleshooting
 
 ### Server won't start
-- Check if MongoDB is running
-- Verify `DATABASE_URL` in `.env`
+- Check if your database is running
+- Verify `DATABASE_PROVIDER` and `DATABASE_URL` in `.env`
 - Ensure `JWT_SECRET` is set
+- Run `npx prisma generate` to generate Prisma Client
 
 ### Email not working
 - Check SMTP credentials in `.env`
