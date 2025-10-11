@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../contexts/ToastContext'
 import api from '../services/api'
-import demoDataService from '../services/demoDataService'
 
 export const useServerStatus = () => {
   const [isOnline, setIsOnline] = useState(true)
@@ -9,12 +8,6 @@ export const useServerStatus = () => {
   const { showServerStatus } = useToast()
 
   const checkServerStatus = useCallback(async () => {
-    // Skip server checks in demo mode
-    if (demoDataService.isDemoMode()) {
-      setIsOnline(true);
-      return;
-    }
-
     setIsChecking(true)
     try {
       const response = await api.get('/health')
@@ -38,12 +31,6 @@ export const useServerStatus = () => {
   }, [isOnline, showServerStatus])
 
   const checkAuthEndpoint = useCallback(async () => {
-    // Skip server checks in demo mode
-    if (demoDataService.isDemoMode()) {
-      setIsOnline(true);
-      return;
-    }
-
     try {
       const response = await api.get('/user/profile')
       
@@ -76,12 +63,6 @@ export const useServerStatus = () => {
   }, [isOnline, showServerStatus])
 
   useEffect(() => {
-    // Skip server checks in demo mode
-    if (demoDataService.isDemoMode()) {
-      setIsOnline(true);
-      return;
-    }
-
     checkServerStatus()
     
     const handleFocus = () => {
@@ -110,11 +91,6 @@ export const useServerStatus = () => {
   }, [checkServerStatus])
 
   useEffect(() => {
-    // Skip server checks in demo mode
-    if (demoDataService.isDemoMode()) {
-      return;
-    }
-
     const interval = setInterval(() => {
       checkAuthEndpoint()
     }, 30000) 

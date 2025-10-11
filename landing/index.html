@@ -90,7 +90,7 @@
                         <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="2"/>
                         <path d="M8 5v4M8 11h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                     </svg>
-                    <span>No signup needed • No database required • Try instantly</span>
+                    <span>Self-hosted • Open source • Multiple databases supported</span>
                 </p>
                 <div class="hero-stats">
                     <div class="stat">
@@ -423,22 +423,22 @@
                                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                                 </svg>
                             </div>
-                            <h3>Interactive Installation</h3>
+                            <h3>Quick Installation</h3>
                             <span class="install-badge">Recommended</span>
                         </div>
                         <p class="install-description">
-                            The interactive installation script automatically sets up everything you need. 
-                            Builds frontend, configures web server (Nginx/Apache), sets up systemd service, and enables auto-start on reboot.
+                            One command to install Flomark! Supports multiple databases (MongoDB, PostgreSQL, MySQL, SQLite), 
+                            auto-configures web server, and creates systemd service for auto-start.
                         </p>
                         <div class="platform-badge">
                             <span class="badge-live">✓ Ubuntu/Debian</span>
-                            <span class="badge-live">✓ Demo Mode</span>
-                            <span class="badge-live">✓ Production Mode</span>
+                            <span class="badge-live">✓ Multi-Database</span>
+                            <span class="badge-live">✓ npm/pnpm Support</span>
                         </div>
                         <div class="code-block">
                             <div class="code-header">
-                                <span>Interactive Installation</span>
-                                <button class="copy-btn" data-copy="git clone https://github.com/cli1337/flomark.git&#10;cd flomark&#10;chmod +x install.sh&#10;sudo ./install.sh">
+                                <span>One-Command Installation</span>
+                                <button class="copy-btn" data-copy="sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -446,74 +446,28 @@
                                     Copy
                                 </button>
                             </div>
-                            <pre><code><span class="code-comment"># Clone and install:</span>
-git clone https://github.com/cli1337/flomark.git
-cd flomark
-chmod +x install.sh
-sudo ./install.sh
+                            <pre><code><span class="code-comment"># Run the installer:</span>
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
 
-<span class="code-comment"># The script will interactively ask for:</span>
-<span class="code-comment"># ✓ Web server choice (Apache or Nginx)</span>
-<span class="code-comment"># ✓ Installation path (default: /var/www/flomark)</span>
-<span class="code-comment"># ✓ Domain or IP address</span>
-<span class="code-comment"># ✓ Custom frontend/backend ports</span>
-<span class="code-comment"># ✓ Demo mode or production mode</span>
-<span class="code-comment"># ✓ Admin credentials (if production)</span></code></pre>
+<span class="code-comment"># The script will ask you for:</span>
+<span class="code-comment"># ✓ Package manager (npm or pnpm)</span>
+<span class="code-comment"># ✓ Database type (MongoDB/PostgreSQL/MySQL/SQLite)</span>
+<span class="code-comment"># ✓ Database connection string</span>
+<span class="code-comment"># ✓ Installation path & domain</span>
+<span class="code-comment"># ✓ Web server (Nginx or Apache)</span>
+<span class="code-comment"># ✓ Admin credentials</span></code></pre>
                         </div>
                         
                         <div class="install-note">
-                            <strong>📁 Production Structure:</strong> Frontend → <code>/var/www/flomark/frontend/</code> | Backend → <code>/var/www/flomark/backend/</code>
+                            <strong>🗄️ Supported Databases:</strong> MongoDB • PostgreSQL • MySQL • SQLite
                         </div>
                         <div class="install-features">
-                            <div class="feature-tag">✓ Builds frontend (React → HTML/JS/CSS)</div>
-                            <div class="feature-tag">✓ Configures web server (Nginx/Apache)</div>
-                            <div class="feature-tag">✓ Sets up systemd service</div>
-                            <div class="feature-tag">✓ Auto-start on reboot</div>
-                            <div class="feature-tag">✓ Prevents duplicate installations</div>
-                            <div class="feature-tag">✓ Custom port configuration</div>
-                        </div>
-                    </div>
-
-                    <div class="install-card">
-                        <div class="install-header">
-                            <div class="install-icon">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-                                    <path d="M12 2v20M2 12h20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                                    <path d="M19 5v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2z" stroke="currentColor" stroke-width="2"/>
-                                </svg>
-                            </div>
-                            <h3>Remote Installation</h3>
-                        </div>
-                        <p class="install-description">
-                            Download and run the installer without cloning the full repository. Perfect for quick deployments.
-                        </p>
-                        <div class="code-block">
-                            <div class="code-header">
-                                <span>Two-Step Installation</span>
-                                <button class="copy-btn" data-copy="curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh -o /tmp/flomark-install.sh&#10;sudo bash /tmp/flomark-install.sh">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
-                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                    </svg>
-                                    Copy
-                                </button>
-                            </div>
-                            <pre><code><span class="code-comment"># Step 1: Download installer</span>
-curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/install-remote.sh -o /tmp/flomark-install.sh
-
-<span class="code-comment"># Step 2: Run with sudo</span>
-sudo bash /tmp/flomark-install.sh
-
-<span class="code-comment"># The script will:</span>
-<span class="code-comment"># ✓ Download Flomark automatically</span>
-<span class="code-comment"># ✓ Run interactive installation</span>
-<span class="code-comment"># ✓ Clean up temporary files</span></code></pre>
-                        </div>
-                        <div class="install-features">
-                            <div class="feature-tag">✓ No git clone needed</div>
-                            <div class="feature-tag">✓ Downloads latest version</div>
-                            <div class="feature-tag">✓ Auto cleanup</div>
-                            <div class="feature-tag">✓ Same interactive setup</div>
+                            <div class="feature-tag">✓ Multi-database support</div>
+                            <div class="feature-tag">✓ Auto Prisma schema generation</div>
+                            <div class="feature-tag">✓ Web server configuration</div>
+                            <div class="feature-tag">✓ Systemd service</div>
+                            <div class="feature-tag">✓ npm/pnpm support</div>
+                            <div class="feature-tag">✓ Custom ports</div>
                         </div>
                     </div>
 
@@ -525,15 +479,15 @@ sudo bash /tmp/flomark-install.sh
                                     <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
                                 </svg>
                             </div>
-                            <h3>Update Flomark</h3>
+                            <h3>Update Existing Installation</h3>
                         </div>
                         <p class="install-description">
-                            Update your existing installation to the latest version with automatic backup and rollback.
+                            Update to the latest version with automatic backup, rollback, and package manager detection.
                         </p>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Update Script</span>
-                                <button class="copy-btn" data-copy="cd /var/www/flomark&#10;sudo ./update.sh">
+                                <button class="copy-btn" data-copy="sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -541,19 +495,18 @@ sudo bash /tmp/flomark-install.sh
                                     Copy
                                 </button>
                             </div>
-                            <pre><code><span class="code-comment"># From installation directory</span>
-cd /var/www/flomark
-sudo ./update.sh
+                            <pre><code><span class="code-comment"># Quick update (auto-detects installation):</span>
+sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)
 
-<span class="code-comment"># Or from repository</span>
-cd flomark
+<span class="code-comment"># Or run from installation directory:</span>
+cd /var/www/flomark
 git pull
-sudo ./update.sh</code></pre>
+sudo bash update.sh</code></pre>
                         </div>
                         <div class="install-features">
-                            <div class="feature-tag">✓ Auto backup</div>
-                            <div class="feature-tag">✓ Updates backend & frontend</div>
-                            <div class="feature-tag">✓ Preserves config & data</div>
+                            <div class="feature-tag">✓ Auto backup before update</div>
+                            <div class="feature-tag">✓ npm/pnpm detection</div>
+                            <div class="feature-tag">✓ Preserves .env & storage</div>
                             <div class="feature-tag">✓ Rollback on failure</div>
                         </div>
                     </div>
@@ -598,36 +551,36 @@ sudo nano /var/www/flomark/backend/.env</code></pre>
                         <div class="install-step">
                             <div class="step-number">1</div>
                             <div class="step-content">
-                                <h4>System Dependencies</h4>
-                                <p>Installs Node.js 20.x, pnpm, MongoDB (if production mode), and your choice of web server (Nginx or Apache)</p>
+                                <h4>Database Selection</h4>
+                                <p>Choose your database: MongoDB, PostgreSQL, MySQL, or SQLite. Auto-installs if using localhost.</p>
                             </div>
                         </div>
                         <div class="install-step">
                             <div class="step-number">2</div>
                             <div class="step-content">
-                                <h4>Backend Setup</h4>
-                                <p>Copies backend files, installs dependencies, generates JWT secrets, creates systemd service for auto-start</p>
+                                <h4>Package Manager</h4>
+                                <p>Detects npm/pnpm, lets you choose if both available. Installs Node.js 20+ if needed.</p>
                             </div>
                         </div>
                         <div class="install-step">
                             <div class="step-number">3</div>
                             <div class="step-content">
-                                <h4>Frontend Build</h4>
-                                <p>Builds optimized production bundle with Vite, minified assets, and code splitting</p>
+                                <h4>Backend & Database</h4>
+                                <p>Generates Prisma schema for your database, creates tables, installs dependencies, sets up systemd</p>
                             </div>
                         </div>
                         <div class="install-step">
                             <div class="step-number">4</div>
                             <div class="step-content">
-                                <h4>Web Server Configuration</h4>
-                                <p>Configures reverse proxy, WebSocket support for real-time features, and React Router handling</p>
+                                <h4>Frontend Build</h4>
+                                <p>Builds optimized production bundle with Vite (minified, tree-shaken, code-split)</p>
                             </div>
                         </div>
                         <div class="install-step">
                             <div class="step-number">5</div>
                             <div class="step-content">
-                                <h4>Admin Account</h4>
-                                <p>Creates admin account (in production mode) or uses demo credentials (in demo mode)</p>
+                                <h4>Web Server & Admin</h4>
+                                <p>Configures Nginx/Apache with proxy & WebSocket support. Creates admin account and you're live!</p>
                             </div>
                         </div>
                     </div>
@@ -641,8 +594,8 @@ sudo nano /var/www/flomark/backend/.env</code></pre>
                         <h3>Prerequisites</h3>
                         <ul class="checklist">
                             <li>Node.js 20+ installed</li>
-                            <li>MongoDB 7+ running (or use demo mode)</li>
-                            <li>pnpm package manager</li>
+                            <li>Database: MongoDB, PostgreSQL, MySQL, or SQLite</li>
+                            <li>npm or pnpm package manager</li>
                             <li>Nginx or Apache web server</li>
                             <li>Root/sudo access to your server</li>
                         </ul>
@@ -664,11 +617,14 @@ sudo nano /var/www/flomark/backend/.env</code></pre>
                             <pre><code>git clone https://github.com/cli1337/flomark.git
 cd flomark/backend
 cp env.example .env
-nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, PORT, DEMO_MODE</span></code></pre>
+nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, PORT</span></code></pre>
                         </div>
                         <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
-                            <strong>Key settings:</strong> Set <code>PORT=5000</code>, <code>DEMO_MODE=false</code> (or true for demo), 
-                            <code>DATABASE_URL=mongodb://localhost:27017/flomark</code>, and generate a secure <code>JWT_SECRET</code>
+                            <strong>Database examples:</strong><br/>
+                            • MongoDB: <code>mongodb://localhost:27017/flomark</code><br/>
+                            • PostgreSQL: <code>postgresql://user:password@localhost:5432/flomark</code><br/>
+                            • MySQL: <code>mysql://user:password@localhost:3306/flomark</code><br/>
+                            • SQLite: <code>file:./flomark.db</code>
                         </p>
                     </div>
 
@@ -688,7 +644,7 @@ nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, PORT
                             <pre><code>cd backend
 pnpm install
 npx prisma generate
-npx prisma db push  <span class="code-comment"># Skip if using demo mode</span></code></pre>
+npx prisma db push  <span class="code-comment"># Creates database tables</span></code></pre>
                         </div>
                     </div>
 
@@ -729,8 +685,7 @@ pnpm build  <span class="code-comment"># Creates dist/ folder with production fi
                             </div>
                             <pre><code>cd ../backend
 node scripts/make-admin.js
-<span class="code-comment"># Follow interactive prompts for email, name, and password</span>
-<span class="code-comment"># Skip if using demo mode (uses demo@flomark.app / demo)</span></code></pre>
+<span class="code-comment"># Follow interactive prompts for email, name, and password</span></code></pre>
                         </div>
                     </div>
 

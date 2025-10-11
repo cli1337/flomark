@@ -5,10 +5,9 @@ import { useToast } from '../../../contexts/ToastContext'
 import usePageTitle from '../../../hooks/usePageTitle'
 import { Button } from '../../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../components/ui/Card'
-import { LockKeyhole, Mail, Eye, EyeOff, Play } from 'lucide-react'
+import { LockKeyhole, Mail, Eye, EyeOff } from 'lucide-react'
 import * as Form from '@radix-ui/react-form'
 import api from '../../../services/api'
-import demoDataService from '../../../services/demoDataService'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -25,37 +24,23 @@ function Login() {
   const [needs2FA, setNeeds2FA] = useState(false)
   const [pendingToken, setPendingToken] = useState('')
   const [totp, setTotp] = useState('')
+  const [demoInfo, setDemoInfo] = useState(null)
 
-  // Check for client-side demo mode and auto-login
+  // Check if backend is in demo mode
   useEffect(() => {
-    if (demoDataService.isDemoMode()) {
-      // Auto-login in demo mode
-      handleDemoLogin();
+    const checkDemoMode = async () => {
+      try {
+        const response = await api.get('/demo-info')
+        if (response.data.demoMode) {
+          setDemoInfo(response.data)
+        }
+      } catch (error) {
+        // Silently fail if backend is not available
+        console.log('Could not check demo mode')
+      }
     }
+    checkDemoMode()
   }, [])
-
-  const handleDemoLogin = async () => {
-    setLoading(true)
-    const result = await login('demo@flomark.app', 'demo')
-    
-    if (result.success) {
-      showSuccess('Demo Mode', 'Welcome to Flomark Demo!')
-      navigate('/projects')
-    } else {
-      showError('Login Failed', result.message)
-    }
-    setLoading(false)
-  }
-
-  const handleTryDemo = () => {
-    // Enable demo mode and login
-    demoDataService.enableDemoMode();
-    showSuccess('Demo Mode Enabled', 'Logging you in...');
-    // Wait a moment then reload to trigger demo login
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -217,28 +202,19 @@ function Login() {
                 </Button>
               </Form.Submit>
 
-              {/* Try Demo Button */}
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-white/10" />
+              {/* Demo Mode Credentials */}
+              {demoInfo && (
+                <div className="mt-4 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg">
+                  <p className="text-sm font-medium text-purple-300 mb-2">🎭 Demo Mode Active</p>
+                  <div className="space-y-1 text-xs text-gray-300">
+                    <p><span className="text-gray-400">Email:</span> <code className="bg-black/30 px-2 py-0.5 rounded">demo@flomark.app</code></p>
+                    <p><span className="text-gray-400">Password:</span> <code className="bg-black/30 px-2 py-0.5 rounded">demo</code></p>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-2">
+                    Use these credentials to try the app
+                  </p>
                 </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-[#1e2023] px-2 text-gray-400">Or</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                onClick={handleTryDemo}
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium py-2.5 px-4 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <Play className="w-4 h-4" />
-                Try Demo Mode
-              </Button>
-              <p className="text-center text-xs text-gray-400">
-                No signup required • All features available • Data stored locally
-              </p>
+              )}
 
               {/* Sign up link */}
               {/* <p className="text-center text-sm text-gray-400">
