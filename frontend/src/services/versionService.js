@@ -1,5 +1,6 @@
 import axios from 'axios';
 import packageJson from '../../package.json';
+import demoDataService from './demoDataService';
 
 const GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/cli1337/flomark/refs/heads/main';
 
@@ -23,6 +24,21 @@ export const getCurrentVersion = () => {
  * @returns {Promise<{hasUpdate: boolean, current: object, latest: object}>}
  */
 export const checkForUpdates = async () => {
+  // Skip version check in demo mode
+  if (demoDataService.isDemoMode()) {
+    return {
+      hasUpdate: false,
+      current: {
+        backend: packageJson.version,
+        frontend: packageJson.version
+      },
+      latest: {
+        backend: packageJson.version,
+        frontend: packageJson.version
+      }
+    };
+  }
+
   try {
     // Fetch latest versions from GitHub
     const [backendResponse, frontendResponse] = await Promise.all([

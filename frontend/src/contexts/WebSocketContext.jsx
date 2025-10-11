@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react'
 import socketService from '../services/socketService'
 import { useAuth } from './AuthContext'
 import { useToast } from './ToastContext'
+import demoDataService from '../services/demoDataService'
 
 const WebSocketContext = createContext()
 
@@ -21,6 +22,14 @@ export const WebSocketProvider = ({ children }) => {
   const [activeUsers, setActiveUsers] = useState(new Map())
 
   useEffect(() => {
+    // Don't connect to socket in demo mode
+    if (demoDataService.isDemoMode()) {
+      console.log('🎭 Demo mode active - skipping WebSocket connection');
+      setIsConnected(false);
+      setIsReconnecting(false);
+      return;
+    }
+
     if (user) {
 
       if (!socketService.isSocketConnected()) {
@@ -70,6 +79,9 @@ export const WebSocketProvider = ({ children }) => {
 
 
   useEffect(() => {
+    // Skip socket listeners in demo mode
+    if (demoDataService.isDemoMode()) return;
+
     const handleUserPresenceChanged = (data) => {
       setActiveUsers(prev => {
         const newMap = new Map(prev)
@@ -95,6 +107,9 @@ export const WebSocketProvider = ({ children }) => {
 
 
   useEffect(() => {
+    // Skip socket listeners in demo mode
+    if (demoDataService.isDemoMode()) return;
+
     const handleActiveUsersUpdated = (data) => {
       if (data.activeUsers) {
         const usersMap = new Map()
@@ -117,6 +132,9 @@ export const WebSocketProvider = ({ children }) => {
 
 
   useEffect(() => {
+    // Skip socket listeners in demo mode
+    if (demoDataService.isDemoMode()) return;
+
     const handleUserJoined = (data) => {
       console.log('🔍 WebSocketContext - User joined event received:', data)
 
