@@ -346,7 +346,213 @@ if [ -f "prisma/schema.$DB_PROVIDER.prisma" ]; then
     cp "prisma/schema.$DB_PROVIDER.prisma" "prisma/schema.prisma"
     print_success "Prisma schema configured for $DB_TYPE"
 else
-    print_warning "Schema template not found, using default"
+    print_warning "Schema template not found, generating inline schema for $DB_TYPE"
+    
+    # Generate schema inline for non-MongoDB databases
+    if [ "$DB_TYPE" != "mongodb" ]; then
+        # Determine if we need String for JSON (SQLite) or Json type
+        if [ "$DB_TYPE" = "sqlite" ]; then
+            JSON_TYPE="String"
+        else
+            JSON_TYPE="Json"
+        fi
+        
+        # Determine text type for descriptions
+        if [ "$DB_TYPE" = "mysql" ]; then
+            DESC_TYPE="String?   @db.Text"
+            MSG_TYPE="String     @db.Text"
+        else
+            DESC_TYPE="String?"
+            MSG_TYPE="String"
+        fi
+        
+        cat > prisma/schema.prisma << SCHEMA_EOF
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "$DB_PROVIDER"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               String    @id @default(cuid())
+  createdAt        DateTime  @default(now())
+  name             String
+  email            String    @unique
+  password         String
+  profileImage     String?
+  role             Role      @default(USER)
+  registerIP       String?
+  lastIP           String?
+  twoFactorEnabled Boolean   @default(false)
+  twoFactorSecret  String?
+  
+  projectMemberships ProjectMember[]
+  taskAssignments    TaskMember[]
+  notifications      Notification[]
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  imageHash   String?
+  labels      $JSON_TYPE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  members     ProjectMember[]
+  lists       List[]
+  
+  @@map("projects")
+}
+
+model List {
+  id          String   @id @default(cuid())
+  name        String
+  order       Int      @default(0)
+  color       String   @default("#3b82f6")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks       Task[]
+  
+  @@map("lists")
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  name        String
+  description $DESC_TYPE
+  labels      $JSON_TYPE
+  dueDate     DateTime?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  listId      String
+  list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
+  
+  members     TaskMember[]
+  subTasks    SubTask[]
+  attachments Attachment[]
+  
+  @@map("tasks")
+}
+
+model SubTask {
+  id          String   @id @default(cuid())
+  name        String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  taskId      String
+  task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@map("subtasks")
+}
+
+model Attachment {
+  id           String   @id @default(cuid())
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  createdAt    DateTime @default(now())
+
+  taskId       String
+  task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@map("attachments")
+}
+
+model ProjectMember {
+  id        String      @id @default(cuid())
+  userId    String
+  projectId String
+  role      ProjectRole @default(MEMBER)
+  joinedAt  DateTime    @default(now())
+  
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, projectId])
+  @@map("project_members")
+}
+
+model TaskMember {
+  id         String   @id @default(cuid())
+  userId     String
+  taskId     String
+  assignedAt DateTime @default(now())
+  
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task       Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, taskId])
+  @@map("task_members")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   $MSG_TYPE
+  data      $JSON_TYPE?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("notifications")
+SCHEMA_EOF
+
+        # Add indexes only for non-SQLite databases
+        if [ "$DB_TYPE" != "sqlite" ]; then
+            cat >> prisma/schema.prisma << SCHEMA_EOF
+  @@index([userId, isRead])
+  @@index([userId, createdAt])
+SCHEMA_EOF
+        fi
+
+        cat >> prisma/schema.prisma << SCHEMA_EOF
+}
+
+enum Role {
+  USER
+  ADMIN
+  OWNER
+}
+
+enum ProjectRole {
+  OWNER
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_UPDATED
+  TASK_COMPLETED
+  TASK_DUE_SOON
+  PROJECT_INVITATION
+  MEMBER_JOINED
+  MEMBER_LEFT
+  COMMENT_ADDED
+  MENTION
+  GENERAL
+}
+SCHEMA_EOF
+
+        print_success "Schema generated for $DB_TYPE"
+    fi
 fi
 
 # Install backend dependencies
