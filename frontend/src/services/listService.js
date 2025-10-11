@@ -5,7 +5,8 @@ import demoDataService from './demoDataService'
 export const listService = {
   async getListsByProject(projectId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.getListsByProject(projectId);
+      const response = await demoApi.getListsByProject(projectId);
+      return response.data;
     }
     const response = await api.get(`/projects/${projectId}/lists`)
     return response.data
@@ -13,7 +14,8 @@ export const listService = {
 
   async createList(projectId, name, color = '#3b82f6') {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.createList(projectId, { name, color });
+      const response = await demoApi.createList(projectId, { name, color });
+      return response.data;
     }
     const response = await api.post(`/projects/${projectId}/list`, { name, color })
     return response.data
@@ -21,7 +23,8 @@ export const listService = {
 
   async updateList(listId, data) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.updateList(listId, data);
+      const response = await demoApi.updateList(listId, data);
+      return response.data;
     }
     const response = await api.put(`/projects/lists/${listId}`, data)
     return response.data

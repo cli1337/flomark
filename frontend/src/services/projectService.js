@@ -26,7 +26,8 @@ const createFileApiInstance = () => {
 export const projectService = {
   async getAllProjects(page = 1, limit = 5) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.getProjects();
+      const response = await demoApi.getProjects();
+      return response.data;
     }
     const response = await api.get(`/projects?page=${page}&limit=${limit}`)
     return response.data
@@ -34,7 +35,8 @@ export const projectService = {
 
   async getProjectById(id) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.getProjectById(id);
+      const response = await demoApi.getProjectById(id);
+      return response.data;
     }
     const response = await api.get(`/projects/${id}`)
     return response.data
@@ -42,7 +44,8 @@ export const projectService = {
 
   async createProject(projectName) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.createProject({ name: projectName });
+      const response = await demoApi.createProject({ name: projectName });
+      return response.data;
     }
     const response = await api.post('/projects', { name: projectName })
     return response.data
@@ -50,7 +53,8 @@ export const projectService = {
 
   async updateProject(id, projectName) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.updateProject(id, { name: projectName });
+      const response = await demoApi.updateProject(id, { name: projectName });
+      return response.data;
     }
     const response = await api.put(`/projects/${id}`, { name: projectName })
     return response.data
@@ -119,7 +123,8 @@ export const projectService = {
 
   async getLabelsByProject(projectId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.getLabelsByProject(projectId);
+      const response = await demoApi.getLabelsByProject(projectId);
+      return response.data;
     }
     const response = await api.get(`/projects/${projectId}/labels`)
     return response.data
@@ -127,7 +132,8 @@ export const projectService = {
 
   async createLabel(projectId, labelData) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.createLabel(projectId, labelData);
+      const response = await demoApi.createLabel(projectId, labelData);
+      return response.data;
     }
     const response = await api.post(`/projects/${projectId}/labels`, labelData)
     return response.data
@@ -135,7 +141,8 @@ export const projectService = {
 
   async updateLabel(labelId, labelData) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.updateLabel(labelId, labelData);
+      const response = await demoApi.updateLabel(labelId, labelData);
+      return response.data;
     }
     const response = await api.put(`/labels/${labelId}`, labelData)
     return response.data
@@ -143,7 +150,8 @@ export const projectService = {
 
   async deleteLabel(labelId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.deleteLabel(labelId);
+      const response = await demoApi.deleteLabel(labelId);
+      return response.data;
     }
     const response = await api.delete(`/labels/${labelId}`)
     return response.data
@@ -164,7 +172,8 @@ export const projectService = {
 
   async deleteProject(projectId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.deleteProject(projectId);
+      const response = await demoApi.deleteProject(projectId);
+      return response.data;
     }
     const response = await api.delete(`/projects/${projectId}`)
     return response.data
@@ -173,16 +182,16 @@ export const projectService = {
   async getProjectDataOptimized(projectId) {
     if (demoDataService.isDemoMode()) {
       // Get all related data for the project
-      const project = await demoApi.getProjectById(projectId);
-      const lists = await demoApi.getListsByProject(projectId);
-      const labels = await demoApi.getLabelsByProject(projectId);
+      const projectRes = await demoApi.getProjectById(projectId);
+      const listsRes = await demoApi.getListsByProject(projectId);
+      const labelsRes = await demoApi.getLabelsByProject(projectId);
       
       return {
         success: true,
         data: {
-          project: project.data,
-          lists: lists.data,
-          labels: labels.data
+          project: projectRes.data.data,
+          lists: listsRes.data.data,
+          labels: labelsRes.data.data
         }
       };
     }

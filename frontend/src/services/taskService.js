@@ -5,7 +5,8 @@ import demoDataService from './demoDataService'
 export const taskService = {
   async getTasksByList(listId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.getTasksByList(listId);
+      const response = await demoApi.getTasksByList(listId);
+      return response.data;
     }
     const response = await api.get(`/tasks/lists/${listId}/tasks`)
     return response.data
@@ -13,7 +14,8 @@ export const taskService = {
 
   async createTask(listId, data) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.createTask(listId, data);
+      const response = await demoApi.createTask(listId, data);
+      return response.data;
     }
     const response = await api.post(`/tasks/lists/${listId}/tasks`, data)
     return response.data
@@ -21,7 +23,8 @@ export const taskService = {
 
   async updateTask(taskId, data) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.updateTask(taskId, data);
+      const response = await demoApi.updateTask(taskId, data);
+      return response.data;
     }
     const response = await api.put(`/tasks/${taskId}`, data)
     return response.data
@@ -29,7 +32,8 @@ export const taskService = {
 
   async deleteTask(taskId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.deleteTask(taskId);
+      const response = await demoApi.deleteTask(taskId);
+      return response.data;
     }
     const response = await api.delete(`/tasks/${taskId}`)
     return response.data
@@ -56,7 +60,8 @@ export const taskService = {
 
   async moveTask(taskId, newListId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.moveTask(taskId, newListId);
+      const response = await demoApi.moveTask(taskId, newListId);
+      return response.data;
     }
     const response = await api.put(`/tasks/${taskId}/move`, { listId: newListId })
     return response.data
@@ -96,7 +101,8 @@ export const taskService = {
 
   async addSubTask(taskId, name) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.createSubtask(taskId, { title: name });
+      const response = await demoApi.createSubtask(taskId, { title: name });
+      return response.data;
     }
     const response = await api.post(`/tasks/${taskId}/subtasks`, { name })
     return response.data
@@ -104,7 +110,8 @@ export const taskService = {
 
   async updateSubTask(subTaskId, data) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.updateSubtask(subTaskId, data);
+      const response = await demoApi.updateSubtask(subTaskId, data);
+      return response.data;
     }
     const response = await api.put(`/tasks/subtasks/${subTaskId}`, data)
     return response.data
@@ -112,7 +119,8 @@ export const taskService = {
 
   async deleteSubTask(subTaskId) {
     if (demoDataService.isDemoMode()) {
-      return await demoApi.deleteSubtask(subTaskId);
+      const response = await demoApi.deleteSubtask(subTaskId);
+      return response.data;
     }
     const response = await api.delete(`/tasks/subtasks/${subTaskId}`)
     return response.data
