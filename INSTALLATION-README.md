@@ -16,7 +16,8 @@ Complete guide for installing and updating Flomark on your server with multi-dat
 ### One-Command Installation (Recommended)
 
 ```bash
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh -o /tmp/flomark-install.sh
+sudo bash /tmp/flomark-install.sh
 ```
 
 **What you'll be asked:**

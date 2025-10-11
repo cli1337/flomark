@@ -21,7 +21,8 @@
 ### One-Command Installation
 
 ```bash
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh -o /tmp/flomark-install.sh
+sudo bash /tmp/flomark-install.sh
 ```
 
 **The installer will guide you through:**
@@ -89,7 +90,8 @@ file:/var/lib/flomark/database.db
 ### Quick Install (Recommended)
 
 ```bash
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh -o /tmp/flomark-install.sh
+sudo bash /tmp/flomark-install.sh
 ```
 
 ### Features
@@ -141,7 +143,8 @@ sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quic
 
 ```bash
 # From anywhere (auto-detects installation):
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh -o /tmp/flomark-update.sh
+sudo bash /tmp/flomark-update.sh
 
 # Or from installation directory:
 cd /var/www/flomark
@@ -357,7 +360,8 @@ When `DEMO_MODE=true` in backend `.env`:
 
 ```bash
 # One-command installation
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh -o /tmp/flomark-install.sh
+sudo bash /tmp/flomark-install.sh
 
 # Follow interactive prompts for:
 # - Database type and connection
@@ -373,7 +377,8 @@ sudo certbot --nginx -d yourdomain.com
 
 ```bash
 # Quick update (auto-detects everything)
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh -o /tmp/flomark-update.sh
+sudo bash /tmp/flomark-update.sh
 
 # Or from installation directory
 cd /var/www/flomark

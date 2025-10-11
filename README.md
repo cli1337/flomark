@@ -86,7 +86,8 @@ https://demo.flomark.app
 #### One-Command Installation (Recommended) ⚡
 
 ```bash
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh -o /tmp/flomark-install.sh
+sudo bash /tmp/flomark-install.sh
 ```
 
 **The installer will ask you for:**
@@ -203,7 +204,8 @@ Update existing installations:
 
 ```bash
 # Auto-detects installation and package manager:
-sudo bash <(curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh)
+curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh -o /tmp/flomark-update.sh
+sudo bash /tmp/flomark-update.sh
 ```
 
 **Update Features:**
