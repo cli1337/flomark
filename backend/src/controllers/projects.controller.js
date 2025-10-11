@@ -187,9 +187,15 @@ export const createProject = async (req, res, next) => {
             return res.status(400).json({ message: "Name must be between 3 and 20 characters", key: "invalid_name", success: false });
         }
 
+        // Determine labels format based on database type
+        const dbUrl = process.env.DATABASE_URL || '';
+        const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+        const defaultLabels = isSQLite ? '[]' : [];
+
         const project = await prisma.project.create({
             data: { 
                 name,
+                labels: defaultLabels,
                 members: {
                     create: {
                         userId: req.user.id,
@@ -804,7 +810,17 @@ export const getLabelsByProject = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
         }
         
-        const labels = (project.labels || []).map((label, index) => ({
+        // Parse labels based on database type
+        let labelsArray = project.labels || [];
+        if (typeof labelsArray === 'string') {
+            try {
+                labelsArray = JSON.parse(labelsArray);
+            } catch (e) {
+                labelsArray = [];
+            }
+        }
+        
+        const labels = labelsArray.map((label, index) => ({
             id: label.id || `label-${index}`,
             name: label.name || 'Unnamed Label',
             color: label.color || '#3b82f6'
@@ -850,7 +866,16 @@ export const createLabel = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
         }
         
-        const existingLabels = project.labels || [];
+        // Parse existing labels
+        let existingLabels = project.labels || [];
+        if (typeof existingLabels === 'string') {
+            try {
+                existingLabels = JSON.parse(existingLabels);
+            } catch (e) {
+                existingLabels = [];
+            }
+        }
+        
         const labelExists = existingLabels.some(label => 
             (typeof label === 'string' ? label : label.name) === name
         );
@@ -865,10 +890,17 @@ export const createLabel = async (req, res, next) => {
             color
         };
         
+        const updatedLabels = [...existingLabels, newLabel];
+        
+        // Determine labels format based on database type
+        const dbUrl = process.env.DATABASE_URL || '';
+        const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+        const labelsToSave = isSQLite ? JSON.stringify(updatedLabels) : updatedLabels;
+        
         const updatedProject = await prisma.project.update({
             where: { id },
             data: {
-                labels: [...existingLabels, newLabel]
+                labels: labelsToSave
             }
         });
 

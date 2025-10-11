@@ -583,9 +583,9 @@ fi
 # Install backend dependencies
 print_info "Installing backend dependencies..."
 if [ "$PKG_MANAGER" = "pnpm" ]; then
-    pnpm install --prod
+    pnpm install --prod --no-optional=false
 else
-    npm install --omit=dev
+    npm install --omit=dev --include=optional
 fi
 print_success "Backend dependencies installed"
 

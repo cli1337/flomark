@@ -132,11 +132,17 @@ export const createTask = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to create tasks in this list", key: "unauthorized", success: false });
         }
 
+        // Determine labels format based on database type
+        const dbUrl = process.env.DATABASE_URL || '';
+        const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+        const defaultLabels = isSQLite ? '[]' : [];
+
         const task = await prisma.task.create({
             data: {
                 name: name.trim(),
                 description: description?.trim() || null,
                 dueDate: dueDate ? new Date(dueDate) : null,
+                labels: defaultLabels,
                 listId
             },
             include: {
