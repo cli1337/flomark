@@ -92,6 +92,20 @@ const ProjectDetail = () => {
   
   usePageTitle(project ? project.name : 'Project')
 
+  // Helper function to ensure labels is always an array
+  const parseLabels = (labels) => {
+    if (!labels) return []
+    if (Array.isArray(labels)) return labels
+    if (typeof labels === 'string') {
+      try {
+        return JSON.parse(labels)
+      } catch (e) {
+        return []
+      }
+    }
+    return []
+  }
+
   const { broadcastProjectUpdate, broadcastTaskUpdate } = useProjectSocket(id)
   
 
@@ -155,11 +169,16 @@ const ProjectDetail = () => {
   const handleTaskCreated = useCallback((data) => {
     if (data.projectId === id && data.userId !== user?.id) {
       if (data.payload?.task) {
+        // Parse labels before adding to state
+        const taskWithParsedLabels = {
+          ...data.payload.task,
+          labels: parseLabels(data.payload.task.labels)
+        }
         setTasks(prev => ({
           ...prev,
           [data.payload.task.listId]: [
             ...(prev[data.payload.task.listId] || []),
-            data.payload.task
+            taskWithParsedLabels
           ]
         }))
         showSuccess('New Task', `${data.userName} created a new task`)
@@ -170,11 +189,16 @@ const ProjectDetail = () => {
   const handleTaskUpdated = useCallback((data) => {
     if (data.projectId === id && data.userId !== user?.id) {
       if (data.payload?.task) {
+        // Parse labels before updating state
+        const taskWithParsedLabels = {
+          ...data.payload.task,
+          labels: parseLabels(data.payload.task.labels)
+        }
         setTasks(prev => {
           const newTasks = { ...prev }
           Object.keys(newTasks).forEach(listId => {
             newTasks[listId] = newTasks[listId].map(task => 
-              task.id === data.payload.task.id ? data.payload.task : task
+              task.id === taskWithParsedLabels.id ? taskWithParsedLabels : task
             )
           })
           return newTasks
@@ -197,13 +221,19 @@ const ProjectDetail = () => {
         console.log('🎯 From list:', data.payload.fromListId)
         console.log('🎯 To list:', data.payload.toListId)
         
+        // Parse labels before using the task
+        const taskWithParsedLabels = {
+          ...data.payload.task,
+          labels: parseLabels(data.payload.task.labels)
+        }
+        
         // Wait for next frame to ensure DOM is ready
         requestAnimationFrame(() => {
           setTimeout(() => {
             console.log('🎯 Starting animation for remote user')
             taskMoveAnimation.startTaskMoveAnimation(
-              data.payload.task.id,
-              data.payload.task,
+              taskWithParsedLabels.id,
+              taskWithParsedLabels,
               data.payload.fromListId,
               data.payload.toListId
             )
@@ -220,7 +250,7 @@ const ProjectDetail = () => {
             if (data.payload.fromListId) {
               const sourceTasks = newTasks[data.payload.fromListId] || []
               newTasks[data.payload.fromListId] = sourceTasks
-                .filter(task => task.id !== data.payload.task.id)
+                .filter(task => task.id !== taskWithParsedLabels.id)
             }
 
             // Add to destination list
@@ -228,7 +258,7 @@ const ProjectDetail = () => {
               const destTasks = newTasks[data.payload.toListId] || []
               newTasks[data.payload.toListId] = [
                 ...destTasks,
-                data.payload.task
+                taskWithParsedLabels
               ]
             }
             
@@ -455,10 +485,14 @@ const ProjectDetail = () => {
   }
 
   const handleCardCreated = async (newCard) => {
-
+    // Parse labels before adding to state
+    const cardWithParsedLabels = {
+      ...newCard,
+      labels: parseLabels(newCard.labels)
+    }
     setTasks(prev => ({
       ...prev,
-      [selectedListForCard.id]: [...(prev[selectedListForCard.id] || []), newCard]
+      [selectedListForCard.id]: [...(prev[selectedListForCard.id] || []), cardWithParsedLabels]
     }))
     setShowAddCardModal(false)
     setSelectedListForCard(null)
