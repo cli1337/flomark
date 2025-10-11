@@ -171,3 +171,4 @@ enum NotificationType {
   MENTION
   GENERAL
 }
+

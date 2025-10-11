@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -57,7 +57,7 @@ model List {
 model Task {
   id          String    @id @default(cuid())
   name        String
-  description String?
+  description String?   @db.Text
   labels      Json
   dueDate     DateTime?
   order       Int       @default(0)
@@ -134,7 +134,7 @@ model Notification {
   userId    String
   type      NotificationType
   title     String
-  message   String
+  message   String           @db.Text
   data      Json?
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
@@ -171,3 +171,4 @@ enum NotificationType {
   MENTION
   GENERAL
 }
+

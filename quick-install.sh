@@ -340,7 +340,14 @@ cp -r "$TEMP_DIR/backend"/* "$INSTALL_PATH/backend/"
 
 cd "$INSTALL_PATH/backend"
 
-print_success "Backend files copied"
+# Copy the appropriate Prisma schema for selected database
+print_info "Configuring Prisma schema for $DB_TYPE..."
+if [ -f "prisma/schema.$DB_PROVIDER.prisma" ]; then
+    cp "prisma/schema.$DB_PROVIDER.prisma" "prisma/schema.prisma"
+    print_success "Prisma schema configured for $DB_TYPE"
+else
+    print_warning "Schema template not found, using default"
+fi
 
 # Install backend dependencies
 print_info "Installing backend dependencies..."
@@ -359,7 +366,6 @@ cat > .env << EOF
 # ==================================
 # 🔐 DATABASE CONFIGURATION
 # ==================================
-DATABASE_PROVIDER=$DB_PROVIDER
 DATABASE_URL=$DATABASE_URL
 
 # ==================================

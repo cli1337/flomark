@@ -79,31 +79,44 @@ Server will run at `http://localhost:3000` (or your configured PORT)
 
 ### Required
 ```env
-# Database provider: mongodb, postgresql, mysql, or sqlite
-DATABASE_PROVIDER=mongodb
 DATABASE_URL=mongodb://localhost:27017/flomark
-
-# JWT secret (generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")
 JWT_SECRET=your-super-secret-key
 ```
 
-### Database Examples
+### Database Setup
+
+Flomark supports multiple databases. To switch databases:
+
+1. **Use the quick-install script** (automatically configures the correct schema), or
+2. **Manually copy the appropriate schema:**
+
+```bash
+# For MongoDB (default)
+cp prisma/schema.mongodb.prisma prisma/schema.prisma
+
+# For PostgreSQL
+cp prisma/schema.postgresql.prisma prisma/schema.prisma
+
+# For MySQL
+cp prisma/schema.mysql.prisma prisma/schema.prisma
+
+# For SQLite
+cp prisma/schema.sqlite.prisma prisma/schema.prisma
+```
+
+### Database Connection Examples
 ```env
 # MongoDB
-DATABASE_PROVIDER=mongodb
 DATABASE_URL=mongodb://localhost:27017/flomark
 DATABASE_URL=mongodb+srv://user:password@cluster.mongodb.net/flomark
 
 # PostgreSQL
-DATABASE_PROVIDER=postgresql
 DATABASE_URL=postgresql://user:password@localhost:5432/flomark
 
 # MySQL
-DATABASE_PROVIDER=mysql
 DATABASE_URL=mysql://user:password@localhost:3306/flomark
 
 # SQLite
-DATABASE_PROVIDER=sqlite
 DATABASE_URL=file:./flomark.db
 ```
 
@@ -317,7 +330,8 @@ After configuring SMTP:
 
 ### Server won't start
 - Check if your database is running
-- Verify `DATABASE_PROVIDER` and `DATABASE_URL` in `.env`
+- Verify `DATABASE_URL` in `.env` matches your database type
+- Ensure the correct `prisma/schema.prisma` is configured for your database
 - Ensure `JWT_SECRET` is set
 - Run `npx prisma generate` to generate Prisma Client
 
