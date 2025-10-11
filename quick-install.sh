@@ -217,11 +217,11 @@ echo ""
 print_info "Demo Mode Configuration"
 echo ""
 echo "Demo mode is useful for testing and public demos. When enabled:"
-echo "  • Auto-login as demo@flomark.app (password: demo)"
-echo "  • Creates sample projects automatically"
-echo "  • Shows demo banner in frontend"
+echo "  - Auto-login as demo@flomark.app (password: demo)"
+echo "  - Creates sample projects automatically"
+echo "  - Shows demo banner in frontend"
 echo ""
-read -p "$(echo -e ${CYAN}Enable demo mode? [y/n] (default: n):${NC} )" ENABLE_DEMO
+read -p "$(echo -e ${CYAN}"Enable demo mode? [y/n] (default: n): "${NC})" ENABLE_DEMO
 ENABLE_DEMO=$(echo "$ENABLE_DEMO" | tr '[:upper:]' '[:lower:]')
 if [[ "$ENABLE_DEMO" == "y" ]] || [[ "$ENABLE_DEMO" == "yes" ]]; then
     DEMO_MODE=true
