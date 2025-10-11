@@ -14,10 +14,29 @@ const DemoModeBanner = memo(function DemoModeBanner() {
   }, []);
 
   const checkDemoMode = async () => {
+    // Check localStorage cache first
+    const cached = localStorage.getItem('demo_mode_info');
+    if (cached) {
+      try {
+        const parsedCache = JSON.parse(cached);
+        if (parsedCache.demoMode) {
+          setDemoInfo(parsedCache);
+          return;
+        }
+      } catch (e) {
+        // Invalid cache, continue to fetch
+      }
+    }
+
     try {
       const response = await api.get('/demo-info');
       if (response.data.demoMode) {
         setDemoInfo(response.data);
+        // Cache the result
+        localStorage.setItem('demo_mode_info', JSON.stringify(response.data));
+      } else {
+        // Cache that demo mode is off
+        localStorage.setItem('demo_mode_info', JSON.stringify({ demoMode: false }));
       }
     } catch (error) {
       // Silently fail if backend is not available

@@ -19,6 +19,11 @@ import { WebSocketProvider } from './contexts/WebSocketContext'
 import { useServerStatus } from './hooks/useServerStatus'
 import LoadingState from './components/ui/LoadingState'
 
+const ServerStatusManager = memo(function ServerStatusManager() {
+  useServerStatus()
+  return null
+})
+
 const LogoutRoute = memo(function LogoutRoute() {
   const { logout } = useAuth()
   const navigate = useNavigate()
@@ -36,10 +41,9 @@ const LogoutRoute = memo(function LogoutRoute() {
 })
 
 function App() {
-  useServerStatus()
-
   return (
           <AuthProvider>
+            <ServerStatusManager />
             <NotificationProvider>
               <WebSocketProvider>
                 <Router>
