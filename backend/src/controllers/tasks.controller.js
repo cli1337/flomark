@@ -79,7 +79,23 @@ export const getTasksByList = async (req, res, next) => {
             orderBy: { createdAt: 'asc' }
         });
         
-        res.json({ data: tasks, success: true });
+        // Parse labels from string to array for all tasks
+        const tasksWithParsedLabels = tasks.map(task => {
+            let labelsArray = task.labels || [];
+            if (typeof labelsArray === 'string') {
+                try {
+                    labelsArray = JSON.parse(labelsArray);
+                } catch (e) {
+                    labelsArray = [];
+                }
+            }
+            return {
+                ...task,
+                labels: labelsArray
+            };
+        });
+        
+        res.json({ data: tasksWithParsedLabels, success: true });
     } catch (err) {
         console.error('getTasksByList error:', err);
         next(err);
@@ -214,7 +230,17 @@ export const getTaskById = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to access this task", key: "unauthorized", success: false });
         }
         
-        res.json({ data: task, success: true });
+        // Parse labels from string to array
+        let labelsArray = task.labels || [];
+        if (typeof labelsArray === 'string') {
+            try {
+                labelsArray = JSON.parse(labelsArray);
+            } catch (e) {
+                labelsArray = [];
+            }
+        }
+        
+        res.json({ data: { ...task, labels: labelsArray }, success: true });
     } catch (err) {
         console.error('getTaskById error:', err);
         next(err);
@@ -278,7 +304,10 @@ export const updateTask = async (req, res, next) => {
         }
         if (labels !== undefined) {
             if (Array.isArray(labels)) {
-                updateData.labels = labels;
+                // Determine labels format based on database type
+                const dbUrl = process.env.DATABASE_URL || '';
+                const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+                updateData.labels = isSQLite ? JSON.stringify(labels) : labels;
             } else {
                 return res.status(400).json({ message: "Labels must be an array", key: "invalid_labels", success: false });
             }
@@ -297,12 +326,26 @@ export const updateTask = async (req, res, next) => {
             }
         });
 
+        // Parse labels from string to array before returning
+        let labelsArray = updatedTask.labels || [];
+        if (typeof labelsArray === 'string') {
+            try {
+                labelsArray = JSON.parse(labelsArray);
+            } catch (e) {
+                labelsArray = [];
+            }
+        }
+
+        const taskWithParsedLabels = {
+            ...updatedTask,
+            labels: labelsArray
+        };
 
         broadcastTaskUpdate(task.list.project.id, "task-updated", {
-            task: updatedTask
+            task: taskWithParsedLabels
         }, req.user.id, req.user.name);
         
-        res.json({ data: updatedTask, success: true });
+        res.json({ data: taskWithParsedLabels, success: true });
     } catch (err) {
         console.error('updateTask error:', err);
         next(err);

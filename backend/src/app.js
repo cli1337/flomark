@@ -37,6 +37,9 @@ app.disable('x-powered-by');
 
 // Trust proxy - needed when behind reverse proxy (nginx, load balancer, etc.)
 // This allows express-rate-limit to correctly identify users by IP
+// WARNING: With trust proxy enabled, IP addresses come from X-Forwarded-For headers
+// which can be spoofed. Ensure your reverse proxy is properly configured to strip
+// these headers from client requests and only add them itself.
 app.set('trust proxy', true);
 
 app.use(cors());

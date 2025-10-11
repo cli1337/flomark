@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -29,7 +29,7 @@ model Project {
   id          String   @id @default(cuid())
   name        String
   imageHash   String?
-  labels      Json
+  labels      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -58,7 +58,7 @@ model Task {
   id          String    @id @default(cuid())
   name        String
   description String?
-  labels      Json
+  labels      String
   dueDate     DateTime?
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
@@ -135,15 +135,13 @@ model Notification {
   type      NotificationType
   title     String
   message   String
-  data      Json?
+  data      String?
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
   
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("notifications")
-  @@index([userId, isRead])
-  @@index([userId, createdAt])
 }
 
 enum Role {
@@ -171,3 +169,4 @@ enum NotificationType {
   MENTION
   GENERAL
 }
+

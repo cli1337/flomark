@@ -26,6 +26,8 @@ export const loginRateLimiter = rateLimit({
   skipSuccessfulRequests: false,
   // Skip failed requests from rate limiting (false = count all attempts)
   skipFailedRequests: false,
+  // Validate trust proxy configuration
+  validate: { trustProxy: false },
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -53,6 +55,8 @@ export const registrationRateLimiter = rateLimit({
   legacyHeaders: false,
   skipSuccessfulRequests: false,
   skipFailedRequests: false,
+  // Validate trust proxy configuration
+  validate: { trustProxy: false },
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -78,6 +82,8 @@ export const passwordRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Validate trust proxy configuration
+  validate: { trustProxy: false },
   handler: (req, res) => {
     res.status(429).json({
       success: false,
@@ -103,6 +109,8 @@ export const refreshTokenRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Validate trust proxy configuration
+  validate: { trustProxy: false },
   handler: (req, res) => {
     res.status(429).json({
       success: false,

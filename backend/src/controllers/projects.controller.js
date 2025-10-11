@@ -1276,9 +1276,40 @@ export const getProjectDataOptimized = async (req, res, next) => {
             tasksByList[list.id] = allTasks.filter(task => task.listId === list.id);
         });
         
+        // Parse labels from string to array for all tasks
+        Object.keys(tasksByList).forEach(listId => {
+            tasksByList[listId] = tasksByList[listId].map(task => {
+                let labelsArray = task.labels || [];
+                if (typeof labelsArray === 'string') {
+                    try {
+                        labelsArray = JSON.parse(labelsArray);
+                    } catch (e) {
+                        labelsArray = [];
+                    }
+                }
+                return {
+                    ...task,
+                    labels: labelsArray
+                };
+            });
+        });
+        
+        // Parse project labels from string to array
+        let projectLabels = project.labels || [];
+        if (typeof projectLabels === 'string') {
+            try {
+                projectLabels = JSON.parse(projectLabels);
+            } catch (e) {
+                projectLabels = [];
+            }
+        }
+        
         res.json({ 
             data: {
-                project,
+                project: {
+                    ...project,
+                    labels: projectLabels
+                },
                 lists,
                 tasks: tasksByList,
                 members: project.members
