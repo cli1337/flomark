@@ -192,22 +192,54 @@ print_info "Copying new backend files..."
 cp -r "$TEMP_DIR/backend/src" "$INSTALL_PATH/backend/"
 cp -r "$TEMP_DIR/backend/scripts" "$INSTALL_PATH/backend/"
 cp "$TEMP_DIR/backend/package.json" "$INSTALL_PATH/backend/"
-cp "$TEMP_DIR/backend/prisma" "$INSTALL_PATH/backend/" -r 2>/dev/null || true
+
+# Detect database type from existing .env
+print_info "Detecting database type..."
+DATABASE_URL=$(grep "^DATABASE_URL=" "$INSTALL_PATH/backend/.env" | cut -d'=' -f2- || echo "")
+if [[ "$DATABASE_URL" == mongodb* ]]; then
+    DB_PROVIDER="mongodb"
+    print_success "Detected: MongoDB"
+elif [[ "$DATABASE_URL" == postgresql* ]] || [[ "$DATABASE_URL" == postgres* ]]; then
+    DB_PROVIDER="postgresql"
+    print_success "Detected: PostgreSQL"
+elif [[ "$DATABASE_URL" == mysql* ]]; then
+    DB_PROVIDER="mysql"
+    print_success "Detected: MySQL"
+elif [[ "$DATABASE_URL" == file:* ]] || [[ "$DATABASE_URL" == sqlite:* ]]; then
+    DB_PROVIDER="sqlite"
+    print_success "Detected: SQLite"
+else
+    DB_PROVIDER="mongodb"
+    print_warning "Could not detect database type, defaulting to MongoDB"
+fi
+
+# Copy Prisma schema templates
+print_info "Copying Prisma schema templates..."
+cp -r "$TEMP_DIR/backend/prisma" "$INSTALL_PATH/backend/" -r 2>/dev/null || true
+
+# Apply correct schema for database type
+if [ -f "$INSTALL_PATH/backend/prisma/schema.$DB_PROVIDER.prisma" ]; then
+    print_info "Applying $DB_PROVIDER schema..."
+    cp "$INSTALL_PATH/backend/prisma/schema.$DB_PROVIDER.prisma" "$INSTALL_PATH/backend/prisma/schema.prisma"
+    print_success "Schema configured for $DB_PROVIDER"
+else
+    print_warning "Schema template not found for $DB_PROVIDER, keeping existing schema"
+fi
 
 print_info "Installing backend dependencies..."
 cd "$INSTALL_PATH/backend"
 
 if [ "$PKG_MANAGER" = "pnpm" ]; then
     if [ -f "pnpm-lock.yaml" ]; then
-        pnpm install --prod --frozen-lockfile
+        pnpm install --prod --frozen-lockfile --no-optional=false
     else
-        pnpm install --prod
+        pnpm install --prod --no-optional=false
     fi
 else
     if [ -f "package-lock.json" ]; then
-        npm ci --omit=dev
+        npm ci --omit=dev --include=optional
     else
-        npm install --omit=dev
+        npm install --omit=dev --include=optional
     fi
 fi
 print_success "Backend dependencies installed"
