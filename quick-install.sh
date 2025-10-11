@@ -212,24 +212,47 @@ while true; do
     fi
 done
 
-# Admin credentials
+# Demo Mode (Optional)
 echo ""
-print_info "Admin account setup"
-read -p "$(echo -e ${CYAN}Admin first name:${NC} )" ADMIN_FIRST_NAME
-read -p "$(echo -e ${CYAN}Admin last name:${NC} )" ADMIN_LAST_NAME
-read -p "$(echo -e ${CYAN}Admin email:${NC} )" ADMIN_EMAIL
+print_info "Demo Mode Configuration"
+echo ""
+echo "Demo mode is useful for testing and public demos. When enabled:"
+echo "  • Auto-login as demo@flomark.app (password: demo)"
+echo "  • Creates sample projects automatically"
+echo "  • Shows demo banner in frontend"
+echo ""
+read -p "$(echo -e ${CYAN}Enable demo mode? [y/n] (default: n):${NC} )" ENABLE_DEMO
+ENABLE_DEMO=$(echo "$ENABLE_DEMO" | tr '[:upper:]' '[:lower:]')
+if [[ "$ENABLE_DEMO" == "y" ]] || [[ "$ENABLE_DEMO" == "yes" ]]; then
+    DEMO_MODE=true
+    print_success "Demo mode will be enabled"
+    # Set default demo admin
+    ADMIN_FIRST_NAME="Demo"
+    ADMIN_LAST_NAME="User"
+    ADMIN_EMAIL="demo@flomark.app"
+    ADMIN_PASSWORD="demo"
+    print_info "Using default demo credentials: demo@flomark.app / demo"
+else
+    DEMO_MODE=false
+    # Admin credentials
+    echo ""
+    print_info "Admin account setup"
+    read -p "$(echo -e ${CYAN}Admin first name:${NC} )" ADMIN_FIRST_NAME
+    read -p "$(echo -e ${CYAN}Admin last name:${NC} )" ADMIN_LAST_NAME
+    read -p "$(echo -e ${CYAN}Admin email:${NC} )" ADMIN_EMAIL
 
-while true; do
-    read -sp "$(echo -e ${CYAN}Admin password:${NC} )" ADMIN_PASSWORD
-    echo ""
-    read -sp "$(echo -e ${CYAN}Confirm password:${NC} )" ADMIN_PASSWORD_CONFIRM
-    echo ""
-    if [ "$ADMIN_PASSWORD" = "$ADMIN_PASSWORD_CONFIRM" ]; then
-        break
-    else
-        print_error "Passwords do not match. Please try again."
-    fi
-done
+    while true; do
+        read -sp "$(echo -e ${CYAN}Admin password:${NC} )" ADMIN_PASSWORD
+        echo ""
+        read -sp "$(echo -e ${CYAN}Confirm password:${NC} )" ADMIN_PASSWORD_CONFIRM
+        echo ""
+        if [ "$ADMIN_PASSWORD" = "$ADMIN_PASSWORD_CONFIRM" ]; then
+            break
+        else
+            print_error "Passwords do not match. Please try again."
+        fi
+    done
+fi
 
 # ==================================
 # Installation Summary
@@ -245,6 +268,7 @@ echo "Install Path:     $INSTALL_PATH"
 echo "Domain/IP:        $DOMAIN"
 echo "Frontend Port:    $FRONTEND_PORT"
 echo "Backend Port:     $BACKEND_PORT"
+echo "Demo Mode:        $DEMO_MODE"
 echo "Admin Email:      $ADMIN_EMAIL"
 echo ""
 
@@ -589,7 +613,7 @@ BACKEND_URL=http://$DOMAIN:$BACKEND_PORT
 # ==================================
 # 🎭 DEMO MODE
 # ==================================
-DEMO_MODE=false
+DEMO_MODE=$DEMO_MODE
 
 # ==================================
 # 📧 EMAIL/SMTP (Optional)
