@@ -60,11 +60,12 @@ app.get(`${mainRoutePath}/health`, (req, res) => {
   });
 });
 
-// Simple demo info endpoint - frontend will handle demo mode logic
+// Demo info endpoint - returns demo credentials if demo mode is enabled
 app.get(`${mainRoutePath}/demo-info`, (req, res) => {
   res.status(200).json({
     demoMode: ENV.DEMO_MODE || false,
-    demoUser: ENV.DEMO_MODE ? { email: 'demo@flomark.app' } : null
+    email: ENV.DEMO_MODE ? 'demo@flomark.app' : null,
+    password: ENV.DEMO_MODE ? 'Demo123!' : null
   });
 });
 
