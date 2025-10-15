@@ -24,23 +24,6 @@ function Login() {
   const [needs2FA, setNeeds2FA] = useState(false)
   const [pendingToken, setPendingToken] = useState('')
   const [totp, setTotp] = useState('')
-  const [demoInfo, setDemoInfo] = useState(null)
-
-  // Check if backend is in demo mode
-  useEffect(() => {
-    const checkDemoMode = async () => {
-      try {
-        const response = await api.get('/demo-info')
-        if (response.data.demoMode) {
-          setDemoInfo(response.data)
-        }
-      } catch (error) {
-        // Silently fail if backend is not available
-        console.log('Could not check demo mode')
-      }
-    }
-    checkDemoMode()
-  }, [])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -201,20 +184,6 @@ function Login() {
                   )}
                 </Button>
               </Form.Submit>
-
-              {/* Demo Mode Credentials */}
-              {demoInfo && (
-                <div className="mt-4 p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20 rounded-lg">
-                  <p className="text-sm font-medium text-purple-300 mb-2">🎭 Demo Mode Active</p>
-                  <div className="space-y-1 text-xs text-gray-300">
-                    <p><span className="text-gray-400">Email:</span> <code className="bg-black/30 px-2 py-0.5 rounded">demo@flomark.app</code></p>
-                    <p><span className="text-gray-400">Password:</span> <code className="bg-black/30 px-2 py-0.5 rounded">demo</code></p>
-                  </div>
-                  <p className="text-xs text-gray-400 mt-2">
-                    Use these credentials to try the app
-                  </p>
-                </div>
-              )}
 
               {/* Sign up link */}
               {/* <p className="text-center text-sm text-gray-400">

@@ -11,7 +11,6 @@ import AdminPanel from './pages/admin/AdminPanel'
 import ErrorPage from './pages/ErrorPage'
 import ErrorBoundary from './components/ErrorBoundary'
 import { Forbidden } from './pages/errors'
-import DemoModeBanner from './components/DemoModeBanner'
 import UpdateNotification from './components/UpdateNotification'
 
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -50,7 +49,6 @@ function App() {
                 <Router>
                   <ErrorBoundary>
                     <div className="App">
-                      <DemoModeBanner />
                       <UpdateNotification />
                       <Routes>
                         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
