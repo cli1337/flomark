@@ -57,7 +57,10 @@ api.interceptors.response.use(
           console.log('Token refresh failed, redirecting to login');
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
-          window.location.href = '/login';
+          
+          // Dispatch custom event for navigation (to avoid full page reload)
+          window.dispatchEvent(new CustomEvent('auth:logout'));
+          
           return Promise.reject(refreshError);
         }
       } else {
@@ -65,7 +68,9 @@ api.interceptors.response.use(
         console.log('No valid refresh token, redirecting to login');
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        
+        // Dispatch custom event for navigation (to avoid full page reload)
+        window.dispatchEvent(new CustomEvent('auth:logout'));
       }
     }
 

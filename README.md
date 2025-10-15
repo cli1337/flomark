@@ -114,8 +114,8 @@ pnpm make-admin your-email@example.com OWNER
 
 # Frontend setup (new terminal)
 cd frontend
-pnpm install
-
+   pnpm install
+   
 # Start development servers
 # Terminal 1: Backend
 cd backend && pnpm dev
@@ -124,8 +124,13 @@ cd backend && pnpm dev
 cd frontend && pnpm dev
 ```
 
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:3000
+- Frontend Dev Server: http://localhost:3000
+- Backend API: http://localhost:5000
+
+**Port Configuration:**
+- Frontend port configured in `frontend/vite.config.js`
+- Backend port configured in `backend/.env` (PORT variable)
+- See [frontend/README.md](frontend/README.md) for detailed configuration options
 
 **Database Setup Commands:**
 - `pnpm db:setup:mongodb` - Auto-configures MongoDB schema + generates client + creates tables
@@ -162,8 +167,8 @@ sudo bash /tmp/flomark-update.sh
 - **[UPDATE-GUIDE.md](UPDATE-GUIDE.md)** - Update guide with rollback procedures
 
 ### ⚙️ Configuration
-- **[backend/README.md](backend/README.md)** - Backend documentation
-- **[backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md)** - Environment variables
+- **[backend/README.md](backend/README.md)** - Backend documentation & port configuration
+- **[frontend/README.md](frontend/README.md)** - Frontend configuration (Vite, ports, proxy, allowedHosts)
 - **[backend/SMTP_SETUP.md](backend/SMTP_SETUP.md)** - Email configuration
 
 ### 🏗️ Architecture

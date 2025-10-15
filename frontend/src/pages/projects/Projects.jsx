@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useToast } from '../../contexts/ToastContext'
 import { projectService } from '../../services/projectService'
@@ -35,6 +36,7 @@ import {
 } from 'lucide-react'
 
 const Projects = () => {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { showSuccess, showError } = useToast()
   
@@ -292,7 +294,7 @@ const Projects = () => {
     }, [project.id, project.imageHash])
 
     const handleProjectClick = () => {
-      window.location.href = `/projects/${project.id}`
+      navigate(`/projects/${project.id}`)
     }
 
     const handleKeyDown = (e) => {
@@ -592,7 +594,7 @@ const Projects = () => {
     return (
       <tr 
         className="bg-white/5 border-b border-white/10 hover:bg-white/10 transition-colors cursor-pointer"
-        onClick={() => window.location.href = `/projects/${project.id}`}
+        onClick={() => navigate(`/projects/${project.id}`)}
       >
         <td className="px-6 py-3 text-left">
           <div className="flex items-center gap-3">

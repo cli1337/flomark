@@ -122,7 +122,10 @@ DATABASE_URL=file:./flomark.db
 
 ### Optional
 ```env
+# Server Port (default: 5000)
 PORT=5000
+
+# JWT Token Expiration
 JWT_EXPIRES_IN=24h
 
 # SMTP (for email functionality)
@@ -325,6 +328,47 @@ After configuring SMTP:
 3. Test by inviting a user to a project
 4. Check recipient's inbox (and spam folder)
 
+## 🔌 Port Configuration
+
+### Changing the Backend Port
+
+**Default:** Backend runs on port `5000`
+
+**To change:**
+1. Edit `backend/.env`:
+   ```env
+   PORT=4000  # Your preferred port
+   ```
+
+2. If using frontend dev server, update `frontend/vite.config.js`:
+   ```js
+   proxy: {
+     '/api': {
+       target: 'http://localhost:4000',  // Match your PORT
+       changeOrigin: true
+     }
+   }
+   ```
+
+3. Restart backend:
+   ```bash
+   pnpm dev
+   ```
+
+### Port Already in Use
+
+```bash
+# Find process using port 5000
+lsof -i :5000      # macOS/Linux
+netstat -ano | findstr :5000  # Windows
+
+# Kill the process or change PORT in .env
+```
+
+**Note:** The frontend dev server runs on port `3000` (configured in `frontend/vite.config.js`). See [frontend/README.md](../frontend/README.md) for frontend configuration.
+
+---
+
 ## 🐛 Troubleshooting
 
 ### Server won't start
@@ -333,6 +377,7 @@ After configuring SMTP:
 - Ensure the correct `prisma/schema.prisma` is configured for your database
 - Ensure `JWT_SECRET` is set
 - Run `npx prisma generate` to generate Prisma Client
+- Check if the PORT is already in use (see Port Configuration above)
 
 ### Email not working
 - Check SMTP credentials in `.env`

@@ -14,10 +14,9 @@ const startTime = Date.now();
 connectDatabase().then(() => {
   server.listen(ENV.PORT, () => {
     console.log(`🚀 Server running at http://localhost:${ENV.PORT}`);
-    console.log(`🔌 Socket.IO initialized and ready for connections`);
     const endTime = Date.now();
     const duration = (endTime - startTime) / 1000;
-    console.log(`🚀 Server started in ${duration}s`);
+    console.log(`⚡ Server started in ${duration}s`);
   });
 }).catch((err) => {
   console.error("❌ Failed to start server:", err);

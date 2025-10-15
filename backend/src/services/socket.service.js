@@ -29,8 +29,6 @@ export class SocketService {
 
   setupEventHandlers() {
     this.io.on("connection", (socket) => {
-      console.log(`🔌 User ${socket.user.name} (${socket.user.id}) connected`);
-
       socket.join(`user:${socket.user.id}`);
 
       socket.on("join-project", (projectId) => {
@@ -45,8 +43,6 @@ export class SocketService {
           this.addUserToProject(socket.user.id, socket.user.name, projectId, socket);
           
           this.broadcastActiveUsers(projectId);
-        } else {
-          console.log(`📁 User ${socket.user.name} already in project ${projectId}`);
         }
       });
 
@@ -62,8 +58,6 @@ export class SocketService {
           this.removeUserFromProject(socket.user.id, projectId);
           
           this.broadcastActiveUsers(projectId);
-        } else {
-          console.log(`📁 User ${socket.user.name} not in project ${projectId}`);
         }
       });
 
@@ -131,15 +125,11 @@ export class SocketService {
 
       // Handle notification acknowledgment
       socket.on("notification-received", (data) => {
-        const { notificationId } = data;
-        console.log(`✅ User ${socket.user.name} acknowledged notification ${notificationId}`);
+        // Notification acknowledged - no action needed
       });
 
 
       socket.on("disconnect", (reason) => {
-        console.log(`🔌 User ${socket.user.name} disconnected: ${reason}`);
-        
-
         if (this.userProjects.has(socket.user.id)) {
           const userProjects = this.userProjects.get(socket.user.id);
           userProjects.forEach(projectId => {
@@ -217,8 +207,6 @@ export class SocketService {
 
 
     this.userProjects.get(userId).add(projectId);
-
-    console.log(`📁 Added user ${userName} to project ${projectId}`);
   }
 
 
@@ -226,7 +214,6 @@ export class SocketService {
     if (this.projectUsers.has(projectId)) {
       const user = this.projectUsers.get(projectId).get(userId);
       if (user) {
-        console.log(`📁 Removed user ${user.name} from project ${projectId}`);
         this.projectUsers.get(projectId).delete(userId);
         
 

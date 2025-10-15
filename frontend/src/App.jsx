@@ -40,6 +40,23 @@ const LogoutRoute = memo(function LogoutRoute() {
   )
 })
 
+const AuthLogoutListener = memo(function AuthLogoutListener() {
+  const navigate = useNavigate()
+  const { logout } = useAuth()
+
+  useEffect(() => {
+    const handleLogout = () => {
+      logout()
+      navigate('/login', { replace: true })
+    }
+
+    window.addEventListener('auth:logout', handleLogout)
+    return () => window.removeEventListener('auth:logout', handleLogout)
+  }, [navigate, logout])
+
+  return null
+})
+
 function App() {
   return (
           <AuthProvider>
@@ -48,11 +65,11 @@ function App() {
               <WebSocketProvider>
                 <Router>
                   <ErrorBoundary>
+                    <AuthLogoutListener />
                     <div className="App">
                       <UpdateNotification />
                       <Routes>
                         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-                        {/* <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} /> */}
                         <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                         <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                         <Route path="/projects/:id/flow" element={<ProtectedRoute><ProjectFlowView /></ProtectedRoute>} />
@@ -61,10 +78,7 @@ function App() {
                         <Route path="/join/:inviteLink" element={<JoinProject />} />
                         <Route path="/logout" element={<LogoutRoute />} />
                         <Route path="/" element={<Navigate to="/login" />} />
-                        {/* 404 - Catch all undefined routes */}
                         <Route path="*" element={<ErrorPage />} />
-                        {/* Uncomment to test error pages during development */}
-                        {/* <Route path="/error-showcase" element={<ErrorShowcase />} /> */}
                       </Routes>
                     </div>
                   </ErrorBoundary>
