@@ -312,11 +312,8 @@ if [ "$PKG_MANAGER" = "pnpm" ]; then
         pnpm install && pnpm run build && BUILD_SUCCESS=true
     fi
 else
-    if [ -f "package-lock.json" ]; then
-        npm ci && npm run build && BUILD_SUCCESS=true
-    else
-        npm install && npm run build && BUILD_SUCCESS=true
-    fi
+    # Always use npm install instead of npm ci to handle dependency updates
+    npm install && npm run build && BUILD_SUCCESS=true
 fi
 
 # Check if build succeeded
