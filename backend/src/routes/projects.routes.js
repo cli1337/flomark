@@ -22,6 +22,7 @@ import {
   getProjectDataOptimized
 } from "../controllers/projects.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { checkDemoMode } from "../middlewares/demo.middleware.js";
 import { uploadPhoto, handleMulterError } from "../config/multer.config.js";
 
 /**
@@ -38,32 +39,32 @@ router.use(authenticateToken);
 
 // ===== Project Operations =====
 router.get("/", getProjects);
-router.post("/", createProject);
-router.put("/:id", updateProject);
-router.delete("/:id", deleteProject);
+router.post("/", checkDemoMode, createProject);
+router.put("/:id", checkDemoMode, updateProject);
+router.delete("/:id", checkDemoMode, deleteProject);
 router.get("/:id/data", getProjectDataOptimized); // Optimized - get all project data at once
 router.get("/:id", getProjectById);
-router.post("/:id/image", uploadPhoto.single('image'), handleMulterError, uploadProjectImage);
+router.post("/:id/image", checkDemoMode, uploadPhoto.single('image'), handleMulterError, uploadProjectImage);
 
 // ===== List Operations =====
-router.post("/:id/list", createList);
+router.post("/:id/list", checkDemoMode, createList);
 router.get("/:id/lists", getListsByProject);
-router.put("/lists/:listId", updateList);
-router.put("/:id/lists/reorder", reorderLists);
+router.put("/lists/:listId", checkDemoMode, updateList);
+router.put("/:id/lists/reorder", checkDemoMode, reorderLists);
 
 // ===== Member Management =====
 router.get("/:id/members", getMembersByProject);
-router.delete("/:id/members/:memberId", removeMemberFromProject);
-router.put("/:id/members/:memberId/role", updateMemberRole);
+router.delete("/:id/members/:memberId", checkDemoMode, removeMemberFromProject);
+router.put("/:id/members/:memberId/role", checkDemoMode, updateMemberRole);
 
 // ===== Invitations =====
-router.post("/:id/invite", createInviteLink);
-router.post("/join/:inviteLink", joinProject);
+router.post("/:id/invite", checkDemoMode, createInviteLink);
+router.post("/join/:inviteLink", checkDemoMode, joinProject);
 
 // ===== Label Management =====
 router.get("/:id/labels", getLabelsByProject);
-router.post("/:id/labels", createLabel);
-router.put("/labels/:labelId", updateLabel);
-router.delete("/labels/:labelId", deleteLabel);
+router.post("/:id/labels", checkDemoMode, createLabel);
+router.put("/labels/:labelId", checkDemoMode, updateLabel);
+router.delete("/labels/:labelId", checkDemoMode, deleteLabel);
 
 export default router;

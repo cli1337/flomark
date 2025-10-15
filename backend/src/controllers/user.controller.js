@@ -539,6 +539,32 @@ export const uploadProfileImage = async (req, res, next) => {
   }
 };
 
+export const removeProfileImage = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: null },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        role: true,
+      },
+    });
+
+    res.json({
+      data: updatedUser,
+      success: true,
+      message: "Profile image removed successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 /**
  * Get all users (Admin only)
  * GET /api/user/all
@@ -730,6 +756,95 @@ export const promoteUserToAdmin = async (req, res, next) => {
     res.json({
       data: updatedUser,
       success: true,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const createUserByAdmin = async (req, res, next) => {
+  try {
+    if (req.user.role !== 'ADMIN' && req.user.role !== 'OWNER') {
+      return res.status(403).json({
+        message: "Access denied. Admin or Owner only.",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    const { name, email, password, role } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        message: "Name, email, and password are required",
+        key: "fields_required",
+        success: false,
+      });
+    }
+
+    if (password.length < 8 || !/[A-Z]/.test(password) || !/[!@#$%^&*]/.test(password)) {
+      return res.status(400).json({
+        message: "Password must be at least 8 characters long and contain at least 1 uppercase letter and 1 special character",
+        key: "invalid_password",
+        success: false,
+      });
+    }
+
+    // Check if email already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: "Email already in use",
+        key: "email_exists",
+        success: false,
+      });
+    }
+
+    // Validate role
+    const validRoles = ['USER', 'ADMIN'];
+    const userRole = role && validRoles.includes(role) ? role : 'USER';
+
+    // Admin can only create USER accounts, not other ADMINs
+    if (req.user.role === 'ADMIN' && userRole === 'ADMIN') {
+      return res.status(403).json({
+        message: "Admins cannot create other admin accounts",
+        key: "forbidden",
+        success: false,
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const registerIP = req.clientIP || req.ip || 'created_by_admin';
+
+    const newUser = await prisma.user.create({
+      data: {
+        name: name.trim(),
+        email: email.trim(),
+        password: hashedPassword,
+        role: userRole,
+        registerIP,
+        lastIP: registerIP,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profileImage: true,
+        role: true,
+        createdAt: true,
+        registerIP: true,
+        lastIP: true,
+        twoFactorEnabled: true,
+      },
+    });
+
+    res.json({
+      data: newUser,
+      success: true,
+      message: "User created successfully",
     });
   } catch (err) {
     next(err);

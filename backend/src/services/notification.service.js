@@ -1,8 +1,5 @@
-import { PrismaClient } from "@prisma/client";
+import { prisma } from "../config/database.js";
 import { SocketService } from "./socket.service.js";
-
-const prisma = new PrismaClient();
-
 /**
  * Notification Service - Handles creating, reading, and managing notifications
  */

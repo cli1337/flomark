@@ -19,7 +19,7 @@ export const ENV = {
   JWT_EXPIRES_IN: process.env.JWT_EXPIRES_IN || "24h",
   BACKEND_URL: process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`,
   
-  // Demo Mode Configuration (for frontend only)
+  // Demo Mode Configuration
   DEMO_MODE: process.env.DEMO_MODE === "true",
   
   // Email Configuration (SMTP)
