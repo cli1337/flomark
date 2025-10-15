@@ -119,23 +119,23 @@ fi
 # Backup current installation
 # ==================================
 echo ""
-print_info "Creating backup of current installation..."
+print_header "💾 Creating Full Backup"
 BACKUP_DIR="/tmp/flomark-backup-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 
-print_info "Backing up .env file..."
-if [ -f "$INSTALL_PATH/backend/.env" ]; then
-    cp "$INSTALL_PATH/backend/.env" "$BACKUP_DIR/.env"
-    print_success ".env backed up"
-else
-    print_warning ".env file not found, skipping backup"
+print_info "Backing up backend..."
+if [ -d "$INSTALL_PATH/backend" ]; then
+    cp -r "$INSTALL_PATH/backend" "$BACKUP_DIR/"
+    print_success "Backend backed up"
 fi
 
-print_info "Backing up storage directory..."
-if [ -d "$INSTALL_PATH/backend/storage" ]; then
-    cp -r "$INSTALL_PATH/backend/storage" "$BACKUP_DIR/"
-    print_success "Storage backed up"
+print_info "Backing up frontend..."
+if [ -d "$INSTALL_PATH/frontend" ]; then
+    cp -r "$INSTALL_PATH/frontend" "$BACKUP_DIR/"
+    print_success "Frontend backed up"
 fi
+
+print_success "Full backup created at: $BACKUP_DIR"
 
 # ==================================
 # Download latest version
@@ -245,12 +245,12 @@ fi
 print_success "Backend dependencies installed"
 
 print_info "Restoring .env file..."
-cp "$BACKUP_DIR/.env" "$INSTALL_PATH/backend/.env"
+cp "$BACKUP_DIR/backend/.env" "$INSTALL_PATH/backend/.env"
 print_success ".env restored"
 
 print_info "Restoring storage directory..."
-if [ -d "$BACKUP_DIR/storage" ]; then
-    cp -r "$BACKUP_DIR/storage"/* "$INSTALL_PATH/backend/storage/" 2>/dev/null || true
+if [ -d "$BACKUP_DIR/backend/storage" ]; then
+    cp -r "$BACKUP_DIR/backend/storage"/* "$INSTALL_PATH/backend/storage/" 2>/dev/null || true
 fi
 
 # Generate Prisma Client (always required)
@@ -303,22 +303,61 @@ export default defineConfig({
 })
 EOF
 
+# Build frontend with error handling
+BUILD_SUCCESS=false
 if [ "$PKG_MANAGER" = "pnpm" ]; then
     if [ -f "pnpm-lock.yaml" ]; then
-        pnpm install --frozen-lockfile
+        pnpm install --frozen-lockfile && pnpm run build && BUILD_SUCCESS=true
     else
-        pnpm install
+        pnpm install && pnpm run build && BUILD_SUCCESS=true
     fi
-    pnpm run build
 else
     if [ -f "package-lock.json" ]; then
-        npm ci
+        npm ci && npm run build && BUILD_SUCCESS=true
     else
-        npm install
+        npm install && npm run build && BUILD_SUCCESS=true
     fi
-    npm run build
 fi
-print_success "Frontend built"
+
+# Check if build succeeded
+if [ "$BUILD_SUCCESS" = false ]; then
+    print_error "Frontend build failed!"
+    echo ""
+    print_warning "Rolling back to previous version..."
+    
+    # Stop any running services
+    systemctl stop flomark-backend 2>/dev/null || true
+    
+    # Restore from backup
+    print_info "Restoring backend from backup..."
+    rm -rf "$INSTALL_PATH/backend"
+    cp -r "$BACKUP_DIR/backend" "$INSTALL_PATH/"
+    
+    print_info "Restoring frontend from backup..."
+    rm -rf "$INSTALL_PATH/frontend"
+    cp -r "$BACKUP_DIR/frontend" "$INSTALL_PATH/"
+    
+    # Restart services
+    systemctl start flomark-backend
+    
+    print_success "Rollback complete! Your previous version has been restored."
+    print_info "Backup kept at: $BACKUP_DIR"
+    
+    # Cleanup temp directory
+    rm -rf "$TEMP_DIR"
+    
+    echo ""
+    print_error "Update failed. Please check the build errors above."
+    echo ""
+    echo "Common solutions:"
+    echo "  1. Make sure all dependencies are available"
+    echo "  2. Check for any syntax errors in the code"
+    echo "  3. Try updating Node.js to the latest LTS version"
+    echo ""
+    exit 1
+fi
+
+print_success "Frontend built successfully"
 
 print_info "Updating frontend files..."
 rm -rf "$INSTALL_PATH/frontend"/*
@@ -342,16 +381,27 @@ if systemctl is-active --quiet flomark-backend; then
 else
     print_error "Flomark backend failed to start"
     echo ""
-    echo "Attempting to restore from backup..."
+    print_error "Backend service failed to start!"
+    print_warning "Rolling back to previous version..."
     
-    # Restore backup
+    # Restore full backup
     systemctl stop flomark-backend
-    cp "$BACKUP_DIR/.env" "$INSTALL_PATH/backend/.env"
-    cp -r "$BACKUP_DIR/storage"/* "$INSTALL_PATH/backend/storage/" 2>/dev/null || true
+    
+    print_info "Restoring backend from backup..."
+    rm -rf "$INSTALL_PATH/backend"
+    cp -r "$BACKUP_DIR/backend" "$INSTALL_PATH/"
+    
+    print_info "Restoring frontend from backup..."
+    rm -rf "$INSTALL_PATH/frontend"
+    cp -r "$BACKUP_DIR/frontend" "$INSTALL_PATH/"
+    
     systemctl start flomark-backend
     
-    print_error "Update failed. Backup restored."
-    echo "Check logs with: journalctl -u flomark-backend -n 50"
+    print_success "Rollback complete! Your previous version has been restored."
+    print_info "Backup kept at: $BACKUP_DIR"
+    
+    echo ""
+    print_error "Update failed. Check logs with: journalctl -u flomark-backend -n 50"
     rm -rf "$TEMP_DIR"
     exit 1
 fi
