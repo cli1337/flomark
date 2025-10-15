@@ -65,5 +65,10 @@ export const authService = {
       },
     })
     return response.data
+  },
+
+  async removeProfileImage() {
+    const response = await api.delete('/user/profile/image')
+    return response.data
   }
 }

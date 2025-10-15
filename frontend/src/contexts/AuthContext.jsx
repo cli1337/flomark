@@ -157,6 +157,24 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  const removeProfileImage = useCallback(async () => {
+    try {
+      const response = await authService.removeProfileImage()
+      
+      if (response.success) {
+        setUser(response.data)
+        return { success: true }
+      } else {
+        return { success: false, message: response.message }
+      }
+    } catch (error) {
+      if (error.error && error.data) {
+        return { success: false, message: error.data.message }
+      }
+      return { success: false, message: error.message || 'An error occurred while removing image' }
+    }
+  }, [])
+
   const value = useMemo(() => ({
     user,
     login,
@@ -166,8 +184,9 @@ export function AuthProvider({ children }) {
     updateProfile,
     updatePassword,
     uploadProfileImage,
+    removeProfileImage,
     loading
-  }), [user, login, completeTwoFactorLogin, register, logout, updateProfile, updatePassword, uploadProfileImage, loading])
+  }), [user, login, completeTwoFactorLogin, register, logout, updateProfile, updatePassword, uploadProfileImage, removeProfileImage, loading])
 
   return (
     <AuthContext.Provider value={value}>

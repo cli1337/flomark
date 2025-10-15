@@ -27,5 +27,14 @@ export const adminService = {
       throw error
     }
   },
+
+  createUser: async (userData) => {
+    try {
+      const response = await api.post('/user/admin/users/create', userData)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
 }
 

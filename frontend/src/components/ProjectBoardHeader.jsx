@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useSocket } from '../hooks/useSocket'
 import { Button } from './ui/Button'
 import { 
@@ -16,7 +17,8 @@ import {
   MoreVertical,
   Plus,
   Mail,
-  X
+  X,
+  Workflow
 } from 'lucide-react'
 import LabelFilter from './LabelFilter'
 import MemberFilter from './MemberFilter'
@@ -24,6 +26,7 @@ import InviteModal from './InviteModal'
 import ActivityIndicator from './ActivityIndicator'
 
 const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMember, onLabelsChange, onMembersChange, onLabelsUpdated, onSearchChange }) => {
+  const navigate = useNavigate()
   const [showInviteModal, setShowInviteModal] = useState(false)
   const [selectedLabels, setSelectedLabels] = useState([])
   const [selectedMembers, setSelectedMembers] = useState([])
@@ -118,6 +121,15 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
                 </div>
               )}
             </div>
+            
+            <Button
+              onClick={() => navigate(`/projects/${project?.id}/flow`)}
+              className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 px-3 py-1 text-sm rounded-lg"
+              title="Flow View"
+            >
+              <Workflow className="h-4 w-4 mr-1" />
+              Flow View
+            </Button>
             
             {canManageProject && (
               <Button

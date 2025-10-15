@@ -4,6 +4,7 @@ import Login from './pages/auth/login/Login'
 import Register from './pages/auth/register/Register'
 import Projects from './pages/projects/Projects'
 import ProjectDetail from './pages/projects/ProjectDetail'
+import ProjectFlowView from './pages/flow/ProjectFlowView'
 import Profile from './pages/profile/Profile'
 import JoinProject from './pages/join/JoinProject'
 import AdminPanel from './pages/admin/AdminPanel'
@@ -56,6 +57,7 @@ function App() {
                         {/* <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} /> */}
                         <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                         <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                        <Route path="/projects/:id/flow" element={<ProtectedRoute><ProjectFlowView /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                         <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
                         <Route path="/join/:inviteLink" element={<JoinProject />} />

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react'
-import { Edit, Shield, ShieldOff, Loader2, Crown, Search, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Edit, Shield, ShieldOff, Loader2, Crown, Search, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react'
 import { adminService } from '../../services/adminService'
 import { useToast } from '../../contexts/ToastContext'
 import { useAuth } from '../../contexts/AuthContext'
 import EditUserModal from '../../components/EditUserModal'
+import CreateUserModal from '../../components/CreateUserModal'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 
@@ -12,6 +13,7 @@ const UsersList = () => {
   const [loading, setLoading] = useState(true)
   const [selectedUser, setSelectedUser] = useState(null)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('ALL')
   const [sortBy, setSortBy] = useState('createdAt')
@@ -164,9 +166,18 @@ const UsersList = () => {
 
   return (
     <div className="p-8">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">User Management</h2>
-        <p className="text-gray-400">Manage user accounts and permissions</p>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">User Management</h2>
+          <p className="text-gray-400">Manage user accounts and permissions</p>
+        </div>
+        <Button
+          onClick={() => setIsCreateModalOpen(true)}
+          className="flex items-center gap-2 bg-white text-black hover:bg-gray-100"
+        >
+          <UserPlus className="h-4 w-4" />
+          Create User
+        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -427,6 +438,16 @@ const UsersList = () => {
             setSelectedUser(null)
           }}
           onUserUpdated={handleUserUpdated}
+        />
+      )}
+
+      {isCreateModalOpen && (
+        <CreateUserModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onUserCreated={() => {
+            loadUsers()
+            setIsCreateModalOpen(false)
+          }}
         />
       )}
     </div>

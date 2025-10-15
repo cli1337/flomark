@@ -22,7 +22,7 @@ import {
 import { authService } from '../../services/authService'
 
 const Profile = () => {
-  const { user, updateProfile, updatePassword, uploadProfileImage } = useAuth()
+  const { user, updateProfile, updatePassword, uploadProfileImage, removeProfileImage } = useAuth()
   const { showSuccess, showError } = useToast()
   const navigate = useNavigate()
   const location = useLocation()
@@ -40,6 +40,7 @@ const Profile = () => {
   const [updatingProfile, setUpdatingProfile] = useState(false)
   const [updatingPassword, setUpdatingPassword] = useState(false)
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [removingImage, setRemovingImage] = useState(false)
   const [profileSuccess, setProfileSuccess] = useState(false)
   const [passwordSuccess, setPasswordSuccess] = useState(false)
   const [imageSuccess, setImageSuccess] = useState(false)
@@ -136,6 +137,24 @@ const Profile = () => {
       showError('Upload Failed', 'An error occurred while uploading your image')
     } finally {
       setUploadingImage(false)
+    }
+  }
+
+  const handleImageRemove = async () => {
+    setRemovingImage(true)
+    try {
+      const result = await removeProfileImage()
+      if (result.success) {
+        showSuccess('Image Removed', 'Your profile image has been removed')
+        setProfileImage(null)
+        setProfileImagePreview(null)
+      } else {
+        showError('Remove Failed', result.message)
+      }
+    } catch (error) {
+      showError('Remove Failed', 'An error occurred while removing your image')
+    } finally {
+      setRemovingImage(false)
     }
   }
 
@@ -384,6 +403,26 @@ const Profile = () => {
                       <>
                         <Camera className="h-4 w-4 mr-2" />
                         Upload Image
+                      </>
+                    )}
+                  </Button>
+                )}
+                
+                {user?.profileImage && !profileImage && (
+                  <Button
+                    onClick={handleImageRemove}
+                    disabled={removingImage}
+                    className="w-full px-4 py-2 rounded-lg font-medium bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/50"
+                  >
+                    {removingImage ? (
+                      <div className="flex items-center gap-2">
+                        <LoadingSpinner size="h-4 w-4" />
+                        Removing...
+                      </div>
+                    ) : (
+                      <>
+                        <X className="h-4 w-4 mr-2" />
+                        Remove Image
                       </>
                     )}
                   </Button>
