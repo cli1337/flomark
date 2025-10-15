@@ -65,7 +65,7 @@ app.get(`${mainRoutePath}/demo-info`, (req, res) => {
   res.status(200).json({
     demoMode: ENV.DEMO_MODE || false,
     email: ENV.DEMO_MODE ? 'demo@flomark.app' : null,
-    password: ENV.DEMO_MODE ? 'Demo123!' : null
+    password: ENV.DEMO_MODE ? 'demo' : null
   });
 });
 
