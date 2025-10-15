@@ -1,7 +1,7 @@
 import express from "express";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { prisma } from "../config/database.js";
-import { ObjectId } from "mongodb";
+import { isValidId } from "../utils/id-validator.js";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -21,7 +21,7 @@ const checkProjectAccess = async (req, res, next) => {
       });
     }
 
-    if (!ObjectId.isValid(projectId)) {
+    if (!isValidId(projectId)) {
       return res.status(400).json({ 
         message: "Invalid project ID", 
         key: "invalid_project_id", 

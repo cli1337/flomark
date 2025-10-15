@@ -47,14 +47,29 @@ const photoFilter = (req, file, cb) => {
 
 const taskFileFilter = (req, file, cb) => {
   const allowedTypes = [
-    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
-    'text/plain'
+    // Images
+    'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml',
+    // Documents
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/vnd.ms-powerpoint',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    // Text files
+    'text/plain', 'text/csv', 'text/markdown',
+    // Archives
+    'application/zip', 'application/x-zip-compressed',
+    'application/x-rar-compressed', 'application/x-7z-compressed',
+    // Other
+    'application/json'
   ];
   
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Allowed types: images, PDF, Word, Excel, CSV, and text files.'), false);
+    cb(new Error('Invalid file type. Allowed types: images, PDF, Word, Excel, PowerPoint, CSV, text files, and archives.'), false);
   }
 };
 
@@ -74,7 +89,7 @@ export const uploadTaskFile = multer({
     fileSize: 10 * 1024 * 1024, // 10MB
     files: 1
   }
-});
+}).single('file');
 
 export const handleMulterError = (error, req, res, next) => {
   if (error instanceof multer.MulterError) {

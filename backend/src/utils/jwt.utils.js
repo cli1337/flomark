@@ -21,5 +21,5 @@ export const extractTokenFromHeader = (authHeader) => {
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return null;
   }
-  return authHeader.substring(7);
+  return authHeader.split(' ')[1]?.trim();
 };

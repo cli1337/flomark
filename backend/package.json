@@ -1,6 +1,6 @@
 {
   "name": "flomark-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "type": "module",
   "main": "/src/server.js",
@@ -8,7 +8,13 @@
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
-    "make-admin": "node scripts/make-admin.js"
+    "make-admin": "node scripts/make-admin.js",
+    "dev:setup": "npm run dev:setup:sqlite",
+    "dev:setup:sqlite": "node -e \"const fs=require('fs');fs.existsSync('.env')||fs.copyFileSync('env.development.template','.env');fs.copyFileSync('prisma/schema.sqlite.prisma','prisma/schema.prisma');console.log('✓ SQLite development environment configured')\" && npm install && npx prisma generate && npx prisma db push",
+    "db:studio": "npx prisma studio",
+    "db:push": "npx prisma db push",
+    "db:generate": "npx prisma generate",
+    "db:reset": "npx prisma db push --force-reset"
   },
   "repository": {
     "type": "git",
@@ -26,12 +32,14 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.1.0",
     "express-validator": "^7.2.1",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.20.0",
     "multer": "^2.0.2",
-    "socket.io": "^4.8.1",
+    "nodemailer": "^7.0.9",
     "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1",
     "speakeasy": "^2.0.0"
   },
   "devDependencies": {

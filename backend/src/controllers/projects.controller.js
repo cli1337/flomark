@@ -1,12 +1,27 @@
 import { prisma } from "../config/database.js";
-import { ObjectId } from "mongodb";
 import fs from "fs";
 import crypto from "crypto";
-import { ENV } from "../config/env.js";
 import { SocketService } from "../services/socket.service.js";
+import { isValidId } from "../utils/id-validator.js";
+import { safeUserSelect, sanitizeProject, sanitizeProjects, sanitizeMembers } from "../utils/user-sanitizer.js";
 
+/**
+ * Projects Controller
+ * Handles project management, lists, labels, members, and invitations
+ * All endpoints require authentication unless specified
+ */
+
+// In-memory cache for invite links (consider using Redis in production)
 const cache = new Map();
 
+/**
+ * Broadcast project updates to all connected clients in real-time
+ * @param {string} projectId - Project ID
+ * @param {string} type - Update type (e.g., 'project-created', 'list-created')
+ * @param {object} payload - Update payload
+ * @param {string} userId - User who made the change
+ * @param {string} userName - Name of user who made the change
+ */
 const broadcastProjectUpdate = (projectId, type, payload, userId, userName) => {
   if (SocketService.instance) {
 
@@ -34,6 +49,13 @@ const broadcastProjectUpdate = (projectId, type, payload, userId, userName) => {
   }
 };
 
+/**
+ * Get all projects for authenticated user (paginated)
+ * GET /api/projects?page=1&limit=5
+ * 
+ * Query: { page, limit }
+ * Returns: { data: projects[], success: true, total, page, limit, totalPages }
+ */
 export const getProjects = async (req, res, next) => {
     try {
         const page = parseInt(req.query.page) || 1;
@@ -61,7 +83,9 @@ export const getProjects = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 lists: {
@@ -90,6 +114,12 @@ export const getProjects = async (req, res, next) => {
     }
 };
 
+/**
+ * Get project by ID with members
+ * GET /api/projects/:id
+ * 
+ * Returns: { data: project, success: true }
+ */
 export const getProjectById = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -98,7 +128,7 @@ export const getProjectById = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -107,7 +137,9 @@ export const getProjectById = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 }
             }
@@ -127,6 +159,14 @@ export const getProjectById = async (req, res, next) => {
     }
 };
 
+/**
+ * Create a new project
+ * POST /api/projects
+ * 
+ * Body: { name }
+ * Returns: { data: project, success: true }
+ * Note: Creator is automatically added as OWNER
+ */
 export const createProject = async (req, res, next) => {
     try {
         if (!req.body) {
@@ -152,9 +192,15 @@ export const createProject = async (req, res, next) => {
             return res.status(400).json({ message: "Name must be between 3 and 20 characters", key: "invalid_name", success: false });
         }
 
+        // Determine labels format based on database type
+        const dbUrl = process.env.DATABASE_URL || '';
+        const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+        const defaultLabels = isSQLite ? '[]' : [];
+
         const project = await prisma.project.create({
             data: { 
                 name,
+                labels: defaultLabels,
                 members: {
                     create: {
                         userId: req.user.id,
@@ -191,7 +237,7 @@ export const updateProject = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
 
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -258,7 +304,7 @@ export const uploadProjectImage = async (req, res, next) => {
             return res.status(400).json({ message: "File is required", key: "file_required", success: false });
         }
         
-        if (!ObjectId.isValid(req.params.id)) {
+        if (!isValidId(req.params.id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -313,6 +359,13 @@ export const uploadProjectImage = async (req, res, next) => {
     }
 };
 
+/**
+ * Create a list within a project
+ * POST /api/projects/:id/lists
+ * 
+ * Body: { name, color }
+ * Returns: { data: list, success: true }
+ */
 export const createList = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -322,7 +375,7 @@ export const createList = async (req, res, next) => {
             return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
         }
 
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -371,7 +424,7 @@ export const getListsByProject = async (req, res, next) => {
     try {
         const { id } = req.params;
         
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -400,13 +453,20 @@ export const getListsByProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Create an invite link for a project (Owner only)
+ * POST /api/projects/:id/invite
+ * 
+ * Body: { email } (optional - restrict invite to specific email)
+ * Returns: { data: inviteLink, success: true }
+ */
 export const createInviteLink = async (req, res, next) => {
     try {
         const { id } = req.params;
         if (!id) {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
         const project = await prisma.project.findUnique({ 
@@ -431,6 +491,12 @@ export const createInviteLink = async (req, res, next) => {
     }
 };
 
+/**
+ * Join a project using an invite link
+ * POST /api/projects/join/:inviteLink
+ * 
+ * Returns: { data: { member, project }, success: true }
+ */
 export const joinProject = async (req, res, next) => {
     try {
         const { inviteLink } = req.params;
@@ -566,7 +632,7 @@ export const getMembersByProject = async (req, res, next) => {
     try {
         const { id } = req.params;
         
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -587,7 +653,9 @@ export const getMembersByProject = async (req, res, next) => {
         const members = await prisma.projectMember.findMany({ 
             where: { projectId: id },
             include: {
-                user: true
+                user: {
+                    select: safeUserSelect
+                }
             }
         });
         
@@ -597,6 +665,13 @@ export const getMembersByProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Remove a member from a project
+ * DELETE /api/projects/:id/members/:memberId
+ * 
+ * Returns: { data: member, success: true }
+ * Note: Cannot remove project owner
+ */
 export const removeMemberFromProject = async (req, res, next) => {
     try {
         const { id, memberId } = req.params;
@@ -606,10 +681,10 @@ export const removeMemberFromProject = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
-        if (!ObjectId.isValid(memberId)) {
+        if (!isValidId(memberId)) {
             return res.status(400).json({ message: "Invalid member ID", key: "invalid_member_id", success: false });
         }
         const member = await prisma.projectMember.delete({
@@ -645,10 +720,10 @@ export const updateMemberRole = async (req, res, next) => {
         if (!id) {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
-        if (!ObjectId.isValid(memberId)) {
+        if (!isValidId(memberId)) {
             return res.status(400).json({ message: "Invalid member ID", key: "invalid_member_id", success: false });
         }
         if (!role || !['ADMIN', 'MEMBER'].includes(role)) {
@@ -742,7 +817,17 @@ export const getLabelsByProject = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
         }
         
-        const labels = (project.labels || []).map((label, index) => ({
+        // Parse labels based on database type
+        let labelsArray = project.labels || [];
+        if (typeof labelsArray === 'string') {
+            try {
+                labelsArray = JSON.parse(labelsArray);
+            } catch (e) {
+                labelsArray = [];
+            }
+        }
+        
+        const labels = labelsArray.map((label, index) => ({
             id: label.id || `label-${index}`,
             name: label.name || 'Unnamed Label',
             color: label.color || '#3b82f6'
@@ -754,6 +839,13 @@ export const getLabelsByProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Create a label for a project
+ * POST /api/projects/:id/labels
+ * 
+ * Body: { name, color }
+ * Returns: { data: label, success: true }
+ */
 export const createLabel = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -781,7 +873,16 @@ export const createLabel = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
         }
         
-        const existingLabels = project.labels || [];
+        // Parse existing labels
+        let existingLabels = project.labels || [];
+        if (typeof existingLabels === 'string') {
+            try {
+                existingLabels = JSON.parse(existingLabels);
+            } catch (e) {
+                existingLabels = [];
+            }
+        }
+        
         const labelExists = existingLabels.some(label => 
             (typeof label === 'string' ? label : label.name) === name
         );
@@ -796,10 +897,17 @@ export const createLabel = async (req, res, next) => {
             color
         };
         
+        const updatedLabels = [...existingLabels, newLabel];
+        
+        // Determine labels format based on database type
+        const dbUrl = process.env.DATABASE_URL || '';
+        const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+        const labelsToSave = isSQLite ? JSON.stringify(updatedLabels) : updatedLabels;
+        
         const updatedProject = await prisma.project.update({
             where: { id },
             data: {
-                labels: [...existingLabels, newLabel]
+                labels: labelsToSave
             }
         });
 
@@ -948,7 +1056,7 @@ export const updateList = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!isValidId(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
         
@@ -1010,7 +1118,7 @@ export const reorderLists = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
         
@@ -1066,7 +1174,7 @@ export const deleteProject = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
         
@@ -1108,6 +1216,13 @@ export const deleteProject = async (req, res, next) => {
     }
 };
 
+/**
+ * Get complete project data (project, lists, tasks, members) - Optimized
+ * GET /api/projects/:id/data
+ * 
+ * Returns: { data: { project, lists, tasks, members }, success: true }
+ * Note: This is an optimized endpoint that fetches all project data in minimal queries
+ */
 export const getProjectDataOptimized = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -1116,7 +1231,7 @@ export const getProjectDataOptimized = async (req, res, next) => {
             return res.status(400).json({ message: "Project ID is required", key: "project_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(id)) {
+        if (!isValidId(id)) {
             return res.status(400).json({ message: "Invalid project ID", key: "invalid_project_id", success: false });
         }
 
@@ -1125,7 +1240,9 @@ export const getProjectDataOptimized = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 }
             }
@@ -1154,7 +1271,9 @@ export const getProjectDataOptimized = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true,
@@ -1168,9 +1287,40 @@ export const getProjectDataOptimized = async (req, res, next) => {
             tasksByList[list.id] = allTasks.filter(task => task.listId === list.id);
         });
         
+        // Parse labels from string to array for all tasks
+        Object.keys(tasksByList).forEach(listId => {
+            tasksByList[listId] = tasksByList[listId].map(task => {
+                let labelsArray = task.labels || [];
+                if (typeof labelsArray === 'string') {
+                    try {
+                        labelsArray = JSON.parse(labelsArray);
+                    } catch (e) {
+                        labelsArray = [];
+                    }
+                }
+                return {
+                    ...task,
+                    labels: labelsArray
+                };
+            });
+        });
+        
+        // Parse project labels from string to array
+        let projectLabels = project.labels || [];
+        if (typeof projectLabels === 'string') {
+            try {
+                projectLabels = JSON.parse(projectLabels);
+            } catch (e) {
+                projectLabels = [];
+            }
+        }
+        
         res.json({ 
             data: {
-                project,
+                project: {
+                    ...project,
+                    labels: projectLabels
+                },
                 lists,
                 tasks: tasksByList,
                 members: project.members

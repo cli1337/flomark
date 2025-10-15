@@ -1,8 +1,22 @@
 import { prisma } from "../config/database.js";
-import { ObjectId } from "mongodb";
 import { SocketService } from "../services/socket.service.js";
+import { isValidId } from "../utils/id-validator.js";
+import { safeUserSelect } from "../utils/user-sanitizer.js";
 
+/**
+ * Tasks Controller
+ * Handles all task-related operations including CRUD, members, subtasks, and labels
+ * All endpoints require authentication
+ */
 
+/**
+ * Broadcast task updates to all connected clients in project in real-time
+ * @param {string} projectId - Project ID
+ * @param {string} type - Update type (e.g., 'task-created', 'task-updated')
+ * @param {object} payload - Update payload
+ * @param {string} userId - User who made the change
+ * @param {string} userName - Name of user who made the change
+ */
 const broadcastTaskUpdate = (projectId, type, payload, userId, userName) => {
   if (SocketService.instance) {
 
@@ -17,6 +31,12 @@ const broadcastTaskUpdate = (projectId, type, payload, userId, userName) => {
   }
 };
 
+/**
+ * Get all tasks in a list
+ * GET /api/tasks/list/:listId
+ * 
+ * Returns: { data: tasks[], success: true }
+ */
 export const getTasksByList = async (req, res, next) => {
     try {
         const { listId } = req.params;
@@ -25,7 +45,7 @@ export const getTasksByList = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!isValidId(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
 
@@ -52,7 +72,9 @@ export const getTasksByList = async (req, res, next) => {
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true
@@ -60,13 +82,36 @@ export const getTasksByList = async (req, res, next) => {
             orderBy: { createdAt: 'asc' }
         });
         
-        res.json({ data: tasks, success: true });
+        // Parse labels from string to array for all tasks
+        const tasksWithParsedLabels = tasks.map(task => {
+            let labelsArray = task.labels || [];
+            if (typeof labelsArray === 'string') {
+                try {
+                    labelsArray = JSON.parse(labelsArray);
+                } catch (e) {
+                    labelsArray = [];
+                }
+            }
+            return {
+                ...task,
+                labels: labelsArray
+            };
+        });
+        
+        res.json({ data: tasksWithParsedLabels, success: true });
     } catch (err) {
         console.error('getTasksByList error:', err);
         next(err);
     }
 };
 
+/**
+ * Create a new task in a list
+ * POST /api/tasks/list/:listId
+ * 
+ * Body: { name, description, dueDate }
+ * Returns: { data: task, success: true }
+ */
 export const createTask = async (req, res, next) => {
     try {
         const { listId } = req.params;
@@ -76,7 +121,7 @@ export const createTask = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!isValidId(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
         
@@ -106,17 +151,25 @@ export const createTask = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to create tasks in this list", key: "unauthorized", success: false });
         }
 
+        // Determine labels format based on database type
+        const dbUrl = process.env.DATABASE_URL || '';
+        const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+        const defaultLabels = isSQLite ? '[]' : [];
+
         const task = await prisma.task.create({
             data: {
                 name: name.trim(),
                 description: description?.trim() || null,
                 dueDate: dueDate ? new Date(dueDate) : null,
+                labels: defaultLabels,
                 listId
             },
             include: {
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true
@@ -135,6 +188,12 @@ export const createTask = async (req, res, next) => {
     }
 };
 
+/**
+ * Get task by ID with all details
+ * GET /api/tasks/:taskId
+ * 
+ * Returns: { data: task, success: true }
+ */
 export const getTaskById = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -143,7 +202,7 @@ export const getTaskById = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -159,7 +218,9 @@ export const getTaskById = async (req, res, next) => {
                 },
                 members: {
                     include: {
-                        user: true
+                        user: {
+                            select: safeUserSelect
+                        }
                     }
                 },
                 subTasks: true,
@@ -176,13 +237,30 @@ export const getTaskById = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to access this task", key: "unauthorized", success: false });
         }
         
-        res.json({ data: task, success: true });
+        // Parse labels from string to array
+        let labelsArray = task.labels || [];
+        if (typeof labelsArray === 'string') {
+            try {
+                labelsArray = JSON.parse(labelsArray);
+            } catch (e) {
+                labelsArray = [];
+            }
+        }
+        
+        res.json({ data: { ...task, labels: labelsArray }, success: true });
     } catch (err) {
         console.error('getTaskById error:', err);
         next(err);
     }
 };
 
+/**
+ * Update a task
+ * PUT /api/tasks/:taskId
+ * 
+ * Body: { name, description, dueDate, labels }
+ * Returns: { data: updatedTask, success: true }
+ */
 export const updateTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -192,7 +270,7 @@ export const updateTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -233,7 +311,10 @@ export const updateTask = async (req, res, next) => {
         }
         if (labels !== undefined) {
             if (Array.isArray(labels)) {
-                updateData.labels = labels;
+                // Determine labels format based on database type
+                const dbUrl = process.env.DATABASE_URL || '';
+                const isSQLite = dbUrl.startsWith('file:') || dbUrl.startsWith('sqlite:');
+                updateData.labels = isSQLite ? JSON.stringify(labels) : labels;
             } else {
                 return res.status(400).json({ message: "Labels must be an array", key: "invalid_labels", success: false });
             }
@@ -252,18 +333,39 @@ export const updateTask = async (req, res, next) => {
             }
         });
 
+        // Parse labels from string to array before returning
+        let labelsArray = updatedTask.labels || [];
+        if (typeof labelsArray === 'string') {
+            try {
+                labelsArray = JSON.parse(labelsArray);
+            } catch (e) {
+                labelsArray = [];
+            }
+        }
+
+        const taskWithParsedLabels = {
+            ...updatedTask,
+            labels: labelsArray
+        };
 
         broadcastTaskUpdate(task.list.project.id, "task-updated", {
-            task: updatedTask
+            task: taskWithParsedLabels
         }, req.user.id, req.user.name);
         
-        res.json({ data: updatedTask, success: true });
+        res.json({ data: taskWithParsedLabels, success: true });
     } catch (err) {
         console.error('updateTask error:', err);
         next(err);
     }
 };
 
+/**
+ * Move a task to a different list
+ * PUT /api/tasks/:taskId/move
+ * 
+ * Body: { listId }
+ * Returns: { data: movedTask, success: true }
+ */
 export const moveTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -273,7 +375,7 @@ export const moveTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -281,7 +383,7 @@ export const moveTask = async (req, res, next) => {
             return res.status(400).json({ message: "New list ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(newListId)) {
+        if (!isValidId(newListId)) {
             return res.status(400).json({ message: "Invalid new list ID", key: "invalid_list_id", success: false });
         }
 
@@ -363,7 +465,7 @@ export const reorderTasks = async (req, res, next) => {
             return res.status(400).json({ message: "List ID is required", key: "list_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(listId)) {
+        if (!isValidId(listId)) {
             return res.status(400).json({ message: "Invalid list ID", key: "invalid_list_id", success: false });
         }
         
@@ -418,7 +520,7 @@ export const deleteTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
 
@@ -461,6 +563,13 @@ export const deleteTask = async (req, res, next) => {
     }
 };
 
+/**
+ * Assign a member to a task
+ * POST /api/tasks/:taskId/members
+ * 
+ * Body: { userId }
+ * Returns: { data: taskMember, success: true }
+ */
 export const assignMember = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -470,7 +579,7 @@ export const assignMember = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -478,7 +587,7 @@ export const assignMember = async (req, res, next) => {
             return res.status(400).json({ message: "User ID is required", key: "user_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(userId)) {
+        if (!isValidId(userId)) {
             return res.status(400).json({ message: "Invalid user ID", key: "invalid_user_id", success: false });
         }
 
@@ -521,7 +630,9 @@ export const assignMember = async (req, res, next) => {
                 userId
             },
             include: {
-                user: true
+                user: {
+                    select: safeUserSelect
+                }
             }
         });
         
@@ -532,6 +643,12 @@ export const assignMember = async (req, res, next) => {
     }
 };
 
+/**
+ * Remove a member from a task
+ * DELETE /api/tasks/:taskId/members/:userId
+ * 
+ * Returns: { data: { taskId, userId }, success: true }
+ */
 export const removeMember = async (req, res, next) => {
     try {
         const { taskId, userId } = req.params;
@@ -540,7 +657,7 @@ export const removeMember = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -548,7 +665,7 @@ export const removeMember = async (req, res, next) => {
             return res.status(400).json({ message: "User ID is required", key: "user_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(userId)) {
+        if (!isValidId(userId)) {
             return res.status(400).json({ message: "Invalid user ID", key: "invalid_user_id", success: false });
         }
 
@@ -588,6 +705,13 @@ export const removeMember = async (req, res, next) => {
     }
 };
 
+/**
+ * Add a subtask to a task
+ * POST /api/tasks/:taskId/subtasks
+ * 
+ * Body: { name }
+ * Returns: { data: subTask, success: true }
+ */
 export const addSubTask = async (req, res, next) => {
     try {
         const { taskId } = req.params;
@@ -597,7 +721,7 @@ export const addSubTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -645,6 +769,13 @@ export const addSubTask = async (req, res, next) => {
     }
 };
 
+/**
+ * Update a subtask (name or completion status)
+ * PUT /api/tasks/subtasks/:subTaskId
+ * 
+ * Body: { name, isCompleted }
+ * Returns: { data: updatedSubTask, success: true }
+ */
 export const updateSubTask = async (req, res, next) => {
     try {
         const { subTaskId } = req.params;
@@ -654,7 +785,7 @@ export const updateSubTask = async (req, res, next) => {
             return res.status(400).json({ message: "Subtask ID is required", key: "subtask_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(subTaskId)) {
+        if (!isValidId(subTaskId)) {
             return res.status(400).json({ message: "Invalid subtask ID", key: "invalid_subtask_id", success: false });
         }
 
@@ -715,7 +846,7 @@ export const deleteSubTask = async (req, res, next) => {
             return res.status(400).json({ message: "Subtask ID is required", key: "subtask_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(subTaskId)) {
+        if (!isValidId(subTaskId)) {
             return res.status(400).json({ message: "Invalid subtask ID", key: "invalid_subtask_id", success: false });
         }
 
@@ -765,7 +896,7 @@ export const addLabel = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         
@@ -773,7 +904,7 @@ export const addLabel = async (req, res, next) => {
             return res.status(400).json({ message: "Label ID is required", key: "label_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(labelId)) {
+        if (!isValidId(labelId)) {
             return res.status(400).json({ message: "Invalid label ID", key: "invalid_label_id", success: false });
         }
 
@@ -821,7 +952,7 @@ export const removeLabel = async (req, res, next) => {
             return res.status(400).json({ message: "Task ID is required", key: "task_id_required", success: false });
         }
         
-        if (!ObjectId.isValid(taskId)) {
+        if (!isValidId(taskId)) {
             return res.status(400).json({ message: "Invalid task ID", key: "invalid_task_id", success: false });
         }
         

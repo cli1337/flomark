@@ -1,43 +1,117 @@
-import { prisma } from "../src/config/database.js";
+import { prisma } from '../src/config/database.js';
+import bcrypt from 'bcrypt';
+import readline from 'readline';
 
-async function makeUserAdmin() {
-  const email = process.argv[2];
-  const roleArg = process.argv[3]?.toUpperCase();
-  
-  if (!email) {
-    console.error('Please provide an email address');
-    console.log('Usage: node scripts/make-admin.js <email> [role]');
-    console.log('Roles: ADMIN (default), OWNER');
-    console.log('Examples:');
-    console.log('  node scripts/make-admin.js user@example.com');
-    console.log('  node scripts/make-admin.js user@example.com OWNER');
-    process.exit(1);
-  }
+/**
+ * Make Admin Script
+ * Creates or updates a user with admin/owner privileges
+ * 
+ * Usage: 
+ *   node scripts/make-admin.js <email> <role> [name] [password]
+ * 
+ * Examples:
+ *   node scripts/make-admin.js admin@example.com OWNER
+ *   node scripts/make-admin.js admin@example.com OWNER "John Doe" mypassword123
+ */
 
-  const role = roleArg === 'OWNER' ? 'OWNER' : 'ADMIN';
+const args = process.argv.slice(2);
 
+if (args.length < 2) {
+  console.error('❌ Usage: node scripts/make-admin.js <email> <role> [name] [password]');
+  console.error('   Roles: OWNER, ADMIN, USER');
+  console.error('   Example: node scripts/make-admin.js admin@example.com OWNER "John Doe" mypassword');
+  process.exit(1);
+}
+
+const email = args[0];
+const role = args[1].toUpperCase();
+let name = args[2] || null;
+let providedPassword = args[3] || null;
+
+// Validate role
+if (!['OWNER', 'ADMIN', 'USER'].includes(role)) {
+  console.error('❌ Invalid role. Must be OWNER, ADMIN, or USER');
+  process.exit(1);
+}
+
+// Create readline interface for interactive input
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+function question(prompt) {
+  return new Promise((resolve) => {
+    rl.question(prompt, resolve);
+  });
+}
+
+async function makeAdmin() {
   try {
-    const user = await prisma.user.findUnique({
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
       where: { email }
     });
 
-    if (!user) {
-      console.error(`User with email ${email} not found`);
-      process.exit(1);
+    if (existingUser) {
+      // Update existing user
+      const updatedUser = await prisma.user.update({
+        where: { email },
+        data: { 
+          role,
+          ...(name && { name })
+        }
+      });
+
+      console.log(`✅ User role updated successfully!`);
+      console.log(`   Email: ${updatedUser.email}`);
+      console.log(`   Role: ${updatedUser.role}`);
+      console.log(`   Name: ${updatedUser.name}`);
+    } else {
+      // Interactive mode if name/password not provided
+      if (!name) {
+        console.log('\n📝 Creating new admin user...\n');
+        name = await question('Full Name: ');
+      }
+      if (!providedPassword) {
+        providedPassword = await question('Password (min 6 characters): ');
+        
+        // Validate password
+        if (providedPassword.length < 6) {
+          console.error('❌ Password must be at least 6 characters long');
+          rl.close();
+          await prisma.$disconnect();
+          process.exit(1);
+        }
+      }
+
+      const hashedPassword = await bcrypt.hash(providedPassword, 10);
+      
+      const newUser = await prisma.user.create({
+        data: {
+          email,
+          name,
+          password: hashedPassword,
+          role
+        }
+      });
+
+      console.log(`\n✅ User created successfully!`);
+      console.log(`   Email: ${newUser.email}`);
+      console.log(`   Name: ${newUser.name}`);
+      console.log(`   Role: ${newUser.role}`);
+      console.log('');
+      console.log('✓ You can now login with these credentials.');
     }
-
-    const updatedUser = await prisma.user.update({
-      where: { email },
-      data: { role }
-    });
-
-    console.log(`✅ User ${updatedUser.name} (${updatedUser.email}) is now ${role === 'OWNER' ? 'an OWNER' : 'an ADMIN'}`);
-    process.exit(0);
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('❌ Error:', error.message);
+    rl.close();
+    await prisma.$disconnect();
     process.exit(1);
+  } finally {
+    rl.close();
+    await prisma.$disconnect();
   }
 }
 
-makeUserAdmin();
-
+makeAdmin();
