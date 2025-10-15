@@ -122,9 +122,8 @@ DATABASE_URL=file:./flomark.db
 
 ### Optional
 ```env
-PORT=3000
+PORT=5000
 JWT_EXPIRES_IN=24h
-BACKEND_URL=http://localhost:3000
 
 # SMTP (for email functionality)
 SMTP_HOST=smtp.gmail.com

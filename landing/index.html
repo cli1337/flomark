@@ -631,11 +631,11 @@ nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, PORT
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 2: Install Backend Dependencies</h3>
+                        <h3>Step 2: Install Backend & Setup Database</h3>
                         <div class="code-block">
                             <div class="code-header">
-                                <span>Backend</span>
-                                <button class="copy-btn" data-copy="cd backend&#10;pnpm install&#10;npx prisma generate&#10;npx prisma db push">
+                                <span>Backend Installation</span>
+                                <button class="copy-btn" data-copy="cd backend&#10;pnpm install">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
                                         <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -645,9 +645,24 @@ nano .env  <span class="code-comment"># Configure DATABASE_URL, JWT_SECRET, PORT
                             </div>
                             <pre><code>cd backend
 pnpm install
-npx prisma generate
-npx prisma db push  <span class="code-comment"># Creates database tables</span></code></pre>
+
+<span class="code-comment"># Then setup your database (choose one):</span>
+
+<span class="code-comment"># For MongoDB:</span>
+pnpm db:setup:mongodb
+
+<span class="code-comment"># For PostgreSQL:</span>
+pnpm db:setup:postgresql
+
+<span class="code-comment"># For MySQL:</span>
+pnpm db:setup:mysql
+
+<span class="code-comment"># For SQLite:</span>
+pnpm db:setup:sqlite</code></pre>
                         </div>
+                        <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
+                            <strong>💡 Tip:</strong> These commands automatically copy the correct Prisma schema, generate the client, and create database tables!
+                        </p>
                     </div>
 
                     <div class="manual-section">

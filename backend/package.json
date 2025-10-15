@@ -14,7 +14,11 @@
     "db:studio": "npx prisma studio",
     "db:push": "npx prisma db push",
     "db:generate": "npx prisma generate",
-    "db:reset": "npx prisma db push --force-reset"
+    "db:reset": "npx prisma db push --force-reset",
+    "db:setup:mongodb": "node -e \"const fs=require('fs');fs.copyFileSync('prisma/schema.mongodb.prisma','prisma/schema.prisma');console.log('✓ MongoDB schema configured')\" && npx prisma generate && npx prisma db push",
+    "db:setup:postgresql": "node -e \"const fs=require('fs');fs.copyFileSync('prisma/schema.postgresql.prisma','prisma/schema.prisma');console.log('✓ PostgreSQL schema configured')\" && npx prisma generate && npx prisma db push",
+    "db:setup:mysql": "node -e \"const fs=require('fs');fs.copyFileSync('prisma/schema.mysql.prisma','prisma/schema.prisma');console.log('✓ MySQL schema configured')\" && npx prisma generate && npx prisma db push",
+    "db:setup:sqlite": "node -e \"const fs=require('fs');fs.copyFileSync('prisma/schema.sqlite.prisma','prisma/schema.prisma');console.log('✓ SQLite schema configured')\" && npx prisma generate && npx prisma db push"
   },
   "repository": {
     "type": "git",

@@ -30,31 +30,7 @@ The script will:
 
 ## 🔧 Manual Setup
 
-### Step 1: Choose Your Database
-
-Navigate to the backend directory:
-
-```bash
-cd backend/prisma
-```
-
-Copy the appropriate schema template:
-
-```bash
-# For MongoDB (default)
-cp schema.mongodb.prisma schema.prisma
-
-# For PostgreSQL
-cp schema.postgresql.prisma schema.prisma
-
-# For MySQL
-cp schema.mysql.prisma schema.prisma
-
-# For SQLite
-cp schema.sqlite.prisma schema.prisma
-```
-
-### Step 2: Configure Connection String
+### Step 1: Configure Connection String
 
 Edit `backend/.env` and set your `DATABASE_URL`:
 
@@ -91,22 +67,36 @@ DATABASE_URL="mysql://user:pass@host:3306/flomark"
 DATABASE_URL="file:./flomark.db"
 ```
 
-### Step 3: Initialize Database
+### Step 2: Setup Database Schema
+
+Run the appropriate database setup command (automatically copies schema, generates client, and creates tables):
 
 ```bash
 cd backend
 
-# Generate Prisma Client
-npx prisma generate
+# For MongoDB:
+pnpm db:setup:mongodb
 
-# Push schema to database (creates tables)
-npx prisma db push
+# For PostgreSQL:
+pnpm db:setup:postgresql
+
+# For MySQL:
+pnpm db:setup:mysql
+
+# For SQLite:
+pnpm db:setup:sqlite
 
 # (Optional) View database in Prisma Studio
 npx prisma studio
 ```
 
-### Step 4: Create Admin User
+**What these commands do:**
+- ✅ Copy the correct Prisma schema for your database
+- ✅ Generate the Prisma Client
+- ✅ Push the schema to your database (creates tables)
+- ✅ All in one simple command!
+
+### Step 3: Create Admin User
 
 ```bash
 # Using npm
@@ -121,11 +111,25 @@ pnpm make-admin your-email@example.com OWNER
 To switch from one database to another:
 
 1. **Backup your data** (if needed)
-2. Copy the new schema template over `schema.prisma`
-3. Update `DATABASE_URL` in `.env`
-4. Run `npx prisma generate`
-5. Run `npx prisma db push`
-6. Recreate admin user
+2. Update `DATABASE_URL` in `.env` with new database connection string
+3. Run the new database setup command:
+   ```bash
+   cd backend
+   pnpm db:setup:mongodb     # or postgresql, mysql, sqlite
+   ```
+4. Recreate admin user
+
+**Alternative (manual way):**
+```bash
+# Copy the new schema template
+cd backend/prisma
+cp schema.postgresql.prisma schema.prisma  # for example
+
+# Regenerate and push
+cd ..
+npx prisma generate
+npx prisma db push
+```
 
 ⚠️ **Warning:** Switching databases will require re-importing data. There's no automatic migration between different database types.
 
@@ -213,6 +217,14 @@ npx prisma generate
 
 If you selected the wrong database during installation:
 
+**Easy way (using new commands):**
+```bash
+# Update .env with correct DATABASE_URL
+cd backend
+pnpm db:setup:postgresql  # or mongodb, mysql, sqlite
+```
+
+**Manual way:**
 ```bash
 cd backend/prisma
 

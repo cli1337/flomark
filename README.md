@@ -11,9 +11,10 @@ Flomark is a powerful, feature-rich task and project management application desi
 
 ---
 
-## ⚡ Try Demo Mode
+## ⚡ Try Demo
 
 https://demo.flomark.app
+
 ---
 
 ## ✨ Features
@@ -31,9 +32,6 @@ https://demo.flomark.app
 - **Two-Factor Authentication (2FA)** - Enhanced security with TOTP
 - **Role-Based Access Control** - Owner, Admin, and User roles
 - **Admin Panel** - Comprehensive user management dashboard
-  - User search, filtering, and sorting
-  - Role management and promotion
-  - Activity monitoring
 - **Project Roles** - Granular permissions (Owner, Admin, Member, Viewer)
 - **Invite System** - Secure project invitations with unique links
 
@@ -75,607 +73,113 @@ https://demo.flomark.app
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 20+ 
-- One of: MongoDB, PostgreSQL, MySQL, or SQLite
-- npm or pnpm package manager
-- Ubuntu/Debian Linux (for automated install)
-
-### Installation
-
-#### One-Command Installation (Recommended) ⚡
+### Production Installation (One Command)
 
 ```bash
 curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/quick-install.sh -o /tmp/flomark-install.sh
 sudo bash /tmp/flomark-install.sh
 ```
 
-**The installer will ask you for:**
-- 📦 Package manager (npm or pnpm)
-- 💾 Database type (MongoDB/PostgreSQL/MySQL/SQLite)
-- 🔗 Database connection string
-- 📁 Installation path
-- 🌐 Web server (Nginx or Apache)
-- 👤 Admin credentials
+The installer will guide you through:
+- Package manager selection (npm or pnpm)
+- Database setup (MongoDB/PostgreSQL/MySQL/SQLite)
+- Web server configuration (Nginx or Apache)
+- Admin account creation
 
-**Supported Database Connection Strings:**
-```bash
-# MongoDB
-mongodb://localhost:27017/flomark
-mongodb+srv://user:password@cluster.mongodb.net/flomark
-
-# PostgreSQL
-postgresql://user:password@localhost:5432/flomark
-
-# MySQL
-mysql://user:password@localhost:3306/flomark
-
-# SQLite
-file:./flomark.db
-```
-
-**The script will:**
-- ✅ Download Flomark automatically (if using remote installer)
-- ✅ Ask for installation path (default: `/var/www/flomark`)
-- ✅ Check if already installed (prevents duplicates)
-- ✅ Guide you through all configuration interactively
-- ✅ Build and deploy to production
-  - Frontend: `/var/www/flomark/frontend/`
-  - Backend: `/var/www/flomark/backend/`
-- ✅ Configure web server (Nginx/Apache)
-- ✅ Set up systemd service for auto-start
-- ✅ Create admin account or enable demo mode
-
-**Perfect for production servers!**
+**📚 For detailed installation options, see [COMPLETE-SETUP-GUIDE.md](COMPLETE-SETUP-GUIDE.md)**
 
 ---
 
-#### Option 2: Manual Clone & Install
-
-**If you prefer to clone first:**
+### Development Setup
 
 ```bash
+# Clone repository
 git clone https://github.com/cli1337/flomark.git
 cd flomark
-sudo ./install.sh
+
+# Backend setup
+cd backend
+pnpm install
+cp env.example .env
+# Edit .env with your database connection
+
+# Setup database (choose one):
+pnpm db:setup:mongodb     # For MongoDB
+pnpm db:setup:postgresql  # For PostgreSQL
+pnpm db:setup:mysql       # For MySQL
+pnpm db:setup:sqlite      # For SQLite
+
+# Create admin account
+pnpm make-admin your-email@example.com OWNER
+
+# Frontend setup (new terminal)
+cd frontend
+pnpm install
+
+# Start development servers
+# Terminal 1: Backend
+cd backend && pnpm dev
+
+# Terminal 2: Frontend
+cd frontend && pnpm dev
 ```
 
-**See [INSTALLATION-INTERACTIVE-GUIDE.md](INSTALLATION-INTERACTIVE-GUIDE.md) for detailed guide.**
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:3000
+
+**Database Setup Commands:**
+- `pnpm db:setup:mongodb` - Auto-configures MongoDB schema + generates client + creates tables
+- `pnpm db:setup:postgresql` - Auto-configures PostgreSQL schema + generates client + creates tables
+- `pnpm db:setup:mysql` - Auto-configures MySQL schema + generates client + creates tables
+- `pnpm db:setup:sqlite` - Auto-configures SQLite schema + generates client + creates tables
+
+**📚 For environment variables, see [backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md)**
 
 ---
 
-#### Option 2: Manual Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/cli1337/flomark.git
-   cd flomark
-   ```
-
-2. **Backend Setup**
-   ```bash
-   cd backend
-   pnpm install
-   
-   # Create .env file from example
-   cp env.example .env
-   # Edit .env with your configuration (see Environment Variables section below)
-   
-   # Push database schema
-   npx prisma db push
-   
-   # Create an admin user
-   pnpm make-admin your-email@example.com OWNER
-   ```
-
-3. **Frontend Setup**
-   ```bash
-   cd ../frontend
-   pnpm install
-   ```
-
-4. **Start Development Servers**
-   
-   Backend:
-   ```bash
-   cd backend
-   pnpm dev
-   ```
-   
-   Frontend (new terminal):
-   ```bash
-   cd frontend
-   pnpm dev
-   ```
-
-5. **Access the application**
-   - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
-
----
-
-## 🌐 Production Deployment
-
-Deploy Flomark with one command! The installer handles everything.
-
-### 🚀 Quick Update
-
-Update existing installations:
+## 🔄 Updates
 
 ```bash
-# Auto-detects installation and package manager:
+# One-command update with auto-backup
 curl -sL https://raw.githubusercontent.com/cli1337/flomark/main/update.sh -o /tmp/flomark-update.sh
 sudo bash /tmp/flomark-update.sh
 ```
 
-**Update Features:**
-- ✅ Auto-backup before update
-- ✅ Detects npm vs pnpm
-- ✅ Updates backend & frontend
-- ✅ Preserves .env and storage
-- ✅ Rollback on failure
-
-### 📦 What Gets Installed
-
-The quick-install script automatically:
-
-1. **💾 Database Setup**
-   - Installs selected database (if localhost)
-   - Generates Prisma schema for your database type
-   - Creates all tables/collections
-   - Handles migrations
-
-2. **🌐 Web Server**
-   - Installs Nginx or Apache
-   - Configures reverse proxy for API
-   - Enables WebSocket support
-   - Sets up security headers
-
-3. **⚙️ Backend**
-   - Installs Node.js 20+
-   - Sets up systemd service (auto-restart)
-   - Installs dependencies with npm or pnpm
-   - Generates JWT secrets
-   - Creates admin account
-
-4. **🎨 Frontend**
-   - Builds production bundle
-   - Optimizes and minifies assets
-   - Enables code splitting
-
-### 🛠️ Manual Installation
-
-<details>
-<summary><b>Click to expand manual installation steps</b></summary>
-
-#### Prerequisites
-- Node.js 20+
-- One of: MongoDB, PostgreSQL, MySQL, or SQLite
-- npm or pnpm package manager
-- Nginx or Apache
-- Root/sudo access
-
-#### Step 1: Clone and Configure
-
-```bash
-git clone https://github.com/cli1337/flomark.git
-cd flomark/backend
-cp env.example .env
-nano .env  # Configure DATABASE_URL with your database
-```
-
-**Example Database URLs:**
-```bash
-# MongoDB
-DATABASE_URL="mongodb://localhost:27017/flomark"
-
-# PostgreSQL  
-DATABASE_URL="postgresql://user:password@localhost:5432/flomark"
-
-# MySQL
-DATABASE_URL="mysql://user:password@localhost:3306/flomark"
-
-# SQLite
-DATABASE_URL="file:./flomark.db"
-```
-
-#### Step 2: Update Prisma Schema (if not using MongoDB)
-
-The repository includes a MongoDB schema. For other databases:
-
-```bash
-# Edit prisma/schema.prisma
-# Change "provider" from "mongodb" to your database:
-# - postgresql
-# - mysql  
-# - sqlite
-```
-
-#### Step 3: Install Dependencies
-
-```bash
-# Backend
-cd backend
-npm install  # or pnpm install
-npx prisma generate
-npx prisma db push
-
-# Frontend
-cd ../frontend
-npm install  # or pnpm install
-npm run build  # or pnpm build
-```
-
-#### Step 4: Create Admin Account
-
-```bash
-cd backend
-node scripts/make-admin.js
-# Follow interactive prompts
-```
-
-#### Step 4: Create Systemd Service
-
-```bash
-sudo nano /etc/systemd/system/flomark-backend.service
-```
-
-Add this content:
-```ini
-[Unit]
-Description=Flomark Backend Server
-After=network.target mongod.service
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/path/to/flomark/backend
-ExecStart=/usr/bin/node src/server.js
-Restart=always
-Environment=NODE_ENV=production
-
-[Install]
-WantedBy=multi-user.target
-```
-
-Enable and start:
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable flomark-backend
-sudo systemctl start flomark-backend
-sudo systemctl status flomark-backend
-```
-
-#### Step 5: Configure Web Server
-
-**For Nginx:**
-
-Create `/etc/nginx/sites-available/flomark`:
-```nginx
-server {
-    listen 80;
-    server_name yourdomain.com;
-    root /path/to/flomark/frontend/dist;
-    
-    location /api {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-    }
-    
-    location /socket.io/ {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-```
-
-Enable and restart:
-```bash
-sudo ln -s /etc/nginx/sites-available/flomark /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-**For Apache:**
-
-Create `/etc/apache2/sites-available/flomark.conf`:
-```apache
-<VirtualHost *:80>
-    ServerName yourdomain.com
-    DocumentRoot /path/to/flomark/frontend/dist
-    
-    ProxyPass /api http://localhost:3000/api
-    ProxyPassReverse /api http://localhost:3000/api
-    
-    RewriteEngine On
-    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteRule ^/socket.io/(.*)$ ws://localhost:3000/socket.io/$1 [P,L]
-</VirtualHost>
-```
-
-Enable and restart:
-```bash
-sudo a2enmod proxy proxy_http proxy_wstunnel rewrite
-sudo a2ensite flomark.conf
-sudo systemctl restart apache2
-```
-
-#### Step 6: Enable SSL (Optional but Recommended)
-
-```bash
-# For Nginx
-sudo apt-get install certbot python3-certbot-nginx
-sudo certbot --nginx -d yourdomain.com
-
-# For Apache
-sudo apt-get install certbot python3-certbot-apache
-sudo certbot --apache -d yourdomain.com
-```
-
-</details>
-
-### 🔄 Updating Your Installation
-
-Flomark provides separate update scripts to preserve your customizations:
-
-#### Update Backend Only
-
-```bash
-chmod +x update-backend.sh
-./update-backend.sh
-```
-
-**Preserves:**
-- `.env` configuration
-- `uploads/` directory
-- `storage/` directory
-- Custom middleware
-
-**Updates:**
-- Server code
-- Dependencies
-- Database schema
-
-#### Update Frontend Only
-
-```bash
-chmod +x update-frontend.sh
-./update-frontend.sh
-```
-
-**Preserves:**
-- `frontend/src/custom/` directory
-- Custom configurations
-
-**Updates:**
-- UI components
-- Dependencies
-- Build configuration
-
-💡 **Tip:** Keep your customizations in `frontend/src/custom/` to ensure they're preserved during updates!
-
-### 📚 Documentation
-
-- **🚀 Deployment:**
-  - [DEPLOYMENT.md](DEPLOYMENT.md) - Complete deployment guide
-  - [DEPLOYMENT-QUICKSTART.md](DEPLOYMENT-QUICKSTART.md) - Quick reference
-  - [INSTALLATION-SCRIPTS-README.md](INSTALLATION-SCRIPTS-README.md) - Scripts overview
-  - [COMPLETE-SETUP-GUIDE.md](COMPLETE-SETUP-GUIDE.md) - Everything in one place
-- **🔄 Updates:**
-  - [UPDATE-GUIDE.md](UPDATE-GUIDE.md) - How to update your installation
-  - `update-backend.sh` - Backend update script
-  - `update-frontend.sh` - Frontend update script
-- **🎭 Demo Mode:** 
-  - [DEMO-MODE-README.md](DEMO-MODE-README.md) - Demo mode setup and configuration
-- **🏗️ Architecture:** 
-  - [ARCHITECTURE-DIAGRAM.md](ARCHITECTURE-DIAGRAM.md) - System architecture overview
+**📚 For update procedures and rollback, see [UPDATE-GUIDE.md](UPDATE-GUIDE.md)**
 
 ---
 
-## 📋 Environment Variables
+## 📖 Documentation
 
-### Backend (.env)
+### 🚀 Installation & Deployment
+- **[COMPLETE-SETUP-GUIDE.md](COMPLETE-SETUP-GUIDE.md)** - Complete setup guide
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment guide with troubleshooting
+- **[DEPLOYMENT-QUICKSTART.md](DEPLOYMENT-QUICKSTART.md)** - Quick reference
+- **[INSTALLATION-SCRIPTS-README.md](INSTALLATION-SCRIPTS-README.md)** - Scripts overview
+- **[DATABASE-SETUP.md](DATABASE-SETUP.md)** - Database configuration
 
-Create a `.env` file in the `backend` directory. Use `env.example` as a template.
+### 🔄 Updates & Maintenance
+- **[UPDATE-GUIDE.md](UPDATE-GUIDE.md)** - Update guide with rollback procedures
 
-#### Required Variables
-```env
-# Database
-DATABASE_URL=mongodb://localhost:27017/flomark
+### ⚙️ Configuration
+- **[backend/README.md](backend/README.md)** - Backend documentation
+- **[backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md)** - Environment variables
+- **[backend/SMTP_SETUP.md](backend/SMTP_SETUP.md)** - Email configuration
 
-# JWT Authentication (REQUIRED)
-# Generate secure secret: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-JWT_EXPIRES_IN=24h
+### 🏗️ Architecture
+- **[ARCHITECTURE-DIAGRAM.md](ARCHITECTURE-DIAGRAM.md)** - System architecture
+- **[FEATURES-SUMMARY.md](FEATURES-SUMMARY.md)** - All features breakdown
 
-# Server Configuration
-PORT=3000
-BACKEND_URL=http://localhost:3000
-```
-
-#### Optional: Demo Mode
-```env
-# Demo Mode (no database required, auto-login)
-DEMO_MODE=false
-DEMO_PROJECT_ID=demo-project
-```
-
-**To enable demo mode:**
-1. Set `DEMO_MODE=true` in `.env`
-2. Start backend (no database setup needed!)
-3. Access demo at `/demo`
-
-**Demo Mode Features:**
-- ✅ No MongoDB required
-- ✅ Auto-login (no authentication)
-- ✅ In-memory data storage
-- ✅ Perfect for landing pages
-- ⚠️ Data resets on restart
-
-See [DEMO-MODE-NO-DATABASE.md](DEMO-MODE-NO-DATABASE.md) for details.
-
-#### Optional: Email/SMTP Configuration
-Email functionality is optional but required for:
-- 📧 Project invitation emails
-- 🔔 Email notifications
-- 🔐 Password reset (if implemented)
-
-```env
-# SMTP Server Settings
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-
-# SMTP Authentication
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-
-# Email Sender Information
-SMTP_FROM_NAME=Flomark
-SMTP_FROM_EMAIL=noreply@flomark.com
-```
-
-#### SMTP Provider Examples
-
-<details>
-<summary><b>Gmail</b></summary>
-
-```env
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
-```
-
-**Note:** Enable 2FA and generate an App Password at [Google Account](https://myaccount.google.com/apppasswords)
-</details>
-
-<details>
-<summary><b>Outlook/Office 365</b></summary>
-
-```env
-SMTP_HOST=smtp.office365.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-email@outlook.com
-SMTP_PASS=your-password
-```
-</details>
-
-<details>
-<summary><b>SendGrid</b></summary>
-
-```env
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=apikey
-SMTP_PASS=your-sendgrid-api-key
-```
-</details>
-
-<details>
-<summary><b>Mailgun</b></summary>
-
-```env
-SMTP_HOST=smtp.mailgun.org
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=postmaster@your-domain.mailgun.org
-SMTP_PASS=your-mailgun-password
-```
-</details>
-
-<details>
-<summary><b>Amazon SES</b></summary>
-
-```env
-SMTP_HOST=email-smtp.us-east-1.amazonaws.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your-ses-smtp-username
-SMTP_PASS=your-ses-smtp-password
-```
-</details>
-
-> 💡 **Tip:** If SMTP is not configured, the application will run normally but email functionality will be disabled.
-
-📚 **Need help setting up SMTP?** Check out the detailed [SMTP Setup Guide](backend/SMTP_SETUP.md) for step-by-step instructions for each provider.
-
-### Frontend
-Configure API endpoint in `vite.config.js` if needed (defaults to `/api`)
+### 🤝 Contributing
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 
 ---
 
-## 👥 User Roles
+## 📧 Support
 
-### System Roles
-- **OWNER** 👑 - Full system access, cannot be demoted, receives update notifications
-- **ADMIN** 🛡️ - Manage users and projects, can promote users to admin
-- **USER** 👤 - Standard user access
-
-### Project Roles
-- **OWNER** - Full project control
-- **ADMIN** - Manage project and members
-- **MEMBER** - Edit tasks and content
-- **VIEWER** - Read-only access
-
-### Creating Admin Users
-
-After installation, create additional admins:
-
-```bash
-cd backend
-# Interactive mode (prompts for details)
-node scripts/make-admin.js admin@example.com ADMIN
-
-# Non-interactive mode (for scripts)
-node scripts/make-admin.js admin@example.com ADMIN "Jane" "Smith" "password123"
-```
-
----
-
-## 🔧 Admin Panel
-
-Access the admin panel at `/admin` (OWNER/ADMIN only):
-
-- **User Management** - Search, filter, and manage all users
-- **Role Management** - Promote/demote users
-- **User Editing** - Update user information
-- **Activity Monitoring** - Track user actions
-- **Advanced Filters** - Sort by role, name, email, join date
-
-### Update Notifications (OWNER only)
-
-Owners see update notifications with:
-- Available updates banner
-- Direct links to GitHub releases
-- Update command examples
-- Link to update documentation
-
----
-
-## 📝 API Documentation
-
-
-*(API documentation coming soon)*
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to:
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+- **Issues:** [Report a bug or request a feature](https://github.com/cli1337/flomark/issues)
+- **Discussions:** Have questions? Start a discussion!
+- **Documentation:** Check the guides above
 
 ---
 
@@ -691,139 +195,7 @@ See the [LICENSE](LICENSE) file for details.
 
 - Icons by [Lucide](https://lucide.dev/)
 - UI components by [Radix UI](https://www.radix-ui.com/)
-- Built with React, Node.js, and MongoDB
-
----
-
-## 🛠️ Useful Commands
-
-### Installation Scripts
-```bash
-# Unified installation (interactive)
-sudo ./install.sh yourdomain.com
-
-# Nginx-specific
-sudo ./install-nginx.sh yourdomain.com
-
-# Apache-specific
-sudo ./install-apache.sh yourdomain.com
-```
-
-### Update Scripts
-```bash
-# Update backend only
-./update-backend.sh
-
-# Update frontend only
-./update-frontend.sh
-```
-
-### Admin Management
-```bash
-# Create owner/admin (interactive)
-cd backend
-node scripts/make-admin.js email@example.com OWNER
-
-# Setup demo mode
-pnpm run setup-demo
-```
-
-### Systemd Service Commands
-```bash
-sudo systemctl status flomark-backend    # Check status
-sudo journalctl -u flomark-backend -f    # View logs (live)
-sudo journalctl -u flomark-backend -n 50 # View last 50 log lines
-sudo systemctl restart flomark-backend   # Restart service
-sudo systemctl stop flomark-backend      # Stop service
-sudo systemctl start flomark-backend     # Start service
-```
-
-### Web Server Commands
-```bash
-# Nginx
-sudo systemctl status nginx
-sudo systemctl reload nginx
-sudo nginx -t
-
-# Apache
-sudo systemctl status apache2
-sudo systemctl reload apache2
-sudo apache2ctl configtest
-```
-
-### Database Commands
-```bash
-cd backend
-npx prisma studio              # GUI database browser
-npx prisma db push             # Update schema
-npx prisma generate            # Regenerate client
-```
-
----
-
-## 📖 Additional Documentation
-
-### Deployment & Installation
-- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Complete deployment guide with troubleshooting
-- **[DEPLOYMENT-QUICKSTART.md](DEPLOYMENT-QUICKSTART.md)** - Quick reference card
-- **[INSTALLATION-SCRIPTS-README.md](INSTALLATION-SCRIPTS-README.md)** - Detailed scripts documentation
-- **[COMPLETE-SETUP-GUIDE.md](COMPLETE-SETUP-GUIDE.md)** - Everything in one place
-- **[FEATURES-SUMMARY.md](FEATURES-SUMMARY.md)** - All features breakdown
-
-### Updates & Maintenance
-- **[UPDATE-GUIDE.md](UPDATE-GUIDE.md)** - Complete update guide with rollback procedures
-- **[INSTALLATION-SUMMARY.md](INSTALLATION-SUMMARY.md)** - Implementation summary
-
-### Features & Configuration
-- **[DEMO-MODE-README.md](DEMO-MODE-README.md)** - Demo mode setup and configuration
-- **[ARCHITECTURE-DIAGRAM.md](ARCHITECTURE-DIAGRAM.md)** - System architecture diagrams
-
-### Backend Documentation
-- **[backend/README.md](backend/README.md)** - Complete backend documentation
-- **[backend/ENV_VARIABLES.md](backend/ENV_VARIABLES.md)** - Environment variables reference
-- **[backend/SMTP_SETUP.md](backend/SMTP_SETUP.md)** - Email configuration guide
-
-### Contributing
-- **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-**Backend not starting:**
-```bash
-sudo journalctl -u flomark-backend -n 50
-cd backend && pnpm install
-sudo systemctl restart flomark-backend
-```
-
-**Frontend not loading:**
-```bash
-cd frontend && pnpm build
-sudo systemctl restart nginx  # or apache2
-```
-
-**502 Bad Gateway:**
-- Backend not running: `sudo systemctl restart flomark-backend`
-- Port conflict: Check if port 3000 is free
-
-**WebSocket issues:**
-- Check proxy configuration in web server
-- Verify Socket.io endpoint: `curl -i http://localhost:3000/socket.io/`
-
-**File uploads fail:**
-- Check file size limits in web server config
-- Verify uploads directory permissions: `chmod 755 backend/uploads`
-
-For more troubleshooting, see [DEPLOYMENT.md](DEPLOYMENT.md#troubleshooting)
-
----
-
-## 📧 Support
-
-- **Issues:** [Report a bug or request a feature](https://github.com/cli1337/flomark/issues)
-- **Discussions:** Have questions? Start a discussion!
-- **Documentation:** Check the guides in the [Additional Documentation](#-additional-documentation) section
+- Built with React, Node.js, and Prisma
 
 ---
 
@@ -834,4 +206,3 @@ If you find Flomark useful, give it a star ⭐ on GitHub!
 ---
 
 **Free & Open Source** • Made with ❤️
-
