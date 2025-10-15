@@ -212,6 +212,29 @@ while true; do
     fi
 done
 
+# Demo Mode Configuration
+echo ""
+print_info "Demo Mode Configuration"
+echo ""
+print_info "Demo mode prevents data modification (read-only mode)"
+print_info "Useful for public demos or testing environments"
+echo ""
+while true; do
+    read -p "$(echo -e ${CYAN}Enable demo mode? [y/n]:${NC} )" ENABLE_DEMO
+    ENABLE_DEMO=$(echo "$ENABLE_DEMO" | tr '[:upper:]' '[:lower:]')
+    if [[ "$ENABLE_DEMO" == "y" ]] || [[ "$ENABLE_DEMO" == "yes" ]]; then
+        DEMO_MODE="true"
+        print_success "Demo mode will be ENABLED"
+        break
+    elif [[ "$ENABLE_DEMO" == "n" ]] || [[ "$ENABLE_DEMO" == "no" ]]; then
+        DEMO_MODE="false"
+        print_success "Demo mode will be DISABLED"
+        break
+    else
+        print_error "Invalid choice. Please enter 'y' or 'n'"
+    fi
+done
+
 # Admin credentials
 echo ""
 print_info "Admin account setup"
@@ -245,6 +268,7 @@ echo "Install Path:     $INSTALL_PATH"
 echo "Domain/IP:        $DOMAIN"
 echo "Frontend Port:    $FRONTEND_PORT"
 echo "Backend Port:     $BACKEND_PORT"
+echo "Demo Mode:        $DEMO_MODE"
 echo "Admin Email:      $ADMIN_EMAIL"
 echo ""
 
@@ -587,6 +611,11 @@ PORT=$BACKEND_PORT
 BACKEND_URL=http://$DOMAIN:$BACKEND_PORT
 
 # ==================================
+# 🎭 DEMO MODE CONFIGURATION
+# ==================================
+DEMO_MODE=$DEMO_MODE
+
+# ==================================
 # 📧 EMAIL/SMTP (Optional)
 # ==================================
 SMTP_HOST=
@@ -609,6 +638,19 @@ print_success "Prisma Client generated"
 print_info "Initializing database schema..."
 npx prisma db push --accept-data-loss
 print_success "Database schema initialized"
+
+# Fix SQLite permissions if using SQLite
+if [ "$DB_TYPE" = "sqlite" ]; then
+    print_info "Setting database file permissions..."
+    # Extract database file path from DATABASE_URL
+    DB_FILE=$(echo "$DATABASE_URL" | sed 's/file://')
+    if [ -f "$DB_FILE" ]; then
+        chmod 666 "$DB_FILE"
+        # Also set directory permissions
+        chmod 755 "$(dirname "$DB_FILE")"
+        print_success "SQLite database permissions set"
+    fi
+fi
 
 # Create admin user
 print_info "Creating admin user..."
