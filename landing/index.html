@@ -24,16 +24,14 @@
                     <span class="logo-text">Flomark</span>
                 </div>
                 <div class="nav-links">
-                    <a href="#home">Home</a>
                     <a href="#features">Features</a>
-                    <a href="#why-us">Why Us</a>
-                    <a href="#tech">Tech Stack</a>
                     <a href="#installation">Installation</a>
-                    <a href="#pricing">Pricing</a>
+                    <a href="#why-us">Why Self-Host</a>
+                    <a href="#tech">Technology</a>
                     <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener">GitHub</a>
                 </div>
                 <div class="nav-actions">
-                    <a href="#installation" class="btn-secondary">Get Started</a>
+                    <a href="https://github.com/cli1337/flomark#readme" target="_blank" rel="noopener" class="btn-secondary">Documentation</a>
                     <a href="https://github.com/cli1337/flomark" target="_blank" rel="noopener" class="btn-primary">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" style="margin-right: 6px;">
                             <path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
@@ -51,7 +49,7 @@
     </nav>
 
     
-    <section id="home" class="hero">
+    <section class="hero">
         <div class="hero-background">
             <div class="gradient-orb orb-1"></div>
             <div class="gradient-orb orb-2"></div>
@@ -390,16 +388,22 @@
         </div>
     </section>
 
-    <section id="installation" class="pricing">
+    <!-- Installation Tutorial Section -->
+    <section id="installation" class="installation">
         <div class="container">
             <div class="section-header">
-                <h2 class="section-title">Installation Guide</h2>
-                <p class="section-description">Choose your installation method - automated or manual setup.</p>
+                <h2 class="section-title">Easy Installation</h2>
+                <p class="section-description">Get Flomark up and running in minutes with automated scripts or manual setup</p>
             </div>
-            <div class="pricing-card">
-                <div class="pricing-header">
-                    <h3 class="pricing-title">Get Started</h3>
-                    <div class="pricing-price">
+
+            <!-- Installation Method Tabs -->
+            <div class="install-tabs">
+                <button class="install-tab active" data-tab="auto">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 3v14M7 7l3-3 3 3M7 13l3 3 3-3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Automated Scripts
+                </button>
                 <button class="install-tab" data-tab="manual">
                     <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                         <path d="M3 3h14v14H3z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -662,64 +666,10 @@ pnpm db:setup:sqlite</code></pre>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 3: Frontend Setup</h3>
-                        
-                        <h4 style="font-size: 16px; font-weight: 600; margin: 20px 0 12px 0; color: var(--text-primary);">For Development</h4>
+                        <h3>Step 3: Build Frontend</h3>
                         <div class="code-block">
                             <div class="code-header">
-                                <span>Development Mode</span>
-                                <button class="copy-btn" data-copy="cd ../frontend&#10;pnpm install&#10;pnpm dev">
-                                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                                        <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
-                                        <path d="M2 2h7v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                                    </svg>
-                                    Copy
-                                </button>
-                            </div>
-                            <pre><code>cd ../frontend
-pnpm install
-pnpm dev  <span class="code-comment"># Starts dev server at http://localhost:3000</span></code></pre>
-                        </div>
-                        <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
-                            <strong>📌 Important Ports:</strong><br/>
-                            • Frontend dev server: <code>http://localhost:3000</code> (configured in <code>vite.config.js</code>)<br/>
-                            • Backend API server: <code>http://localhost:5000</code> (configured in <code>backend/.env</code>)<br/>
-                            • API proxy: <code>/api</code> requests automatically forward to backend
-                        </p>
-                        
-                        <h4 style="font-size: 16px; font-weight: 600; margin: 20px 0 12px 0; color: var(--text-primary);">Vite Configuration (vite.config.js)</h4>
-                        <div class="code-block">
-                            <div class="code-header">
-                                <span>Configuration Options</span>
-                            </div>
-                            <pre><code><span class="code-comment">// Change frontend port (default: 3000)</span>
-server: {
-  port: 3000,  <span class="code-comment">// Your preferred port</span>
-}
-
-<span class="code-comment">// Change backend API target (default: http://localhost:5000)</span>
-server: {
-  proxy: {
-    '/api': {
-      target: 'http://localhost:5000',  <span class="code-comment">// Match your backend PORT</span>
-      changeOrigin: true
-    }
-  }
-}
-
-<span class="code-comment">// Allow custom domains (for local development)</span>
-server: {
-  allowedHosts: ['127.0.0.1', 'myapp.local'],
-}</code></pre>
-                        </div>
-                        <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
-                            <strong>💡 Full Configuration Guide:</strong> See <a href="https://github.com/cli1337/flomark/blob/main/frontend/README.md" target="_blank" rel="noopener" style="color: var(--primary); text-decoration: underline;">frontend/README.md</a> for detailed Vite configuration options.
-                        </p>
-                        
-                        <h4 style="font-size: 16px; font-weight: 600; margin: 20px 0 12px 0; color: var(--text-primary);">For Production</h4>
-                        <div class="code-block">
-                            <div class="code-header">
-                                <span>Production Build</span>
+                                <span>Frontend</span>
                                 <button class="copy-btn" data-copy="cd ../frontend&#10;pnpm install&#10;pnpm build">
                                     <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                                         <rect x="5" y="5" width="9" height="9" rx="1" stroke="currentColor" stroke-width="1.5"/>
@@ -730,39 +680,15 @@ server: {
                             </div>
                             <pre><code>cd ../frontend
 pnpm install
-pnpm build  <span class="code-comment"># Creates optimized dist/ folder</span></code></pre>
+pnpm build  <span class="code-comment"># Creates dist/ folder with production files</span></code></pre>
                         </div>
                         <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
-                            The built files will be in <code>frontend/dist/</code> - point your web server to this directory.<br/>
-                            <strong>Note:</strong> In production, nginx/apache handles the <code>/api</code> proxy (not Vite).
+                            The built files will be in <code>frontend/dist/</code> - point your web server to this directory
                         </p>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 4: Backend Environment Configuration</h3>
-                        <div class="code-block">
-                            <div class="code-header">
-                                <span>Edit .env file</span>
-                            </div>
-                            <pre><code><span class="code-comment"># Important: Configure backend/.env before starting</span>
-
-<span class="code-comment"># Backend server port (default: 5000)</span>
-PORT=5000
-
-<span class="code-comment"># If you change PORT, update frontend/vite.config.js proxy target:</span>
-proxy: {
-  '/api': {
-    target: 'http://localhost:5000',  <span class="code-comment">// Must match PORT</span>
-  }
-}</code></pre>
-                        </div>
-                        <p style="margin-top: 12px; color: var(--text-secondary); font-size: 14px;">
-                            <strong>📚 More config options:</strong> See <a href="https://github.com/cli1337/flomark/blob/main/backend/README.md" target="_blank" rel="noopener" style="color: var(--primary); text-decoration: underline;">backend/README.md</a> for full environment variable documentation.
-                        </p>
-                    </div>
-
-                    <div class="manual-section">
-                        <h3>Step 5: Create Admin Account</h3>
+                        <h3>Step 4: Create Admin Account</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
@@ -781,7 +707,7 @@ node scripts/make-admin.js
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 6: Create Systemd Service</h3>
+                        <h3>Step 5: Create Systemd Service</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
@@ -830,7 +756,7 @@ sudo systemctl status flomark-backend</code></pre>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 7: Configure Web Server</h3>
+                        <h3>Step 6: Configure Web Server</h3>
                         <p>Choose your web server:</p>
                         
                         <div class="web-server-tabs">
@@ -963,7 +889,7 @@ sudo systemctl restart apache2</code></pre>
                     </div>
 
                     <div class="manual-section">
-                        <h3>Step 8: Enable SSL (Optional but Recommended)</h3>
+                        <h3>Step 7: Enable SSL (Optional but Recommended)</h3>
                         <div class="code-block">
                             <div class="code-header">
                                 <span>Terminal</span>
@@ -1100,7 +1026,7 @@ sudo certbot --apache -d yourdomain.com</code></pre>
     </section>
 
     
-    <section id="get-started" class="cta">
+    <section class="cta">
         <div class="container">
             <div class="cta-content">
                 <h2 class="cta-title">Ready to own your data?</h2>
@@ -1121,7 +1047,7 @@ sudo certbot --apache -d yourdomain.com</code></pre>
     </section>
 
     
-    <footer id="footer" class="footer">
+    <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
@@ -1140,12 +1066,10 @@ sudo certbot --apache -d yourdomain.com</code></pre>
                 <div class="footer-links">
                     <div class="footer-column">
                         <h4>Product</h4>
-                        <a href="#home">Home</a>
                         <a href="#features">Features</a>
-                        <a href="#why-us">Why Us</a>
-                        <a href="#tech">Technology</a>
-                        <a href="#installation">Installation</a>
                         <a href="#pricing">Pricing</a>
+                        <a href="#tech">Technology</a>
+                        <a href="https://github.com/cli1337/flomark#-quick-start" target="_blank" rel="noopener">Quick Start</a>
                     </div>
                     <div class="footer-column">
                         <h4>Resources</h4>
@@ -1164,7 +1088,7 @@ sudo certbot --apache -d yourdomain.com</code></pre>
             </div>
             <div class="footer-bottom">
                 <div>
-                    <p>&copy; <span id="current-year"></span> Flomark. Released under the MIT License.</p>
+                    <p>&copy; 2024 Flomark. Released under the MIT License.</p>
                     <p style="margin-top: 8px; font-size: 14px; color: var(--text-secondary);">
                         Made by Nick with <span style="color: #ef4444;">❤️</span>
                     </p>
@@ -1180,10 +1104,6 @@ sudo certbot --apache -d yourdomain.com</code></pre>
         </div>
     </footer>
 
-    <script>
-        // Set current year dynamically
-        document.getElementById('current-year').textContent = new Date().getFullYear();
-    </script>
     <script src="script.js"></script>
 </body>
 </html>
