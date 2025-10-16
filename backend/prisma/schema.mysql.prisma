@@ -23,6 +23,8 @@ model User {
   projectMemberships ProjectMember[]
   taskAssignments    TaskMember[]
   notifications      Notification[]
+  comments           Comment[]
+  activityLogs       ActivityLog[]
 }
 
 model Project {
@@ -34,9 +36,25 @@ model Project {
   updatedAt   DateTime @updatedAt
   
   members     ProjectMember[]
+  boards      Board[]
   lists       List[]
+  activityLogs ActivityLog[]
   
   @@map("projects")
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  name        String
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  lists       List[]
+  
+  @@map("boards")
 }
 
 model List {
@@ -47,8 +65,12 @@ model List {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId   String?
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  boardId     String?
+  board       Board?   @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  
   tasks       Task[]
   
   @@map("lists")
@@ -70,6 +92,7 @@ model Task {
   members     TaskMember[]
   subTasks    SubTask[]
   attachments Attachment[]
+  comments    Comment[]
   
   @@map("tasks")
 }
@@ -134,16 +157,45 @@ model Notification {
   userId    String
   type      NotificationType
   title     String
-  message   String           @db.Text
-  data      Json?
+  message   String
+  data      String?
   isRead    Boolean          @default(false)
   createdAt DateTime         @default(now())
   
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   
   @@map("notifications")
-  @@index([userId, isRead])
-  @@index([userId, createdAt])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  taskId    String
+  task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  
+  @@map("comments")
+}
+
+model ActivityLog {
+  id          String       @id @default(cuid())
+  projectId   String
+  userId      String
+  action      ActivityType
+  entityType  String
+  entityId    String?
+  details     String?      @db.Text
+  createdAt   DateTime     @default(now())
+  
+  project     Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("activity_logs")
 }
 
 enum Role {
@@ -172,3 +224,26 @@ enum NotificationType {
   GENERAL
 }
 
+enum ActivityType {
+  TASK_CREATED
+  TASK_UPDATED
+  TASK_MOVED
+  TASK_DELETED
+  TASK_COMPLETED
+  TASK_UNCOMPLETED
+  SUBTASK_CREATED
+  SUBTASK_COMPLETED
+  SUBTASK_UNCOMPLETED
+  SUBTASK_DELETED
+  LIST_CREATED
+  LIST_UPDATED
+  LIST_MOVED
+  LIST_DELETED
+  BOARD_CREATED
+  BOARD_UPDATED
+  BOARD_DELETED
+  MEMBER_ADDED
+  MEMBER_REMOVED
+  COMMENT_ADDED
+  COMMENT_DELETED
+}
