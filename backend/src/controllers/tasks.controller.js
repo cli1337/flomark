@@ -224,7 +224,15 @@ export const getTaskById = async (req, res, next) => {
                     }
                 },
                 subTasks: true,
-                attachments: true
+                attachments: true,
+                comments: {
+                    include: {
+                        user: {
+                            select: safeUserSelect
+                        }
+                    },
+                    orderBy: { createdAt: 'asc' }
+                }
             }
         });
         

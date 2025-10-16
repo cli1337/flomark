@@ -22,9 +22,11 @@ import {
 } from 'lucide-react'
 import { taskService } from '../services/taskService'
 import { projectService } from '../services/projectService'
+import { commentService } from '../services/commentService'
 import { useToast } from '../contexts/ToastContext'
 import { useAuth } from '../contexts/AuthContext'
 import useMobileDetection from '../hooks/useMobileDetection'
+import { useSocketEvent } from '../hooks/useSocket'
 
 const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }) => {
   const { showSuccess, showError } = useToast()
@@ -58,6 +60,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
   const [canManageMembers, setCanManageMembers] = useState(false)
   const [newSubTask, setNewSubTask] = useState('')
   const [newComment, setNewComment] = useState('')
+  const [comments, setComments] = useState([])
   const [isEditingName, setIsEditingName] = useState(false)
   const [isEditingDescription, setIsEditingDescription] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -99,8 +102,30 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
     if (isOpen && task) {
       loadAvailableMembers()
       loadAvailableLabels()
+      loadComments()
     }
   }, [isOpen, task])
+
+  // Socket event listener for real-time comment updates
+  useSocketEvent('comment-updated', (data) => {
+    if (!task || !data || data.payload?.taskId !== task.id) return
+    
+    switch (data.type) {
+      case 'comment-added':
+        setComments(prev => [...prev, data.payload.comment])
+        break
+      case 'comment-updated':
+        setComments(prev => prev.map(c => 
+          c.id === data.payload.comment.id ? data.payload.comment : c
+        ))
+        break
+      case 'comment-deleted':
+        setComments(prev => prev.filter(c => c.id !== data.payload.commentId))
+        break
+      default:
+        break
+    }
+  }, [task?.id])
 
 
   useEffect(() => {
@@ -212,17 +237,53 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
     }
   }
 
+  const loadComments = async () => {
+    if (!task?.id) return
+    
+    // If comments are already in task data, use them
+    if (task.comments && Array.isArray(task.comments)) {
+      setComments(task.comments)
+      return
+    }
+    
+    // Otherwise fetch from API
+    try {
+      const response = await commentService.getCommentsByTask(task.id)
+      if (response.success) {
+        setComments(response.data || [])
+      }
+    } catch (error) {
+      console.error('Failed to load comments:', error)
+    }
+  }
+
   const handleAddComment = async () => {
     if (!newComment.trim()) return
     
     setCommentLoading(true)
     try {
-      setNewComment('')
-      showSuccess('Comment Added', 'Comment has been added successfully')
+      const response = await commentService.createComment(task.id, newComment.trim())
+      if (response.success) {
+        setComments(prev => [...prev, response.data])
+        setNewComment('')
+        showSuccess('Comment Added', 'Comment has been added successfully')
+      }
     } catch (error) {
       showError('Failed to Add Comment', 'Please try again later')
     } finally {
       setCommentLoading(false)
+    }
+  }
+
+  const handleDeleteComment = async (commentId) => {
+    try {
+      const response = await commentService.deleteComment(commentId)
+      if (response.success) {
+        setComments(prev => prev.filter(c => c.id !== commentId))
+        showSuccess('Comment Deleted', 'Comment has been deleted')
+      }
+    } catch (error) {
+      showError('Failed to Delete Comment', 'Please try again later')
     }
   }
 
@@ -789,6 +850,55 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
                     </div>
                   </div>
                 </div>
+
+                {/* Comments List */}
+                {comments.length > 0 && (
+                  <div className="mt-4 space-y-3">
+                    {comments.map((comment) => (
+                      <div key={comment.id} className="flex gap-3">
+                        <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                          {comment.user?.profileImage ? (
+                            <img 
+                              src={`/api/storage/photos/${comment.user.profileImage}`} 
+                              alt={comment.user?.name || 'User'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-500 flex items-center justify-center">
+                              {comment.user?.name?.charAt(0) || 'U'}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="bg-white/5 border border-white/10 rounded-lg p-3">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-sm font-medium text-white">
+                                {comment.user?.name || 'Unknown User'}
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-gray-400">
+                                  {new Date(comment.createdAt).toLocaleDateString()} {new Date(comment.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                                {comment.userId === user?.id && (
+                                  <button
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                    className="text-red-400 hover:text-red-300 transition-colors p-1"
+                                    title="Delete comment"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-300 whitespace-pre-wrap break-words">
+                              {comment.content}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
