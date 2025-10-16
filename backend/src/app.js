@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import userRoutes from "./routes/user.routes.js";
 import projectsRoutes from "./routes/projects.routes.js";
+import boardsRoutes from "./routes/boards.routes.js";
 import storageRoutes from "./routes/storage.routes.js";
 import tasksRoutes from "./routes/tasks.routes.js";
 import notificationsRoutes from "./routes/notifications.routes.js";
@@ -72,6 +73,7 @@ app.get(`${mainRoutePath}/demo-info`, (req, res) => {
 
 app.use(`${mainRoutePath}/user`, userRoutes);
 app.use(`${mainRoutePath}/projects`, projectsRoutes);
+app.use(`${mainRoutePath}/boards`, boardsRoutes);
 app.use(`${mainRoutePath}/storage`, storageRoutes);
 app.use(`${mainRoutePath}/tasks`, tasksRoutes);
 app.use(`${mainRoutePath}/notifications`, notificationsRoutes);

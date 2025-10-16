@@ -1,5 +1,6 @@
 import { prisma } from "../config/database.js";
 import { SocketService } from "../services/socket.service.js";
+import { ActivityService } from "../services/activity.service.js";
 import { isValidId } from "../utils/id-validator.js";
 import { safeUserSelect } from "../utils/user-sanitizer.js";
 
@@ -129,8 +130,8 @@ export const createTask = async (req, res, next) => {
             return res.status(400).json({ message: "Task name is required", key: "name_required", success: false });
         }
 
-        if (name.length < 2 || name.length > 100) {
-            return res.status(400).json({ message: "Task name must be between 2 and 100 characters", key: "invalid_name", success: false });
+        if (name.length < 2 || name.length > 25) {
+            return res.status(400).json({ message: "Task name must be between 2 and 25 characters", key: "invalid_name", success: false });
         }
 
         const list = await prisma.list.findUnique({
@@ -176,6 +177,15 @@ export const createTask = async (req, res, next) => {
             }
         });
 
+        // Log activity
+        await ActivityService.logActivity(
+            list.project.id,
+            req.user.id,
+            'TASK_CREATED',
+            'task',
+            task.id,
+            { taskName: task.name, listId: listId }
+        );
 
         broadcastTaskUpdate(list.project.id, "task-created", {
             task: task
@@ -309,6 +319,9 @@ export const updateTask = async (req, res, next) => {
             if (!name.trim()) {
                 return res.status(400).json({ message: "Task name is required", key: "name_required", success: false });
             }
+            if (name.trim().length > 25) {
+                return res.status(400).json({ message: "Task name must be 25 characters or less", key: "name_too_long", success: false });
+            }
             updateData.name = name.trim();
         }
         if (description !== undefined) {
@@ -355,6 +368,22 @@ export const updateTask = async (req, res, next) => {
             ...updatedTask,
             labels: labelsArray
         };
+
+        // Log activity
+        const changes = {};
+        if (name !== undefined) changes.name = name;
+        if (description !== undefined) changes.description = description;
+        if (dueDate !== undefined) changes.dueDate = dueDate;
+        if (labels !== undefined) changes.labels = labels;
+        
+        await ActivityService.logActivity(
+            task.list.project.id,
+            req.user.id,
+            'TASK_UPDATED',
+            'task',
+            task.id,
+            { taskName: taskWithParsedLabels.name, changes }
+        );
 
         broadcastTaskUpdate(task.list.project.id, "task-updated", {
             task: taskWithParsedLabels
@@ -450,6 +479,19 @@ export const moveTask = async (req, res, next) => {
             }
         });
 
+        // Log activity
+        await ActivityService.logActivity(
+            task.list.project.id,
+            req.user.id,
+            'TASK_MOVED',
+            'task',
+            task.id,
+            { 
+                taskName: task.name,
+                fromListId: task.listId,
+                toListId: newListId
+            }
+        );
 
         broadcastTaskUpdate(task.list.project.id, "task-moved", {
             task: movedTask,
@@ -558,6 +600,15 @@ export const deleteTask = async (req, res, next) => {
             where: { id: taskId }
         });
 
+        // Log activity
+        await ActivityService.logActivity(
+            task.list.project.id,
+            req.user.id,
+            'TASK_DELETED',
+            'task',
+            taskId,
+            { taskName: task.name, listId: task.listId }
+        );
 
         broadcastTaskUpdate(task.list.project.id, "task-deleted", {
             taskId: taskId,
@@ -770,6 +821,16 @@ export const addSubTask = async (req, res, next) => {
             }
         });
         
+        // Log activity
+        await ActivityService.logActivity(
+            task.list.project.id,
+            req.user.id,
+            'SUBTASK_CREATED',
+            'subtask',
+            subTask.id,
+            { subtaskName: subTask.name, taskId, taskName: task.name }
+        );
+        
         res.json({ data: subTask, success: true });
     } catch (err) {
         console.error('addSubTask error:', err);
@@ -839,6 +900,22 @@ export const updateSubTask = async (req, res, next) => {
             data: updateData
         });
         
+        // Log activity for completion status change
+        if (isCompleted !== undefined) {
+            await ActivityService.logActivity(
+                subTask.task.list.project.id,
+                req.user.id,
+                isCompleted ? 'SUBTASK_COMPLETED' : 'SUBTASK_UNCOMPLETED',
+                'subtask',
+                subTaskId,
+                { 
+                    subtaskName: updatedSubTask.name,
+                    taskId: subTask.taskId,
+                    taskName: subTask.task.name
+                }
+            );
+        }
+        
         res.json({ data: updatedSubTask, success: true });
     } catch (err) {
         console.error('updateSubTask error:', err);
@@ -887,6 +964,20 @@ export const deleteSubTask = async (req, res, next) => {
         await prisma.subTask.delete({
             where: { id: subTaskId }
         });
+        
+        // Log activity
+        await ActivityService.logActivity(
+            subTask.task.list.project.id,
+            req.user.id,
+            'SUBTASK_DELETED',
+            'subtask',
+            subTaskId,
+            { 
+                subtaskName: subTask.name,
+                taskId: subTask.taskId,
+                taskName: subTask.task.name
+            }
+        );
         
         res.json({ data: { id: subTaskId }, success: true });
     } catch (err) {

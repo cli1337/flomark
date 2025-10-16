@@ -17,7 +17,7 @@ export const loginRateLimiter = rateLimit({
   max: 5, // Limit each IP to 5 requests per windowMs
   message: {
     success: false,
-    message: 'Too many login attempts from this IP, please try again after 15 minutes.',
+    message: 'Too many login attempts from this IP, please try again after 3 minutes.',
     key: 'too_many_login_attempts'
   },
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
@@ -31,7 +31,7 @@ export const loginRateLimiter = rateLimit({
   handler: (req, res) => {
     res.status(429).json({
       success: false,
-      message: 'Too many login attempts from this IP, please try again after 15 minutes.',
+      message: 'Too many login attempts from this IP, please try again after 3 minutes.',
       key: 'too_many_login_attempts',
       retryAfter: Math.ceil(req.rateLimit.resetTime / 1000 / 60) // minutes
     });
@@ -73,11 +73,11 @@ export const registrationRateLimiter = rateLimit({
  * Used for: /api/user/password, /api/user/2fa/*
  */
 export const passwordRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 3 * 60 * 1000, // 15 minutes
   max: 10, // Limit each IP to 10 requests per windowMs
   message: {
     success: false,
-    message: 'Too many password/security attempts from this IP, please try again after 15 minutes.',
+    message: 'Too many password/security attempts from this IP, please try again after 3 minutes.',
     key: 'too_many_password_attempts'
   },
   standardHeaders: true,
@@ -87,7 +87,7 @@ export const passwordRateLimiter = rateLimit({
   handler: (req, res) => {
     res.status(429).json({
       success: false,
-      message: 'Too many password/security attempts from this IP, please try again after 15 minutes.',
+      message: 'Too many password/security attempts from this IP, please try again after 3 minutes.',
       key: 'too_many_password_attempts',
       retryAfter: Math.ceil(req.rateLimit.resetTime / 1000 / 60) // minutes
     });
@@ -100,7 +100,7 @@ export const passwordRateLimiter = rateLimit({
  * Used for: /api/user/refresh
  */
 export const refreshTokenRateLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 3 * 60 * 1000, // 15 minutes
   max: 20, // Limit each IP to 20 requests per windowMs
   message: {
     success: false,

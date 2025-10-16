@@ -7,26 +7,27 @@ import readline from 'readline';
  * Creates or updates a user with admin/owner privileges
  * 
  * Usage: 
- *   node scripts/make-admin.js <email> <role> [name] [password]
+ *   node scripts/make-admin.js <email> <role> [firstName] [lastName] [password]
  * 
  * Examples:
  *   node scripts/make-admin.js admin@example.com OWNER
- *   node scripts/make-admin.js admin@example.com OWNER "John Doe" mypassword123
+ *   node scripts/make-admin.js admin@example.com OWNER John Doe mypassword123
  */
 
 const args = process.argv.slice(2);
 
 if (args.length < 2) {
-  console.error('❌ Usage: node scripts/make-admin.js <email> <role> [name] [password]');
+  console.error('❌ Usage: node scripts/make-admin.js <email> <role> [firstName] [lastName] [password]');
   console.error('   Roles: OWNER, ADMIN, USER');
-  console.error('   Example: node scripts/make-admin.js admin@example.com OWNER "John Doe" mypassword');
+  console.error('   Example: node scripts/make-admin.js admin@example.com OWNER John Doe mypassword');
   process.exit(1);
 }
 
 const email = args[0];
 const role = args[1].toUpperCase();
-let name = args[2] || null;
-let providedPassword = args[3] || null;
+let firstName = args[2] || null;
+let lastName = args[3] || null;
+let providedPassword = args[4] || null;
 
 // Validate role
 if (!['OWNER', 'ADMIN', 'USER'].includes(role)) {
@@ -55,12 +56,18 @@ async function makeAdmin() {
 
     if (existingUser) {
       // Update existing user
+      let updateData = { role };
+      
+      // Update name if provided
+      if (firstName && lastName) {
+        updateData.name = `${firstName} ${lastName}`;
+      } else if (firstName) {
+        updateData.name = firstName;
+      }
+      
       const updatedUser = await prisma.user.update({
         where: { email },
-        data: { 
-          role,
-          ...(name && { name })
-        }
+        data: updateData
       });
 
       console.log(`✅ User role updated successfully!`);
@@ -69,9 +76,12 @@ async function makeAdmin() {
       console.log(`   Name: ${updatedUser.name}`);
     } else {
       // Interactive mode if name/password not provided
-      if (!name) {
+      if (!firstName) {
         console.log('\n📝 Creating new admin user...\n');
-        name = await question('Full Name: ');
+        firstName = await question('First Name: ');
+      }
+      if (!lastName) {
+        lastName = await question('Last Name: ');
       }
       if (!providedPassword) {
         providedPassword = await question('Password (min 6 characters): ');
@@ -86,11 +96,12 @@ async function makeAdmin() {
       }
 
       const hashedPassword = await bcrypt.hash(providedPassword, 10);
+      const fullName = `${firstName} ${lastName}`.trim();
       
       const newUser = await prisma.user.create({
         data: {
           email,
-          name,
+          name: fullName,
           password: hashedPassword,
           role
         }

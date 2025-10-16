@@ -2,6 +2,7 @@ import { prisma } from "../config/database.js";
 import fs from "fs";
 import crypto from "crypto";
 import { SocketService } from "../services/socket.service.js";
+import { ActivityService } from "../services/activity.service.js";
 import { isValidId } from "../utils/id-validator.js";
 import { safeUserSelect, sanitizeProject, sanitizeProjects, sanitizeMembers } from "../utils/user-sanitizer.js";
 
@@ -88,9 +89,13 @@ export const getProjects = async (req, res, next) => {
                         }
                     }
                 },
-                lists: {
+                boards: {
                     include: {
-                        tasks: true
+                        lists: {
+                            include: {
+                                tasks: true
+                            }
+                        }
                     }
                 }
             },
@@ -369,10 +374,14 @@ export const uploadProjectImage = async (req, res, next) => {
 export const createList = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { name, color } = req.body;
+        const { name, color, boardId } = req.body;
         
         if (!name) {
             return res.status(400).json({ message: "Name is required", key: "name_required", success: false });
+        }
+        
+        if (name.length < 2 || name.length > 25) {
+            return res.status(400).json({ message: "List name must be between 2 and 25 characters", key: "invalid_name", success: false });
         }
 
         if (!isValidId(id)) {
@@ -394,7 +403,10 @@ export const createList = async (req, res, next) => {
         }
 
         const lastList = await prisma.list.findFirst({
-            where: { projectId: id },
+            where: { 
+                boardId: boardId || null,
+                projectId: boardId ? null : id
+            },
             orderBy: { order: 'desc' }
         });
         
@@ -403,12 +415,22 @@ export const createList = async (req, res, next) => {
         const list = await prisma.list.create({
             data: { 
                 name, 
-                projectId: id,
+                projectId: boardId ? null : id,
+                boardId: boardId || null,
                 color: color || "#3b82f6",
                 order: nextOrder
             }
         });
 
+        // Log activity
+        await ActivityService.logActivity(
+            id,
+            req.user.id,
+            'LIST_CREATED',
+            'list',
+            list.id,
+            { listName: list.name, boardId: boardId || null }
+        );
 
         broadcastProjectUpdate(id, "list-created", {
             list: list
@@ -442,8 +464,12 @@ export const getListsByProject = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to access this project", key: "unauthorized", success: false });
         }
 
+        // Get lists that belong directly to project (no board) - for backward compatibility
         const lists = await prisma.list.findMany({ 
-            where: { projectId: id },
+            where: { 
+                projectId: id,
+                boardId: null
+            },
             orderBy: { order: 'asc' }
         });
         
@@ -566,6 +592,16 @@ export const joinProject = async (req, res, next) => {
                     user: true
                 }
             });
+            
+            // Log activity
+            await ActivityService.logActivity(
+                project.id,
+                user.id,
+                'MEMBER_ADDED',
+                'member',
+                member.id,
+                { memberName: user.name }
+            );
         } catch (createError) {
             if (createError.code === 'P2002' && createError.meta?.target?.includes('userId_projectId')) {
                 const existingMember = await prisma.projectMember.findUnique({
@@ -698,6 +734,15 @@ export const removeMemberFromProject = async (req, res, next) => {
             return res.status(403).json({ message: "You are not authorized to remove the owner", key: "unauthorized", success: false });
         }
 
+        // Log activity
+        await ActivityService.logActivity(
+            id,
+            req.user.id,
+            'MEMBER_REMOVED',
+            'member',
+            member.id,
+            { memberId: member.userId }
+        );
 
         broadcastProjectUpdate(id, "member-removed", {
             member: member
@@ -1083,6 +1128,9 @@ export const updateList = async (req, res, next) => {
             if (!name.trim()) {
                 return res.status(400).json({ message: "List name is required", key: "name_required", success: false });
             }
+            if (name.trim().length > 25) {
+                return res.status(400).json({ message: "List name must be 25 characters or less", key: "name_too_long", success: false });
+            }
             updateData.name = name.trim();
         }
         if (color !== undefined) {
@@ -1097,8 +1145,22 @@ export const updateList = async (req, res, next) => {
             data: updateData
         });
 
+        // Log activity
+        const changes = {};
+        if (name !== undefined) changes.name = name;
+        if (color !== undefined) changes.color = color;
+        if (order !== undefined) changes.order = order;
+        
+        await ActivityService.logActivity(
+            list.project.id,
+            req.user.id,
+            'LIST_UPDATED',
+            'list',
+            listId,
+            { listName: updatedList.name, changes }
+        );
 
-        broadcastProjectUpdate(list.project.projectId, "list-updated", {
+        broadcastProjectUpdate(list.project.id, "list-updated", {
             list: updatedList
         }, req.user.id, req.user.name);
         
@@ -1150,10 +1212,22 @@ export const reorderLists = async (req, res, next) => {
         await Promise.all(updatePromises);
         
         const updatedLists = await prisma.list.findMany({
-            where: { projectId: id },
+            where: { 
+                projectId: id,
+                boardId: null
+            },
             orderBy: { order: 'asc' }
         });
 
+        // Log activity
+        await ActivityService.logActivity(
+            id,
+            req.user.id,
+            'LIST_MOVED',
+            'list',
+            null,
+            { listIds, action: 'reorder' }
+        );
 
         broadcastProjectUpdate(id, "lists-reordered", {
             lists: updatedLists
