@@ -6,8 +6,8 @@ export const listService = {
     return response.data
   },
 
-  async createList(projectId, name, color = '#3b82f6') {
-    const response = await api.post(`/projects/${projectId}/list`, { name, color })
+  async createList(projectId, name, color = '#3b82f6', boardId = null) {
+    const response = await api.post(`/projects/${projectId}/list`, { name, color, boardId })
     return response.data
   },
 

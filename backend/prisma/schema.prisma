@@ -19,6 +19,8 @@ model User {
   lastIP           String?
   twoFactorEnabled Boolean   @default(false)
   twoFactorSecret  String?
+  resetToken       String?
+  resetTokenExpiry DateTime?
   
   projectMemberships ProjectMember[]
   taskAssignments    TaskMember[]

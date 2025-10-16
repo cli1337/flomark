@@ -12,7 +12,7 @@ import {
 } from './ui/Dialog'
 import { X, Plus, Palette } from 'lucide-react'
 
-const CreateColumnModal = ({ isOpen, onClose, projectId, onColumnCreated }) => {
+const CreateColumnModal = ({ isOpen, onClose, projectId, boardId, onColumnCreated }) => {
   const { showSuccess, showError } = useToast()
   const [columnName, setColumnName] = useState('')
   const [selectedColor, setSelectedColor] = useState('#3b82f6')
@@ -46,7 +46,7 @@ const CreateColumnModal = ({ isOpen, onClose, projectId, onColumnCreated }) => {
 
     setIsCreating(true)
     try {
-      const response = await listService.createList(projectId, columnName, selectedColor)
+      const response = await listService.createList(projectId, columnName, selectedColor, boardId)
       if (response.success) {
         showSuccess('Column Created', `"${columnName}" has been created successfully`)
         setColumnName('')

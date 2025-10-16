@@ -2,6 +2,8 @@ import React, { useState, useEffect, memo } from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import Login from './pages/auth/login/Login'
 import Register from './pages/auth/register/Register'
+import ForgotPassword from './pages/auth/forgot-password/ForgotPassword'
+import ResetPassword from './pages/auth/reset-password/ResetPassword'
 import Projects from './pages/projects/Projects'
 import ProjectDetail from './pages/projects/ProjectDetail'
 import ProjectFlowView from './pages/flow/ProjectFlowView'
@@ -70,6 +72,8 @@ function App() {
                       <UpdateNotification />
                       <Routes>
                         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+                        <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+                        <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
                         <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                         <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                         <Route path="/projects/:id/flow" element={<ProtectedRoute><ProjectFlowView /></ProtectedRoute>} />

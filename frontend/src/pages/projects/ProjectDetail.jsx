@@ -42,7 +42,9 @@ import TaskModal from '../../components/TaskModal'
 import CreateColumnModal from '../../components/CreateColumnModal'
 import AddCardModal from '../../components/AddCardModal'
 import ProjectBoardHeader from '../../components/ProjectBoardHeader'
+import BoardTabs from '../../components/BoardTabs'
 import Layout from '../../components/Layout'
+import { boardService } from '../../services/boardService'
 import { 
   Plus, 
   List,
@@ -83,6 +85,8 @@ const ProjectDetail = () => {
   const [editingColumnName, setEditingColumnName] = useState('')
   
   const [project, setProject] = useState(null)
+  const [boards, setBoards] = useState([])
+  const [activeBoard, setActiveBoard] = useState(null)
   const [lists, setLists] = useState([])
   const [tasks, setTasks] = useState({})
   const [members, setMembers] = useState([])
@@ -408,6 +412,22 @@ const ProjectDetail = () => {
 
   const isDraggingCard = activeId && Object.values(tasks).flat().some(task => task.id === activeId)
 
+  const fetchBoards = useCallback(async () => {
+    try {
+      const response = await boardService.getBoardsByProject(id)
+      if (response.success) {
+        setBoards(response.data || [])
+        // Set active board to first board if not already set
+        if (!activeBoard && response.data && response.data.length > 0) {
+          setActiveBoard(response.data[0])
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching boards:', error)
+      // Boards are optional, so don't show error
+    }
+  }, [id, activeBoard])
+
   const fetchProjectData = useCallback(async () => {
     try {
       setLoading(true)
@@ -420,7 +440,14 @@ const ProjectDetail = () => {
         
         setProject(project)
         setMembers(members || [])
-        setLists(lists || [])
+        // If we have an active board, filter lists for that board
+        // Otherwise show all lists (backward compatibility)
+        if (activeBoard) {
+          setLists((lists || []).filter(list => list.boardId === activeBoard.id))
+        } else {
+          // Show lists without boardId (legacy direct project lists)
+          setLists((lists || []).filter(list => !list.boardId))
+        }
         setTasks(tasks || {})
       } else {
         showError('Project not found', 'The project you are looking for does not exist')
@@ -433,7 +460,16 @@ const ProjectDetail = () => {
     } finally {
       setLoading(false)
     }
-  }, [id, showError, navigate])
+  }, [id, activeBoard, showError, navigate])
+
+  const handleBoardChange = (board) => {
+    setActiveBoard(board)
+  }
+
+  const handleBoardsUpdate = async () => {
+    await fetchBoards()
+    await fetchProjectData()
+  }
 
   const handleColumnCreated = async (newColumn) => {
     await fetchProjectData()
@@ -719,9 +755,15 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     if (id) {
-      fetchProjectData()
+      fetchBoards()
     }
   }, [id])
+
+  useEffect(() => {
+    if (id) {
+      fetchProjectData()
+    }
+  }, [id, activeBoard])
 
   const SortableTaskCard = ({ task, index }) => {
     const isProcessing = processingCards.has(task.id)
@@ -1091,6 +1133,10 @@ const ProjectDetail = () => {
 
   if (!project) return null
 
+  // Check if user can manage boards (owner or admin)
+  const currentUserMember = members.find(m => m.userId === user?.id)
+  const canManageBoards = currentUserMember?.role === 'OWNER' || currentUserMember?.role === 'ADMIN'
+
   return (
     <Layout>
       <div className="flex flex-col h-full">
@@ -1102,6 +1148,16 @@ const ProjectDetail = () => {
           onMembersChange={setSelectedMembers}
           onLabelsUpdated={handleLabelsUpdated}
           onSearchChange={handleSearchChange}
+        />
+
+        {/* Board Tabs - Always show for owners/admins to create boards */}
+        <BoardTabs
+          boards={boards}
+          activeBoard={activeBoard}
+          onBoardChange={handleBoardChange}
+          onBoardsUpdate={handleBoardsUpdate}
+          projectId={id}
+          canManage={canManageBoards}
         />
 
         <div className="flex-1 px-16 py-4 sm:px-24 sm:py-6 overflow-auto custom-scrollbar">
@@ -1127,6 +1183,17 @@ const ProjectDetail = () => {
           <div className="space-y-6">
             {loading ? (
               <LoadingState message="Loading project data..." />
+            ) : !activeBoard && boards.length === 0 ? (
+              // No boards - show message to create board first
+              <div className="flex items-center justify-center py-12">
+                <Card className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-lg">
+                  <CardContent className="p-12 text-center">
+                    <List className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-white font-semibold text-lg mb-2">Create a board first</h3>
+                    <p className="text-gray-400 mb-6">Boards organize your columns and tasks. Create your first board using the button above to get started.</p>
+                  </CardContent>
+                </Card>
+              </div>
             ) : lists.length > 0 ? (
               <DndContext
                 sensors={sensors}
@@ -1178,7 +1245,11 @@ const ProjectDetail = () => {
                   <CardContent className="p-12 text-center">
                     <List className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                     <h3 className="text-white font-semibold text-lg mb-2">No columns yet</h3>
-                    <p className="text-gray-400 mb-6">Create your first column to start organizing tasks</p>
+                    <p className="text-gray-400 mb-6">
+                      {activeBoard 
+                        ? `Create your first column in "${activeBoard.name}" to start organizing tasks`
+                        : 'Create your first column to start organizing tasks'}
+                    </p>
                     <Button 
                       onClick={() => setShowCreateColumnModal(true)}
                       className="bg-white hover:bg-gray-100 text-black px-6 py-2 rounded-lg font-medium"
@@ -1228,6 +1299,7 @@ const ProjectDetail = () => {
         isOpen={showCreateColumnModal}
         onClose={() => setShowCreateColumnModal(false)}
         projectId={project?.id}
+        boardId={activeBoard?.id}
         onColumnCreated={handleColumnCreated}
       />
 

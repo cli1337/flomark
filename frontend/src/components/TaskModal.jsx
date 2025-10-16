@@ -735,37 +735,43 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
                 </div>
               )}
               
-              <div className="space-y-2">
-                {taskData.subTasks?.map(subTask => (
-                  <div key={subTask.id} className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleToggleSubTask(subTask.id, !subTask.isCompleted)}
-                      className={`rounded border-2 flex items-center justify-center transition-colors ${
-                        isMobile ? 'w-6 h-6' : 'w-5 h-5'
-                      } ${
-                        subTask.isCompleted 
-                          ? 'bg-green-500 border-green-500' 
-                          : 'border-gray-400 hover:border-gray-300'
-                      }`}
+              <div className="space-y-2 bg-gradient-to-br from-white/[0.03] to-white/[0.08] border border-white/10 rounded-lg p-4 backdrop-blur-sm">
+                <div className="space-y-2.5">
+                  {taskData.subTasks?.map(subTask => (
+                    <div 
+                      key={subTask.id} 
+                      className="flex items-center gap-3 bg-white/5 hover:bg-white/10 transition-colors rounded-md p-2.5 border border-white/5"
                     >
-                      {subTask.isCompleted && <Check className={`text-white ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />}
-                    </button>
-                    <span className={`text-white text-sm flex-1 ${subTask.isCompleted ? 'line-through text-gray-400' : ''}`}>
-                      {subTask.name}
-                    </span>
-                    <button
-                      onClick={() => handleDeleteSubTask(subTask.id)}
-                      className={`hover:bg-red-500/20 rounded transition-colors ${
-                        isMobile ? 'p-2' : 'p-1'
-                      }`}
-                    >
-                      <Trash2 className={`text-red-400 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        onClick={() => handleToggleSubTask(subTask.id, !subTask.isCompleted)}
+                        className={`rounded border-2 flex items-center justify-center transition-all duration-200 ${
+                          isMobile ? 'w-6 h-6' : 'w-5 h-5'
+                        } ${
+                          subTask.isCompleted 
+                            ? 'bg-green-500 border-green-500 shadow-lg shadow-green-500/50' 
+                            : 'border-gray-400 hover:border-gray-300 hover:shadow-md'
+                        }`}
+                      >
+                        {subTask.isCompleted && <Check className={`text-white ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />}
+                      </button>
+                      <span className={`text-white text-sm flex-1 ${subTask.isCompleted ? 'line-through text-gray-400' : ''}`}>
+                        {subTask.name}
+                      </span>
+                      <button
+                        onClick={() => handleDeleteSubTask(subTask.id)}
+                        className={`hover:bg-red-500/20 rounded transition-colors ${
+                          isMobile ? 'p-2' : 'p-1'
+                        }`}
+                        title="Delete subtask"
+                      >
+                        <Trash2 className={`text-red-400 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
                 
-                <div className="flex items-center gap-2">
-                  <button className={`border-2 border-dashed border-gray-600 rounded flex items-center justify-center ${
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                  <button className={`border-2 border-dashed border-gray-500 rounded flex items-center justify-center transition-colors hover:border-gray-400 ${
                     isMobile ? 'w-6 h-6' : 'w-5 h-5'
                   }`}>
                     <Plus className={`text-gray-400 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
@@ -775,8 +781,8 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
                     value={newSubTask}
                     onChange={(e) => setNewSubTask(e.target.value)}
                     placeholder="Add a subtask..."
-                    className={`bg-transparent text-white placeholder-gray-400 border-none outline-none flex-1 ${
-                      isMobile ? 'text-base py-2' : 'text-sm'
+                    className={`bg-white/5 text-white placeholder-gray-500 border border-white/10 rounded px-3 outline-none flex-1 focus:border-white/30 transition-colors ${
+                      isMobile ? 'text-base py-2' : 'text-sm py-1.5'
                     }`}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddSubTask()}
                   />
@@ -784,8 +790,8 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
                     <button
                       onClick={handleAddSubTask}
                       disabled={subTaskLoading}
-                      className={`hover:bg-white/10 rounded transition-colors disabled:opacity-50 ${
-                        isMobile ? 'p-2' : 'p-1'
+                      className={`hover:bg-green-500/20 rounded transition-colors disabled:opacity-50 bg-green-500/10 ${
+                        isMobile ? 'p-2' : 'p-1.5'
                       }`}
                     >
                       {subTaskLoading ? (

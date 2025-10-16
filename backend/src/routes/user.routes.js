@@ -16,6 +16,8 @@ import {
   updateUserByAdmin,
   promoteUserToAdmin,
   createUserByAdmin,
+  forgotPassword,
+  resetPassword,
 } from "../controllers/user.controller.js";
 import { authenticateToken } from "../middlewares/auth.middleware.js";
 import { getClientIP } from "../middlewares/ip.middleware.js";
@@ -43,6 +45,10 @@ router.post("/create", registrationRateLimiter, getClientIP, createUser);
 router.post("/auth", loginRateLimiter, getClientIP, authenticateUser);
 router.post("/refresh", refreshTokenRateLimiter, refreshToken);
 router.post("/2fa/verify-login", loginRateLimiter, verifyTwoFactorLogin); // Complete 2FA login
+
+// Password reset
+router.post("/forgot-password", passwordRateLimiter, forgotPassword);
+router.post("/reset-password", passwordRateLimiter, resetPassword);
 
 // ===== Protected Routes (Authentication Required) =====
 

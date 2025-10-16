@@ -10,6 +10,7 @@ import commentsRoutes from "./routes/comments.routes.js";
 import { errorHandler } from "./middlewares/error.middleware.js";
 import { handleMulterError } from "./config/multer.config.js";
 import { ENV } from "./config/env.js";
+import { emailService } from "./services/email.service.js";
 const mainRoutePath = "/api";
 import { createRequire } from 'module';
 
@@ -49,6 +50,8 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 app.get(`${mainRoutePath}/health`, (req, res) => {
+  const smtpConfigured = emailService.isConfigured();
+  
   res.status(200).json({
     status: 'ok',
     timestamp: new Date().toISOString(),
@@ -58,6 +61,10 @@ app.get(`${mainRoutePath}/health`, (req, res) => {
     version: {
       backend: packageJson.version,
       frontend: frontendVersion
+    },
+    smtp: {
+      configured: smtpConfigured,
+      enabled: smtpConfigured
     }
   });
 });
