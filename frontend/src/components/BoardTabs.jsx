@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import { Plus, Pencil, Trash2, GripVertical } from 'lucide-react';
 import { Button } from './ui/Button';
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription 
+} from './ui/Dialog';
 import { boardService } from '../services/boardService';
 import { useToast } from '../contexts/ToastContext';
 
@@ -168,67 +175,109 @@ const BoardTabs = ({
       </div>
 
       {/* Add Board Modal */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#18191b] border border-white/10 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-white text-lg font-semibold mb-4">Add New Board</h3>
-            <input
-              type="text"
-              value={boardName}
-              onChange={(e) => setBoardName(e.target.value)}
-              placeholder="Board name..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-white/30 mb-4"
-              maxLength={50}
-              autoFocus
-              onKeyPress={(e) => e.key === 'Enter' && handleAddBoard()}
-            />
-            <div className="text-xs text-gray-500 mb-4">
-              {boards.length}/10 boards created
+      <Dialog open={showAddModal} onOpenChange={(open) => {
+        setShowAddModal(open);
+        if (!open) setBoardName('');
+      }}>
+        <DialogContent className="bg-white/10 border-white/20 backdrop-blur-xl text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Add New Board
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Create a new board to organize your work ({boards.length}/10 boards)
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-300">
+                Board Name *
+              </label>
+              <input
+                type="text"
+                value={boardName}
+                onChange={(e) => setBoardName(e.target.value)}
+                placeholder="e.g., Sprint 1, Q4 Planning, Marketing..."
+                className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all"
+                maxLength={50}
+                autoFocus
+                onKeyPress={(e) => e.key === 'Enter' && !loading && boardName.trim() && handleAddBoard()}
+              />
+              <p className="text-xs text-gray-500">
+                {boardName.length}/50 characters
+              </p>
             </div>
-            <div className="flex gap-3 justify-end">
+
+            <div className="flex gap-3 justify-end pt-2">
               <Button
                 onClick={() => {
                   setShowAddModal(false);
                   setBoardName('');
                 }}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2"
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleAddBoard}
                 disabled={loading || !boardName.trim()}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
+                className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Creating...' : 'Create Board'}
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Board Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#18191b] border border-white/10 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-white text-lg font-semibold mb-4">Edit Board</h3>
-            <input
-              type="text"
-              value={boardName}
-              onChange={(e) => setBoardName(e.target.value)}
-              placeholder="Board name..."
-              className="w-full bg-white/5 border border-white/10 rounded-lg p-3 text-white placeholder-gray-400 focus:outline-none focus:border-white/30 mb-4"
-              maxLength={50}
-              autoFocus
-              onKeyPress={(e) => e.key === 'Enter' && handleEditBoard()}
-            />
-            <div className="flex gap-3 justify-between">
+      <Dialog open={showEditModal} onOpenChange={(open) => {
+        setShowEditModal(open);
+        if (!open) {
+          setBoardName('');
+          setEditingBoard(null);
+        }
+      }}>
+        <DialogContent className="bg-white/10 border-white/20 backdrop-blur-xl text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+              <Pencil className="h-5 w-5" />
+              Edit Board
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Update the board name
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-300">
+                Board Name *
+              </label>
+              <input
+                type="text"
+                value={boardName}
+                onChange={(e) => setBoardName(e.target.value)}
+                placeholder="Board name..."
+                className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white/40 focus:ring-2 focus:ring-white/20 transition-all"
+                maxLength={50}
+                autoFocus
+                onKeyPress={(e) => e.key === 'Enter' && !loading && boardName.trim() && handleEditBoard()}
+              />
+              <p className="text-xs text-gray-500">
+                {boardName.length}/50 characters
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-between pt-2">
               <Button
                 onClick={() => {
                   openDeleteModal(editingBoard);
                   setShowEditModal(false);
                 }}
-                className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 border border-red-500/30"
+                className="bg-red-500/20 hover:bg-red-500/30 text-red-400 px-4 py-2 border border-red-500/30 rounded-lg transition-colors"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
@@ -240,52 +289,70 @@ const BoardTabs = ({
                     setBoardName('');
                     setEditingBoard(null);
                   }}
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2"
+                  className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   Cancel
                 </Button>
                 <Button
                   onClick={handleEditBoard}
                   disabled={loading || !boardName.trim()}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 disabled:opacity-50"
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {loading ? 'Saving...' : 'Save'}
                 </Button>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-[#18191b] border border-white/10 rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-white text-lg font-semibold mb-2">Delete Board</h3>
-            <p className="text-gray-400 mb-4">
-              Are you sure you want to delete "{editingBoard?.name}"? This will delete all lists and tasks in this board. This action cannot be undone.
-            </p>
-            <div className="flex gap-3 justify-end">
+      <Dialog open={showDeleteModal} onOpenChange={(open) => {
+        setShowDeleteModal(open);
+        if (!open) setEditingBoard(null);
+      }}>
+        <DialogContent className="bg-white/10 border-white/20 backdrop-blur-xl text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-semibold text-white flex items-center gap-2">
+              <Trash2 className="h-5 w-5 text-red-400" />
+              Delete Board
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              This action cannot be undone
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+              <p className="text-gray-300 text-sm">
+                Are you sure you want to delete <span className="font-semibold text-white">"{editingBoard?.name}"</span>?
+              </p>
+              <p className="text-gray-400 text-sm mt-2">
+                This will permanently delete all lists and tasks in this board.
+              </p>
+            </div>
+
+            <div className="flex gap-3 justify-end pt-2">
               <Button
                 onClick={() => {
                   setShowDeleteModal(false);
                   setEditingBoard(null);
                 }}
-                className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2"
+                className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg transition-colors"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleDeleteBoard}
                 disabled={loading}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 disabled:opacity-50"
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {loading ? 'Deleting...' : 'Delete Board'}
               </Button>
             </div>
           </div>
-        </div>
-      )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

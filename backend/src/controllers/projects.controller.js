@@ -405,7 +405,7 @@ export const createList = async (req, res, next) => {
         const lastList = await prisma.list.findFirst({
             where: { 
                 boardId: boardId || null,
-                projectId: boardId ? null : id
+                projectId: id
             },
             orderBy: { order: 'desc' }
         });
@@ -415,7 +415,7 @@ export const createList = async (req, res, next) => {
         const list = await prisma.list.create({
             data: { 
                 name, 
-                projectId: boardId ? null : id,
+                projectId: id,  // Always set projectId for proper fetching
                 boardId: boardId || null,
                 color: color || "#3b82f6",
                 order: nextOrder
