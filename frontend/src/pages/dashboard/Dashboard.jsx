@@ -273,6 +273,13 @@ const Dashboard = () => {
       }
     }, [project.id, project.imageHash, projectImage])
 
+    // Calculate board count, list count, and task count
+    const boardCount = project.boards?.length || 0
+    const listCount = project.boards?.reduce((total, board) => total + (board.lists?.length || 0), 0) || 0
+    const taskCount = project.boards?.reduce((total, board) => {
+      return total + (board.lists?.reduce((listTotal, list) => listTotal + (list.tasks?.length || 0), 0) || 0)
+    }, 0) || 0
+
     return (
       <Card 
         className="bg-white/5 border-white/10 hover:bg-white/10 transition-all cursor-pointer group overflow-hidden"
@@ -339,8 +346,10 @@ const Dashboard = () => {
             </DropdownMenu>
           </div>
           <div className="flex items-center gap-4 text-sm text-gray-400">
-            <span>{project.lists?.length || 0} lists</span>
-            <span>{project.members?.length || 0} members</span>
+            <span>{boardCount} {boardCount === 1 ? 'board' : 'boards'}</span>
+            <span>{listCount} {listCount === 1 ? 'list' : 'lists'}</span>
+            <span>{taskCount} {taskCount === 1 ? 'task' : 'tasks'}</span>
+            <span>{project.members?.length || 0} {project.members?.length === 1 ? 'member' : 'members'}</span>
           </div>
         </CardContent>
       </Card>

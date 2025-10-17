@@ -1,6 +1,12 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* Prevent white flash during route transitions */
+html, body, #root {
+  background-color: #18191b !important;
+  min-height: 100vh;
+}
+
 /* Optimistic update animations */
 @keyframes optimistic-pulse {
   0%, 100% {

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="background-color: #18191b;">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -9,8 +9,17 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" href="/logo.png" type="image/png">
     <title>Flomark</title>
+    <style>
+      /* Prevent white flash during page transitions */
+      html, body, #root {
+        background-color: #18191b;
+        margin: 0;
+        padding: 0;
+        min-height: 100vh;
+      }
+    </style>
   </head>
-  <body>
+  <body style="background-color: #18191b;">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>

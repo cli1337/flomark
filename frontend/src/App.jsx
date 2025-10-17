@@ -68,7 +68,7 @@ function App() {
                 <Router>
                   <ErrorBoundary>
                     <AuthLogoutListener />
-                    <div className="App">
+                    <div className="App bg-[#18191b] min-h-screen">
                       <UpdateNotification />
                       <Routes>
                         <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />

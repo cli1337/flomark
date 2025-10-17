@@ -1137,6 +1137,17 @@ const ProjectDetail = () => {
   const currentUserMember = members.find(m => m.userId === user?.id)
   const canManageBoards = currentUserMember?.role === 'OWNER' || currentUserMember?.role === 'ADMIN'
 
+  // Show loading state at the top level to prevent white page flash
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center h-full">
+          <LoadingState message="Loading project data..." />
+        </div>
+      </Layout>
+    )
+  }
+
   return (
     <Layout>
       <div className="flex flex-col h-full">
@@ -1181,9 +1192,7 @@ const ProjectDetail = () => {
           )}
 
           <div className="space-y-6">
-            {loading ? (
-              <LoadingState message="Loading project data..." />
-            ) : !activeBoard && boards.length === 0 ? (
+            {!activeBoard && boards.length === 0 ? (
               // No boards - show message to create board first
               <div className="flex items-center justify-center py-12">
                 <Card className="bg-white/5 border border-white/10 backdrop-blur-xl rounded-lg">

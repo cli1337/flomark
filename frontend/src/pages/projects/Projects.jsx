@@ -313,11 +313,15 @@ const Projects = () => {
 
     const members = getProjectMembers()
     
-
-    const totalTasks = project.lists?.reduce((acc, list) => acc + (list.tasks?.length || 0), 0) || 0
-    const completedTasks = project.lists?.reduce((acc, list) => 
-      acc + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0
-    const totalLists = project.lists?.length || 0
+    // Calculate counts from nested boards -> lists -> tasks structure
+    const totalLists = project.boards?.reduce((total, board) => total + (board.lists?.length || 0), 0) || 0
+    const totalTasks = project.boards?.reduce((total, board) => {
+      return total + (board.lists?.reduce((listTotal, list) => listTotal + (list.tasks?.length || 0), 0) || 0)
+    }, 0) || 0
+    const completedTasks = project.boards?.reduce((total, board) => {
+      return total + (board.lists?.reduce((listTotal, list) => 
+        listTotal + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0)
+    }, 0) || 0
     const assignmentCount = notificationCounts[project.id] || 0
     
 
@@ -584,11 +588,15 @@ const Projects = () => {
 
     const members = getProjectMembers()
     
-
-    const totalTasks = project.lists?.reduce((acc, list) => acc + (list.tasks?.length || 0), 0) || 0
-    const completedTasks = project.lists?.reduce((acc, list) => 
-      acc + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0
-    const totalLists = project.lists?.length || 0
+    // Calculate counts from nested boards -> lists -> tasks structure
+    const totalLists = project.boards?.reduce((total, board) => total + (board.lists?.length || 0), 0) || 0
+    const totalTasks = project.boards?.reduce((total, board) => {
+      return total + (board.lists?.reduce((listTotal, list) => listTotal + (list.tasks?.length || 0), 0) || 0)
+    }, 0) || 0
+    const completedTasks = project.boards?.reduce((total, board) => {
+      return total + (board.lists?.reduce((listTotal, list) => 
+        listTotal + (list.tasks?.filter(task => task.isCompleted)?.length || 0), 0) || 0)
+    }, 0) || 0
     const assignmentCount = notificationCounts[project.id] || 0
 
     return (
