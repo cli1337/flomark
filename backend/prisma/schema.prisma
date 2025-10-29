@@ -3,12 +3,12 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "mongodb"
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id               String    @id @default(cuid())
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
   createdAt        DateTime  @default(now())
   name             String
   email            String    @unique
@@ -19,8 +19,6 @@ model User {
   lastIP           String?
   twoFactorEnabled Boolean   @default(false)
   twoFactorSecret  String?
-  resetToken       String?
-  resetTokenExpiry DateTime?
   
   projectMemberships ProjectMember[]
   taskAssignments    TaskMember[]
@@ -30,10 +28,10 @@ model User {
 }
 
 model Project {
-  id          String   @id @default(cuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   imageHash   String?
-  labels      String
+  labels      Json?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
@@ -46,13 +44,13 @@ model Project {
 }
 
 model Board {
-  id          String   @id @default(cuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   order       Int      @default(0)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  projectId   String
+  projectId   String   @db.ObjectId
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   lists       List[]
   
@@ -60,17 +58,17 @@ model Board {
 }
 
 model List {
-  id          String   @id @default(cuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   order       Int      @default(0)
   color       String   @default("#3b82f6")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   
-  projectId   String?
+  projectId   String?  @db.ObjectId
   project     Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
   
-  boardId     String?
+  boardId     String?  @db.ObjectId
   board       Board?   @relation(fields: [boardId], references: [id], onDelete: Cascade)
   
   tasks       Task[]
@@ -79,16 +77,16 @@ model List {
 }
 
 model Task {
-  id          String    @id @default(cuid())
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   description String?
-  labels      String
+  labels      Json?
   dueDate     DateTime?
   order       Int       @default(0)
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   
-  listId      String
+  listId      String    @db.ObjectId
   list        List      @relation(fields: [listId], references: [id], onDelete: Cascade)
   
   members     TaskMember[]
@@ -100,20 +98,20 @@ model Task {
 }
 
 model SubTask {
-  id          String   @id @default(cuid())
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
   isCompleted Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  taskId      String
+  taskId      String   @db.ObjectId
   task        Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@map("subtasks")
 }
 
 model Attachment {
-  id           String   @id @default(cuid())
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
   filename     String
   originalName String
   mimeType     String
@@ -121,16 +119,16 @@ model Attachment {
   url          String
   createdAt    DateTime @default(now())
 
-  taskId       String
+  taskId       String   @db.ObjectId
   task         Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@map("attachments")
 }
 
 model ProjectMember {
-  id        String      @id @default(cuid())
-  userId    String
-  projectId String
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String      @db.ObjectId
+  projectId String      @db.ObjectId
   role      ProjectRole @default(MEMBER)
   joinedAt  DateTime    @default(now())
   
@@ -142,9 +140,9 @@ model ProjectMember {
 }
 
 model TaskMember {
-  id         String   @id @default(cuid())
-  userId     String
-  taskId     String
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  taskId     String   @db.ObjectId
   assignedAt DateTime @default(now())
   
   user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -155,8 +153,8 @@ model TaskMember {
 }
 
 model Notification {
-  id        String           @id @default(cuid())
-  userId    String
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String           @db.ObjectId
   type      NotificationType
   title     String
   message   String
@@ -170,24 +168,24 @@ model Notification {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
-  userId    String
+  userId    String   @db.ObjectId
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   
-  taskId    String
+  taskId    String   @db.ObjectId
   task      Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   
   @@map("comments")
 }
 
 model ActivityLog {
-  id          String       @id @default(cuid())
-  projectId   String
-  userId      String
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  projectId   String       @db.ObjectId
+  userId      String       @db.ObjectId
   action      ActivityType
   entityType  String
   entityId    String?
@@ -249,4 +247,3 @@ enum ActivityType {
   COMMENT_ADDED
   COMMENT_DELETED
 }
-

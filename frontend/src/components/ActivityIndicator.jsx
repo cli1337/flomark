@@ -11,24 +11,24 @@ const ActivityIndicator = ({ projectId }) => {
   const activeUsersInProject = activeUsers
 
   return (
-    <div className="flex items-center gap-2 text-sm text-gray-400">
+    <div className="flex items-center gap-1 sm:gap-2 text-sm text-gray-400 flex-wrap">
       {/* Connection Status */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 flex-shrink-0">
         {isConnected ? (
-          <Wifi className="h-4 w-4 text-green-400" />
+          <Wifi className="h-3 w-3 sm:h-4 sm:w-4 text-green-400" />
         ) : (
-          <WifiOff className="h-4 w-4 text-red-400" />
+          <WifiOff className="h-3 w-3 sm:h-4 sm:w-4 text-red-400" />
         )}
-        <span className="text-xs">
+        <span className="text-xs whitespace-nowrap">
           {isConnected ? 'Connected' : 'Disconnected'}
         </span>
       </div>
 
       {/* Active Users */}
       {activeUsersInProject.length > 0 && (
-        <div className="flex items-center gap-1">
-          <Users className="h-4 w-4 text-blue-400" />
-          <span className="text-xs">
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <Users className="h-3 w-3 sm:h-4 sm:w-4 text-blue-400" />
+          <span className="text-xs whitespace-nowrap">
             {activeUsersInProject.length} active
           </span>
         </div>
@@ -36,13 +36,13 @@ const ActivityIndicator = ({ projectId }) => {
 
       {/* User Avatars */}
       {activeUsersInProject.length > 0 && (
-        <div className="flex -space-x-1">
+        <div className="flex -space-x-1 flex-shrink-0">
           {activeUsersInProject.slice(0, 3).map((activeUser) => {
             const isCurrentUser = activeUser.id === user?.id
             return (
               <div
                 key={activeUser.id}
-                className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium border-2 ${
+                className={`w-5 h-5 sm:w-6 sm:h-6 rounded-full overflow-hidden flex items-center justify-center text-white text-xs font-medium border-2 ${
                   isCurrentUser 
                     ? 'bg-green-500 border-green-300' 
                     : 'bg-blue-500 border-white/30'
@@ -62,7 +62,7 @@ const ActivityIndicator = ({ projectId }) => {
             )
           })}
           {activeUsersInProject.length > 3 && (
-            <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-medium border-2 border-white/30">
+            <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-gray-600 flex items-center justify-center text-white text-xs font-medium border-2 border-white/30">
               +{activeUsersInProject.length - 3}
             </div>
           )}

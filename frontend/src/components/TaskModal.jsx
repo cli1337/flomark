@@ -535,11 +535,13 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
   if (!isOpen || !taskData) return null
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className={`bg-[#18191b] border border-white/10 rounded-lg w-full max-h-[95vh] overflow-hidden ${
-        isMobile ? 'max-w-full mx-2' : 'max-w-4xl'
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+      <div className={`bg-[#18191b] border border-white/10 rounded-lg w-full ${
+        isMobile 
+          ? 'h-[100dvh] max-h-[100dvh] overflow-y-auto max-w-full mx-0 rounded-none' 
+          : 'max-h-[95vh] overflow-hidden max-w-4xl'
       }`}>
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10">
+        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-white/10 sticky top-0 z-10 bg-[#18191b]/95 supports-[backdrop-filter]:bg-[#18191b]/80 backdrop-blur">
             {isEditingName ? (
               <div className="flex">
                 <div className="flex items-center gap-5">
@@ -579,7 +581,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
             )}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+              className={`hover:bg-white/10 rounded-lg transition-colors ${isMobile ? 'p-3' : 'p-2'}`}
             >
               <X className="h-5 w-5 text-gray-400" />
             </button>
@@ -770,8 +772,8 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
                   ))}
                 </div>
                 
-                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
-                  <button className={`border-2 border-dashed border-gray-500 rounded flex items-center justify-center transition-colors hover:border-gray-400 ${
+                <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10 overflow-hidden">
+                  <button className={`border-2 border-dashed border-gray-500 rounded flex items-center justify-center transition-colors hover:border-gray-400 flex-shrink-0 ${
                     isMobile ? 'w-6 h-6' : 'w-5 h-5'
                   }`}>
                     <Plus className={`text-gray-400 ${isMobile ? 'h-4 w-4' : 'h-3 w-3'}`} />
@@ -781,7 +783,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
                     value={newSubTask}
                     onChange={(e) => setNewSubTask(e.target.value)}
                     placeholder="Add a subtask..."
-                    className={`bg-white/5 text-white placeholder-gray-500 border border-white/10 rounded px-3 outline-none flex-1 focus:border-white/30 transition-colors ${
+                    className={`bg-white/5 text-white placeholder-gray-500 border border-white/10 rounded px-3 outline-none w-0 min-w-0 flex-1 focus:border-white/30 transition-colors ${
                       isMobile ? 'text-base py-2' : 'text-sm py-1.5'
                     }`}
                     onKeyPress={(e) => e.key === 'Enter' && handleAddSubTask()}
@@ -790,7 +792,7 @@ const TaskModal = ({ task, isOpen, onClose, onUpdate, labelsUpdated, projectId }
                     <button
                       onClick={handleAddSubTask}
                       disabled={subTaskLoading}
-                      className={`hover:bg-green-500/20 rounded transition-colors disabled:opacity-50 bg-green-500/10 ${
+                      className={`hover:bg-green-500/20 rounded transition-colors disabled:opacity-50 bg-green-500/10 flex-shrink-0 ${
                         isMobile ? 'p-2' : 'p-1.5'
                       }`}
                     >

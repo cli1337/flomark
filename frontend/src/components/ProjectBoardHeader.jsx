@@ -56,17 +56,15 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
   }
 
   return (
-    <div className="p-4 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-white project-name select-none">{project?.name}</h1>
-          
-          {/* Real-time Activity Indicator */}
+    <div className="p-3 sm:p-4 border-b border-white/10 bg-white/5 backdrop-blur-xl">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+          <h1 className="text-lg sm:text-xl font-bold text-white project-name select-none truncate">{project?.name}</h1>
           <ActivityIndicator projectId={project?.id} />
         </div>
 
         <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <div className="flex -space-x-2">
               {members.slice(0, 3).map((member, index) => {
                 const userName = member.user?.name || member.name || 'Unknown User'
@@ -124,25 +122,25 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
             
             <Button
               onClick={() => navigate(`/projects/${project?.id}/flow`)}
-              className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 px-3 py-1 text-sm rounded-lg"
+              className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border border-purple-500/50 px-2 sm:px-3 py-1 text-sm rounded-lg"
               title="Flow View"
             >
-              <Workflow className="h-4 w-4 mr-1" />
-              Flow View
+              <Workflow className="h-4 w-4 sm:mr-1" />
+              <span className="hidden sm:inline">Flow View</span>
             </Button>
             
             {canManageProject && (
               <Button
                 onClick={() => setShowInviteModal(true)}
-                className="bg-white/10 hover:bg-white/20 text-white px-3 py-1 text-sm rounded-lg"
+                className="bg-white/10 hover:bg-white/20 text-white px-2 sm:px-3 py-1 text-sm rounded-lg"
               >
-                <Mail className="h-4 w-4 mr-1" />
-                Invite
+                <Mail className="h-4 w-4 sm:mr-1" />
+                <span className="hidden sm:inline">Invite</span>
               </Button>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap w-full sm:w-auto">
             <MemberFilter
               projectId={project?.id}
               projectOwner={projectOwner}
@@ -172,19 +170,19 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
                 className="text-gray-400 hover:text-white hover:bg-white/10"
               >
                 <X className="h-4 w-4 mr-1" />
-                Clear Filters
+                <span className="hidden sm:inline">Clear Filters</span>
               </Button>
             )}
           </div>
 
-          <div className="relative">
+          <div className="relative w-full sm:w-64 flex-shrink-0">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search cards by name, labels, or members..."
+              placeholder="Search cards..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-64 pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20"
+              className="w-full pl-10 pr-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-white focus:ring-2 focus:ring-white/20 text-sm"
             />
           </div>
 
@@ -198,10 +196,6 @@ const ProjectBoardHeader = ({ project, members = [], projectOwner, onInviteMembe
               <DropdownMenuItem className="cursor-pointer">
                 <Share2 className="h-4 w-4 mr-2" />
                 Share Board
-              </DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">
-                <Copy className="h-4 w-4 mr-2" />
-                Duplicate Board
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

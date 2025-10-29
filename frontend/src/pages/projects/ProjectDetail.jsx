@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import {
   DndContext,
   closestCenter,
@@ -54,12 +54,14 @@ import {
   Calendar,
   Users,
   GripVertical,
-  Search
+  Search,
+  ChevronRight
 } from 'lucide-react'
 
 const ProjectDetail = () => {
-  const { id } = useParams()
+  const { id, taskId } = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
   const { user, logout } = useAuth()
   const { showSuccess, showError, showInfo } = useToast()
   const { isConnected, isReconnecting } = useWebSocket()
@@ -93,8 +95,33 @@ const ProjectDetail = () => {
   const [loading, setLoading] = useState(true)
   const [processingCards, setProcessingCards] = useState(new Set())
   const [activeId, setActiveId] = useState(null)
+  const [showScrollHint, setShowScrollHint] = useState(true)
+  const scrollContainerRef = useRef(null)
   
   usePageTitle(project ? project.name : 'Project')
+  
+  // Hide scroll hint after user scrolls
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container || !isMobile) return
+    
+    const handleScroll = () => {
+      setShowScrollHint(false)
+    }
+    
+    container.addEventListener('scroll', handleScroll, { once: true })
+    
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+    }
+  }, [lists, isMobile])
+  
+  // Show hint again if new columns are added
+  useEffect(() => {
+    if (lists.length > 1 && isMobile) {
+      setShowScrollHint(true)
+    }
+  }, [lists.length, isMobile])
 
   // Helper function to ensure labels is always an array
   const parseLabels = (labels) => {
@@ -564,6 +591,8 @@ const ProjectDetail = () => {
       if (response.success) {
         setSelectedTask(response.data)
         setShowTaskModal(true)
+        // Update URL to shareable task route if on board view
+        navigate(`/projects/${id}/board/${task.id}`, { replace: false })
       }
     } catch (error) {
       console.error('Error fetching task details:', error)
@@ -765,6 +794,24 @@ const ProjectDetail = () => {
     }
   }, [id, activeBoard])
 
+  // Open task modal when navigating to /projects/:id/board/:taskId
+  useEffect(() => {
+    const openFromRoute = async () => {
+      if (!taskId) return
+      try {
+        const response = await taskService.getTaskById(taskId)
+        if (response.success) {
+          setSelectedTask(response.data)
+          setShowTaskModal(true)
+        }
+      } catch (error) {
+        console.error('Error opening task from URL:', error)
+        showError('Failed to load task', 'Please try again later')
+      }
+    }
+    openFromRoute()
+  }, [taskId])
+
   const SortableTaskCard = ({ task, index }) => {
     const isProcessing = processingCards.has(task.id)
     
@@ -837,7 +884,7 @@ const ProjectDetail = () => {
           }
         }}
       >
-        <div className="p-4">
+        <div className="p-3 sm:p-4">
           {/* Labels Row - Top */}
           {task.labels && task.labels.length > 0 && (
             <div className="flex flex-wrap gap-1 mb-2">
@@ -998,7 +1045,7 @@ const ProjectDetail = () => {
         ref={setNodeRef}
         style={style}
         data-list-id={list.id}
-            className={`w-80 min-w-80 max-w-80 flex-shrink-0 group overflow-visible bg-white/5 border border-white/10 rounded-lg p-3 transition-all relative ${
+            className={`w-72 sm:w-80 min-w-72 sm:min-w-80 max-w-72 sm:max-w-80 flex-shrink-0 group overflow-visible bg-white/5 border border-white/10 rounded-lg p-2 sm:p-3 transition-all relative ${
           isDragging ? 'opacity-50 rotate-2 scale-105 ring-2 ring-gray-400 ring-opacity-50' : ''
             }`}
           >
@@ -1006,7 +1053,7 @@ const ProjectDetail = () => {
             <div 
               {...(!isDraggingCard && !isMobile ? attributes : {})}
               {...(!isDraggingCard && !isMobile ? listeners : {})}
-              className={`p-3 mb-3 rounded transition-colors ${
+              className={`p-2 sm:p-3 mb-2 sm:mb-3 rounded transition-colors ${
                 !isDraggingCard && !isMobile
                   ? 'cursor-grab hover:cursor-grabbing hover:bg-white/5' 
                   : 'cursor-default'
@@ -1097,7 +1144,7 @@ const ProjectDetail = () => {
         {/* Tasks Area - Droppable */}
         <div 
           ref={setDroppableRef}
-          className={`min-h-[120px] p-2 transition-colors ${
+          className={`min-h-[120px] p-1 sm:p-2 transition-colors ${
             isOver && (!isDraggingCard || listTasks.length === 0) ? 'bg-blue-500/10 rounded-lg border-2 border-dashed border-blue-400' : ''
           }`}
         >
@@ -1171,19 +1218,19 @@ const ProjectDetail = () => {
           canManage={canManageBoards}
         />
 
-        <div className="flex-1 px-16 py-4 sm:px-24 sm:py-6 overflow-auto custom-scrollbar">
+        <div className="flex-1 px-4 sm:px-8 md:px-16 lg:px-24 py-4 sm:py-6 overflow-auto custom-scrollbar">
           {/* Search Results Indicator */}
           {(searchQuery || selectedLabels.length > 0 || selectedMembers.length > 0) && (
-            <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <div className="flex items-center justify-between">
+            <div className="mb-4 p-2 sm:p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <Search className="h-4 w-4 text-blue-400" />
                   <span className="text-blue-400 text-sm font-medium">
                     {Object.values(filteredTasks).flat().length} task(s) found
                   </span>
                 </div>
-                <div className="flex items-center gap-2 text-xs text-gray-400">
-                  {searchQuery && <span>Search: "{searchQuery}"</span>}
+                <div className="flex items-center gap-2 flex-wrap text-xs text-gray-400">
+                  {searchQuery && <span className="truncate">Search: "{searchQuery}"</span>}
                   {selectedLabels.length > 0 && <span>{selectedLabels.length} label(s)</span>}
                   {selectedMembers.length > 0 && <span>{selectedMembers.length} member(s)</span>}
                 </div>
@@ -1211,24 +1258,40 @@ const ProjectDetail = () => {
                 onDragEnd={handleDragEnd}
               >
                 <SortableContext items={lists.map(list => list.id)} strategy={horizontalListSortingStrategy}>
-                  <div className="flex gap-4 sm:gap-6 min-w-max overflow-x-auto custom-scrollbar pb-4" style={{ paddingRight: '4rem' }}>
-                    {lists.map((list) => (
-                      <SortableColumn key={list.id} list={list} />
-                    ))}
-                      
-                      <div className="min-w-96 sm:min-w-[28rem] flex-shrink-0 h-24">
-                        <Card 
-                          className="bg-white/5 border border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer w-full rounded-lg"
-                          onClick={() => setShowCreateColumnModal(true)}
-                          style={{ animation: 'none' }}
-                        >
-                          <CardContent className="p-8 text-center">
-                            <Plus className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                            <span className="text-gray-400 text-lg font-medium">Create Column</span>
-                          </CardContent>
-                        </Card>
+                  <div className="relative">
+                    <div 
+                      ref={scrollContainerRef}
+                      className="flex gap-3 sm:gap-4 md:gap-6 min-w-max overflow-x-auto custom-scrollbar pb-4 scroll-smooth" 
+                      style={{ paddingRight: isMobile ? '2rem' : '4rem' }}
+                    >
+                      {lists.map((list) => (
+                        <SortableColumn key={list.id} list={list} />
+                      ))}
+                        
+                        <div className="min-w-72 sm:min-w-96 md:min-w-[28rem] flex-shrink-0 h-24">
+                          <Card 
+                            className="bg-white/5 border border-white/10 border-dashed hover:bg-white/10 transition-colors cursor-pointer w-full rounded-lg"
+                            onClick={() => setShowCreateColumnModal(true)}
+                            style={{ animation: 'none' }}
+                          >
+                            <CardContent className="p-4 sm:p-8 text-center">
+                              <Plus className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400 mx-auto mb-2" />
+                              <span className="text-gray-400 text-sm sm:text-lg font-medium">Create Column</span>
+                            </CardContent>
+                          </Card>
+                        </div>
                       </div>
-                    </div>
+                    
+                    {/* Scroll Hint for Mobile */}
+                    {isMobile && showScrollHint && lists.length > 1 && (
+                      <div className="absolute right-0 top-1/2 transform -translate-y-1/2 pointer-events-none z-10 transition-opacity duration-300">
+                        <div className="flex flex-col items-center gap-1.5 bg-gradient-to-l from-[#18191b] via-[#18191b]/90 to-transparent px-3 py-2.5 rounded-l-lg border border-l-white/10 border-t-white/10 border-b-white/10 border-r-0 shadow-lg">
+                          <ChevronRight className="h-5 w-5 text-gray-300 animate-pulse" />
+                          <span className="text-xs text-gray-300 whitespace-nowrap font-medium">Scroll →</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </SortableContext>
                 
                 <DragOverlay>
@@ -1281,6 +1344,10 @@ const ProjectDetail = () => {
         onClose={() => {
           setShowTaskModal(false)
           setSelectedTask(null)
+          // If we are on a task route, go back to board route
+          if (location.pathname.includes(`/projects/${id}/board/`)) {
+            navigate(`/projects/${id}/board`, { replace: true })
+          }
         }}
         onUpdate={async (updatedTask) => {
 

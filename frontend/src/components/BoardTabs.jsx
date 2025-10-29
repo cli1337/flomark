@@ -116,7 +116,7 @@ const BoardTabs = ({
 
   return (
     <div className="border-b border-white/10 bg-white/5 backdrop-blur-xl">
-      <div className="flex items-center gap-2 px-4 sm:px-16 py-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
+      <div className="flex items-center gap-2 px-4 sm:px-8 md:px-16 py-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-700 scrollbar-track-transparent">
         {boards.length === 0 && canManage && (
           <div className="flex items-center gap-2 text-gray-400 text-sm mr-4">
             <span>No boards yet. Create your first board →</span>

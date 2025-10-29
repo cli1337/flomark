@@ -76,6 +76,8 @@ function App() {
                         <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
                         <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
                         <Route path="/projects/:id" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                        <Route path="/projects/:id/board" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
+                        <Route path="/projects/:id/board/:taskId" element={<ProtectedRoute><ProjectDetail /></ProtectedRoute>} />
                         <Route path="/projects/:id/flow" element={<ProtectedRoute><ProjectFlowView /></ProtectedRoute>} />
                         <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
                         <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
